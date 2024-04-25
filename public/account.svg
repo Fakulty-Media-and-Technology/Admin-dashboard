@@ -1,0 +1,10 @@
+<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="11" cy="11" r="11" fill="#C4C4C4"/>
+<mask id="mask0_1988_1700" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="1" width="20" height="20">
+<circle cx="10.9999" cy="11.0003" r="9.70588" fill="#E5E5E5"/>
+</mask>
+<g mask="url(#mask0_1988_1700)">
+<circle cx="10.9999" cy="20.059" r="7.76471" fill="black"/>
+<circle cx="10.9999" cy="7.76483" r="3.23529" fill="black"/>
+</g>
+</svg>

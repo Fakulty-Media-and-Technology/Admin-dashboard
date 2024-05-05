@@ -24,12 +24,16 @@ export const CustomInput = ({
 interface InputProps extends ComponentProps<"input"> {
   src: string;
   onPress: () => void;
+  width: number;
+  height: number;
 }
 
 export const InputWithIcon = ({
   className,
   src,
   onPress,
+  width,
+  height,
   ...props
 }: InputProps) => {
   return (
@@ -42,7 +46,7 @@ export const InputWithIcon = ({
         )}
       />
       <button onClick={onPress}>
-        <Image src={src} width={17} height={12} alt="" />
+        <Image src={src} width={width} height={height} alt="" />
       </button>
     </div>
   );
@@ -52,6 +56,7 @@ interface SelectProps extends ComponentProps<"div"> {
   placeholder: string;
   selectData: string[];
   setType: React.Dispatch<React.SetStateAction<string>>;
+  textStyles?: string;
 }
 
 export const SelectInput = ({
@@ -59,6 +64,7 @@ export const SelectInput = ({
   placeholder,
   selectData,
   setType,
+  textStyles,
   ...props
 }: SelectProps) => {
   const [showSelect, setShowSelect] = useToggle();
@@ -66,7 +72,9 @@ export const SelectInput = ({
     <div className="relative">
       <div className="flex items-center border border-input_grey rounded w-full py-[14px] px-5 ">
         <p
-          className={`${roboto_400.className} flex-1 font-normal text-base text-input_grey`}
+          className={`${textStyles ? textStyles : "text-input_grey"} ${
+            roboto_400.className
+          } flex-1 font-normal text-base`}
         >
           {placeholder}
         </p>
@@ -76,6 +84,64 @@ export const SelectInput = ({
             src="/down.png"
             width={17}
             height={12}
+            alt=""
+            className={showSelect ? "rotate-180" : ""}
+          />
+        </button>
+      </div>
+
+      {showSelect && (
+        <ul className="absolute bg-black1 w-full py-2 space-y-2">
+          {selectData.map((x, index) => {
+            const active = placeholder === x;
+            return (
+              <li
+                onClick={() => [setType(x), setShowSelect(!showSelect)]}
+                className={`${roboto_400.className} ${
+                  active && "bg-black/50"
+                } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
+                key={index}
+              >
+                {x}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export const SelectInputForm = ({
+  className,
+  placeholder,
+  selectData,
+  textStyles,
+  setType,
+  ...props
+}: SelectProps) => {
+  const [showSelect, setShowSelect] = useToggle();
+  return (
+    <div className="relative">
+      <div
+        className={twMerge(
+          `flex items-center border border-input_grey rounded w-full py-[8px] px-5 ${className}`
+        )}
+      >
+        <p
+          className={twMerge(
+            `${roboto_400.className} flex-1 font-normal text-base text-input_grey`,
+            textStyles
+          )}
+        >
+          {placeholder}
+        </p>
+
+        <button onClick={() => setShowSelect(!showSelect)}>
+          <Image
+            src="/down.png"
+            width={10}
+            height={7}
             alt=""
             className={showSelect ? "rotate-180" : ""}
           />
@@ -121,7 +187,7 @@ export const AppButton = ({
       className={twMerge(
         `${
           disabled ? "bg-gray-500 cursor-not-allowed" : "bg-red"
-        } rounded py-[12px] font-normal text-lg  ${manrope_400}`,
+        } rounded py-[12px] font-normal text-lg text-white  ${manrope_400}`,
         className
       )}
     >

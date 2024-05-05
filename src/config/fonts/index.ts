@@ -6,6 +6,12 @@ export const manrope_400 = Manrope({
   weight: "400",
 });
 
+export const manrope_600 = Manrope({
+  subsets: ["latin"],
+  style: "normal",
+  weight: "600",
+});
+
 export const roboto_400 = Roboto({
   subsets: ["latin"],
   style: "normal",
@@ -16,6 +22,12 @@ export const roboto_500 = Roboto({
   subsets: ["latin"],
   style: "normal",
   weight: "500",
+});
+
+export const roboto_700 = Roboto({
+  subsets: ["latin"],
+  style: "normal",
+  weight: "700",
 });
 
 export const roboto_900 = Roboto({

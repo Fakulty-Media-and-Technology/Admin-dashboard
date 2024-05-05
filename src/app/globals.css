@@ -15,3 +15,13 @@
 .tableContainer {
   width: inherit !important;
 }
+
+.box {
+  height: calc(100vh - 280px);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  color: white;
+  background-color: #fff;
+  border-radius: 4px;
+}

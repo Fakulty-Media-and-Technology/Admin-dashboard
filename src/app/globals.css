@@ -47,7 +47,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .swallowtwo{
   height:436px;
-  width: 667px;
+  width: 570px;
   margin-top: 20px;
   margin-left: 10px;
 }
@@ -74,4 +74,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: flex;
   gap: 100px;
 }
-
+.Input-container{
+  width: 500px;
+  margin: 20px auto;
+  padding-top: 10px;
+}

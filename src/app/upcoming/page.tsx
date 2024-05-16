@@ -19,6 +19,7 @@ const page = () => {
   const [role, setRole] = useState<string>("user");
   const [clientRole, setClientRole] = useState<string>("Select Client type");
   const [userPic, setUserPic] = useState<File | null>(null);
+  const [folderpic, setFolderPic] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("Regular");
   const [phoneNo, setPhoneNo] = useState<string>("");
   const [gender, setGender] = useState<string>("Select your gender");
@@ -28,6 +29,10 @@ const page = () => {
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (files) setUserPic(files[0]);
+  }
+  function handleInputs(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files) setFolderPic(files[0]);
   }
 
   const handleAccForm = (e: React.FormEvent<HTMLFormElement>) => {
@@ -267,8 +272,8 @@ const page = () => {
                       Upload landscape image*
                     </label>
                     <div className="w-[321px] h-[38px] mt-[5px]">
-                <input type="file" name="" id=""  className="text-grey_1" accept=".png, .jpeg, .jpg" onChange={(e) => handleInput(e)}/>
-                <button type="submit" className="bg-red_500 w-[93px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[32px] text-white">Upload</button>
+                <input type="file" name="" id=""  className="text-grey_1 border border-border_grey" accept=".png, .jpeg, .jpg" onChange={(e) => handleInput(e)}/>
+                <button type="submit" className="bg-red_500 w-[95px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[35px] text-white">Upload</button>
                 <div className=" mt-[20px] w-[232px] h-[133px]">
                 {userPic ? (
       <Image
@@ -365,12 +370,12 @@ const page = () => {
                       Upload potrait image*
                     </label>
                     <div className="w-[321px] h-[38px] mt-[5px]">
-                    <input type="file" name="" id=""  className="text-grey_1" accept=".png, .jpeg, .jpg" onChange={(e) => handleInput(e)}/>
-                <button type="submit" className="bg-red_500 w-[93px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[32px] text-white">Upload</button>
+                    <input type="file" name="" id=""  className="text-grey_1 border  border-border_grey" accept=".png, .jpeg, .jpg" onChange={(e) => handleInputs(e)}/>
+                <button type="submit" className="bg-red_500 w-[95px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[34px] text-white">Upload</button>
                 <div className=" mt-[20px] w-[232px] h-[133px]">
-                {userPic ? (
+                {folderpic ? (
       <Image
-        src={URL.createObjectURL(userPic)}
+        src={URL.createObjectURL(folderpic)}
         width={232}
         height={133}
         alt=""

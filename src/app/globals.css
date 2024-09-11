@@ -25,3 +25,57 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #fff;
   border-radius: 4px;
 }
+.feature{
+  height: 762px;
+  width: 1080px;
+  background: #212121;
+  margin-top: 40px;
+}
+.Two-feature{
+  margin-top: 10px;
+  width: 1020px;
+  margin-left: 15px;
+  padding-top: 20px;
+  align-items: center;
+}
+.swallowone{
+  height: 436px;
+  width: 347px;
+  margin-top: 20px;
+  margin-left: 15px;
+}
+
+.swallowtwo{
+  height:436px;
+  width: 570px;
+  margin-top: 20px;
+  margin-left: 10px;
+}
+.save{
+  background: #EE2726;
+  padding-top: 20px;
+  padding-right: 40px;
+  padding-bottom: 20px;
+  padding-left: 40px;
+  margin-top: 30px;
+  margin-left: 15px;
+  color: white;
+  text-transform: capitalize;
+}
+.total{
+  display: flex;
+  align-items: center;
+  gap: 100px;
+  margin-top: 30px;
+  margin-left: 40px;
+}
+.total-2{
+  margin-left: 40px;
+  display: flex;
+  gap: 100px;
+}
+.Input-container{
+  width: 500px;
+  margin: 20px auto;
+  padding-top: 10px;
+}

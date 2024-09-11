@@ -24,11 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} flex h-full`}>
+      <body className={`${inter.className} flex h-[100%]`}>
         <ProviderContainer>
           {/* SideBar */}
           <Sidebar />
-          <div className="bg-black2 flex-1">
+          <div className="bg-black2 flex-1 flex-grow">
             {/* header */}
             <Header />
             {children}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetUpcomingQuery } from "@/api/upcomingSlice";
 import {
   CustomInput,
   InputWithIcon,
@@ -9,26 +10,85 @@ import {
 import { UP_Table, UP_TableHeads } from "@/config/data/upcoming.data";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
+import {
+  IUpcomingData,
+  IUpcomingEventFormated,
+  IUpcomingResponse,
+} from "@/types/api/upcoming.types";
+import { formatAmount } from "@/utilities/formatAmount";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-
+import { ImageProps } from "../plans/page";
 
 const page = () => {
-
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
-  const [clientRole, setClientRole] = useState<string>("Select Client type");
   const [userPic, setUserPic] = useState<File | null>(null);
   const [folderpic, setFolderPic] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("Regular");
-  const [phoneNo, setPhoneNo] = useState<string>("");
-  const [gender, setGender] = useState<string>("Select your gender");
-  const [verifyUser, setVerifyUser] = useToggle();
-  const [subscriptionStatus, setSubscriptionStatus] = useToggle();
+  const [searchParams, setSearchParams] = useState<string>("");
+  const [image, setImage] = useState<ImageProps | null>(null);
+  const [coverImage, setCoverImage] = useState<ImageProps | null>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<
+    IUpcomingEventFormated[]
+  >([]);
+  const [upcomingEventsFiltered, setUpcomingEventsFiltered] = useState<
+    IUpcomingEventFormated[]
+  >([]);
 
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+  const {
+    data: upcomingData,
+    refetch,
+    error,
+    isSuccess,
+    isLoading,
+  } = useGetUpcomingQuery({ limit: 10, page: 1 }, {});
+
+  const transformEventData = (data: IUpcomingData[]) => {
+    // if(usersRP.len) return [];
+    return data.map((UP) => ({
+      ...UP,
+      title: UP.title,
+      reminder: formatAmount(UP.reminder.length.toString()),
+      type: UP.type,
+      option: "",
+      views: "0",
+    }));
+  };
+
+  function handleUpcomingList(data: IUpcomingResponse | undefined) {
+    if (!data) return;
+    const upcomingList = transformEventData(data.data);
+    setUpcomingEvents(upcomingList);
+    setUpcomingEventsFiltered(upcomingList);
+  }
+
+  function handleSearchfilter(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchParams(e.target.value);
+
+    setUpcomingEventsFiltered(
+      upcomingEvents.filter((x) => x.title.includes(searchParams))
+    );
+    if (e.target.value === "") {
+      setUpcomingEventsFiltered(upcomingEvents);
+    }
+  }
+
+  function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
     const files = e.target.files;
-    if (files) setUserPic(files[0]);
+    if (files) {
+      if (type === "cover") {
+        setCoverImage({
+          name: files[0].name,
+          url: URL.createObjectURL(files[0]),
+        });
+      } else {
+        setImage({
+          name: files[0].name,
+          url: URL.createObjectURL(files[0]),
+        });
+      }
+    }
   }
   function handleInputs(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -40,18 +100,14 @@ const page = () => {
   };
 
   useEffect(() => {
-    if (userRole === "Client") {
-      setRole("client");
-    } else {
-      setRole("user");
-    }
-  }, [userRole]);
+    handleUpcomingList(upcomingData);
+  }, [isSuccess]);
 
   switch (stage) {
     case "main":
       return (
         <section
-          className={`${roboto_400.className} relative h-[92%] overflow-y-auto pl-5`}
+          className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
         >
           <div className="bg-black3 py-3 px-10">
             <p className="font-normal text-lg text-grey_700">Home / Upcoming</p>
@@ -71,6 +127,8 @@ const page = () => {
                 type="text"
                 placeholder="Search Upcoming"
                 className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
+                value={searchParams}
+                onChange={(e) => handleSearchfilter(e)}
               />
             </div>
 
@@ -84,7 +142,7 @@ const page = () => {
           </div>
 
           <div className="relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
-            <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
+            <div className="absolute w-full py-5 pb-6 pl-0  sm:ml-0 sm:pl-3 md:pl-10 overflow-x-auto">
               <table className={`${roboto_400.className} w-full min-w-[810px]`}>
                 <thead className="">
                   <tr>
@@ -101,15 +159,14 @@ const page = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {UP_Table.map((tx, indx) => {
+                  {upcomingEventsFiltered.map((tx, indx) => {
                     return (
-
                       <tr key={indx} className="text-white ">
                         <td
                           className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
                           key={indx}
                         >
-                          <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[160px]">
+                          <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                             <Image
                               src={`/tablepic/mum.png`}
                               width={42}
@@ -117,9 +174,9 @@ const page = () => {
                               alt="profiles"
                               className="object-contain rounded-full"
                             />
-                            <div className="ml-2">
+                            <div className="ml-2.5">
                               <p
-                                className={`${roboto_500.className} font-medium text-[#fff] text-[15px]`}
+                                className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}
                               >
                                 {tx.title}
                               </p>
@@ -138,20 +195,18 @@ const page = () => {
                               </div>
                             </div>
                           </div>
-
                         </td>
 
                         <td className="text-center font-normal text-xs capitalize">
                           {tx.reminder}
                         </td>
-  
+
                         <td className="text-center font-normal text-xs capitalize">
                           {tx.type}
                         </td>
-                        
-                        
+
                         <td className="w-[400px]">
-                          <div className="flex items-center justify-center gap-x-4">
+                          <div className="flex items-center justify-center gap-x-10">
                             <button>
                               <Image
                                 src="/edit.svg"
@@ -178,8 +233,7 @@ const page = () => {
             </div>
           </div>
 
-
-          <div className="w-100 bg-black2 relative top-18 z-50">
+          {/* <div className="w-100 bg-black2 relative top-18 z-50">
             <div
               className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
             >
@@ -206,21 +260,20 @@ const page = () => {
                 Next <span className="text-white mr-2">{`>>`}</span>
               </button>
             </div>
-          </div>
-          </section>
+          </div> */}
+        </section>
       );
 
     case "add":
       return (
         <section
-          className={`${roboto_400.className} relative h-[92%] overflow-y-auto pl-5`}
+          className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
         >
-        <div className="bg-black3 py-3 px-10">
+          <div className="bg-black3 py-3 px-10">
             <p className="font-normal text-lg text-grey_700">
               Home / Upcoming {role === "user" ? "/ Add" : ""}
             </p>
           </div>
-
 
           <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
             <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
@@ -238,197 +291,207 @@ const page = () => {
                 className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
               />
             </div>
-             {/* add butn */}
-             <div
+            {/* add butn */}
+            <div
               onClick={() => setStage("main")}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
             </div>
-            </div>
-
-            {/* Implementing inside element */}
-            <div className="h-[800px] bg-black3 mt-[40px]">
-              <div className="total">
-                <div className="h-[68px] w-[364px] mt-10 items-center">
-                <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
-                    >
-                      Upcoming Title*
-                    </label>
-                    <CustomInput
-                      type="text"
-                      id="firstName"
-                      className="font-normal block w-[364px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                    />
-                </div>
-
-                <div className="h-[69.3px] w-[321px] mt-10">
-                <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} text-[14px] text-[#909090] text-base ml-2.5 pt-8 w-[179px] h-[21px]`}
-                    >
-                      Upload landscape image*
-                    </label>
-                    <div className="w-[321px] h-[38px] mt-[5px]">
-                <input type="file" name="" id=""  className="text-grey_1 border border-border_grey" accept=".png, .jpeg, .jpg" onChange={(e) => handleInput(e)}/>
-                <button type="submit" className="bg-red_500 w-[95px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[35px] text-white">Upload</button>
-                <div className=" mt-[20px] w-[232px] h-[133px]">
-                {userPic ? (
-      <Image
-        src={URL.createObjectURL(userPic)}
-        width={232}
-        height={133}
-        alt=""
-        className="rounded"
-      />
-    ) : (
-      <Image
-        src="/accDummy.svg"
-        width={105}
-        height={106}
-        alt=""
-        className="rounded opacity-0"
-        
-      />
-    )}
-                </div>
-                    </div> 
-
-                </div>
-                </div>
-
-                {/* implementing details */}
-                <div className="total-2">
-                <div className="h-[139px] w-[364px] mt-10">
-                <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} text-[14px] text-[#909090] text-base ml-2.5 pt-8 w-[179px] h-[21px]`}
-                    >
-                      Details*
-                    </label>
-                    <CustomInput
-                      type = "text"
-                      id="details"
-                      className="h-[111px]"
-                      />
-                </div>
-                 <div className="flex gap-[60px]">
-                <img src="/tablepic/channels box.jpg" alt=""
-                className="h-[133.04px] w-[232.74px] mt-12 opacity-0"
-                />
-                
-                <Image
-                                src="/delete.svg"
-                                width={15}
-                                height={18}
-                                alt="delete"
-                                className="mt-[160px]"
-                              />
-                </div>               
-            </div>
-
-                {/* implementing release date */}
-                <div className="total">
-                <div className="h-[68px] w-[364px] mt-10 items-center">
-                <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
-                    >
-                      Release Date*
-                    </label>
-                    <div className="border border-[#3D3C41] rounded py-1 px-3 flex items-center gap-x-4 w-[150px] mt-[8px]">
-            <span
-              className={`${roboto_500.className} font-medium text-sm text-[#909090]`}
-            >
-              12/05/2023
-            </span>
-            <button
-            // onClick={setShowOptions}
-            >
-              <Image
-                src="/down.png"
-                width={13}
-                height={8}
-                alt=""
-                className={`transition-all duration-500 ease-in-out ${
-                  // showOptions ? "rotate-180" : ""
-                  ""
-                }`}
-              />
-            </button>
           </div>
 
+          {/* Implementing inside element */}
+          <div className="border bg-black3 mt-[40px] px-5 md:px-10 lg:px-14 flex flex-col  md:flex-row items-start  md:gap-x-10 lg:gap-x-16 ">
+            <div className="flex-1 ">
+              <div className="flex-1">
+                <div className="h-[68px] w-full md:w-[364px] mt-10 items-center">
+                  <label
+                    htmlFor="title"
+                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
+                  >
+                    Upcoming Title*
+                  </label>
+                  <CustomInput
+                    type="text"
+                    id="title"
+                    className="font-normal block w-full text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
+                  />
                 </div>
+              </div>
 
-                <div className="h-[69.3px] w-[321px] mt-10">
+              {/* implementing details */}
+              <div className="">
+                <div className="h-[139px] w-full md:w-[364px] mt-10">
+                  <label
+                    htmlFor="title"
+                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
+                  >
+                    Details *
+                  </label>
+                  <CustomInput
+                    type="text"
+                    id="details"
+                    className="h-[111px] mt-3 border-[#D9D9D938]"
+                  />
+                </div>
+              </div>
+
+              {/* implementing release date */}
+              <div className="h-[68px] w-full md:w-[364px] mt-10 items-center">
                 <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} text-[14px] text-[#909090] text-base ml-2.5 pt-8 w-[179px] h-[21px]`}
-                    >
-                      Upload potrait image*
-                    </label>
-                    <div className="w-[321px] h-[38px] mt-[5px]">
-                    <input type="file" name="" id=""  className="text-grey_1 border  border-border_grey" accept=".png, .jpeg, .jpg" onChange={(e) => handleInputs(e)}/>
-                <button type="submit" className="bg-red_500 w-[95px] h-[38px] text-[15px relative left-[210px] rounded-r-md bottom-[34px] text-white">Upload</button>
-                <div className=" mt-[20px] w-[232px] h-[133px]">
-                {folderpic ? (
-      <Image
-        src={URL.createObjectURL(folderpic)}
-        width={232}
-        height={133}
-        alt=""
-        className="rounded"
-      />
-    ) : (
-      <Image
-        src="/accDummy.svg"
-        width={105}
-        height={106}
-        alt=""
-        className="rounded opacity-0"
-        
-      />
-    )}
-                </div>
-                </div>
-                </div>
-                </div>
-
-                  {/* implementing the last save and  */}
-                  <div className="total-2">
-                <div className="h-[200px] w-[364px]">
-                <button
-                  type="submit"
-                  style={{ alignSelf: "center" }}
-                  className={`${roboto_500.className} font-medium text-lg text-white rounded-[5px] w-[145px] py-2 mt-20 bg-red_500`}
+                  htmlFor="date"
+                  className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
                 >
-                  Save
-                </button>
-                </div>
-                 <div className="flex gap-[60px]">
-                <img src="/tablepic/channels box.jpg" alt=""
-                className="h-[133.04px] w-[232.74px] mt-12 opacity-0"
+                  RELEASE DATE *
+                </label>
+                <CustomInput
+                  type="text"
+                  id="date"
+                  readOnly
+                  className="font-normal block w-[157px] text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
                 />
-                
-                <Image
-                                src="/delete.svg"
-                                width={15}
-                                height={18}
-                                alt="delete"
-                                className="mt-[160px]"
-                              />
-                </div>               
-            </div>
-            {/* last div for the body */}
-            </div>
-            
+              </div>
 
-          </section>
+              {/* implementing the last save and  */}
+              <div className="">
+                <div className="h-[200px] w-full md:w-[364px]">
+                  <button
+                    type="submit"
+                    style={{ alignSelf: "center" }}
+                    className={`${roboto_500.className} font-medium text-lg text-white rounded-[5px] w-[145px] py-2 mt-20 bg-red_500`}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              {/* last div for the body */}
+            </div>
+
+            <div className="flex-1">
+              <div className="flex-1 lg:mr-2">
+                <div className="w-full md:w-[350px] md:ml-auto mt-10">
+                  <p
+                    className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
+                  >
+                    Upload Landscape Image *
+                  </p>
+                  <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
+                    <div className="flex items-center ml-5 py-2 relative">
+                      <div
+                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
+                      >
+                        Choose File
+                      </div>
+                      <span
+                        className={`${roboto_400.className} truncate text-xs text-grey_500`}
+                      >
+                        {coverImage ? coverImage.name : "No File selected"}
+                      </span>
+                      <input
+                        type="file"
+                        id="file"
+                        onChange={(e) => handleInput(e, "cover")}
+                        className="absolute z-20 opacity-0"
+                      />
+                    </div>
+                    <div
+                      className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
+                    >
+                      UPLOAD
+                    </div>
+                  </div>
+
+                  <div className="h-[150px] flex flex-row items-end mt-10 justify-center gap-x-3">
+                    {coverImage && (
+                      <>
+                        <Image
+                          id="upload"
+                          src={coverImage.url}
+                          width={298}
+                          height={159}
+                          alt="uploaded"
+                          className="rounded-[10px]"
+                        />
+                        <button
+                          className="hover:scale-110 transition-all duration-200"
+                          onClick={() => setCoverImage(null)}
+                        >
+                          <Image
+                            src="/delete.svg"
+                            width={16}
+                            height={16}
+                            alt="delete icon"
+                          />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-full md:w-[350px] md:ml-auto mt-16">
+                  <p
+                    className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
+                  >
+                    Upload Portait Image *
+                  </p>
+                  <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
+                    <div className="flex items-center ml-5 py-2 relative">
+                      <div
+                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
+                      >
+                        Choose File
+                      </div>
+                      <span
+                        className={`${roboto_400.className} truncate text-xs text-grey_500`}
+                      >
+                        {image ? image.name : "No File selected"}
+                      </span>
+                      <input
+                        type="file"
+                        id="file"
+                        onChange={handleInput}
+                        className="absolute z-20 opacity-0"
+                      />
+                    </div>
+                    <div
+                      className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
+                    >
+                      UPLOAD
+                    </div>
+                  </div>
+
+                  <div className="h-[163px] flex flex-row items-end mt-1 justify-center gap-x-3">
+                    {image && (
+                      <>
+                        <Image
+                          // id="upload"
+                          src={image.url}
+                          width={110}
+                          height={153}
+                          alt="uploaded"
+                          className="h-[120px] rounded-[10px]"
+                        />
+                        <button
+                          className="hover:scale-110 transition-all duration-200"
+                          onClick={() => setImage(null)}
+                        >
+                          <Image
+                            src="/delete.svg"
+                            width={16}
+                            height={16}
+                            alt="delete icon"
+                          />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       );
   }
 };
 
 export default page;
-

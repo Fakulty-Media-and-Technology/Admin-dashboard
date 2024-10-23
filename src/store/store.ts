@@ -5,12 +5,14 @@ import {
   configureStore,
 } from "@reduxjs/toolkit";
 import userSlice from "./slices/usersSlice";
+import { apiSlice } from "@/api/apiSlice";
 
 const middlewares = [
   /* other middlewares */
 ];
 
 const combinedReducer = combineReducers({
+  [apiSlice.reducerPath]: apiSlice.reducer,
   user: userSlice,
   // orientation: orientationSlice,
   // ... more reducers
@@ -26,6 +28,8 @@ const rootReducer = (state: any, action: PayloadAction<any>) => {
 
 const store = configureStore({
   reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
   devTools: true,
 });
 

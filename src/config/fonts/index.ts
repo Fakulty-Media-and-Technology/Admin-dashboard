@@ -1,9 +1,15 @@
-import { Manrope, Roboto } from "next/font/google";
+import { Manrope, Outfit, Roboto } from "next/font/google";
 
 export const manrope_400 = Manrope({
   subsets: ["latin"],
   style: "normal",
   weight: "400",
+});
+
+export const outfit_500 = Outfit({
+  subsets: ["latin"],
+  style: "normal",
+  weight: "500",
 });
 
 export const manrope_600 = Manrope({
@@ -15,6 +21,12 @@ export const manrope_600 = Manrope({
 export const roboto_400 = Roboto({
   subsets: ["latin"],
   style: "normal",
+  weight: "400",
+});
+
+export const roboto_400_italic = Roboto({
+  subsets: ["latin"],
+  style: "italic",
   weight: "400",
 });
 

@@ -5,6 +5,8 @@ import useToggle from "@/hooks/useToggle";
 import Image from "next/image";
 import { ComponentProps } from "react";
 import { twMerge } from "tailwind-merge";
+import LoadingSpinner from "@/config/lottie/loading.json";
+import Lottie from "lottie-react";
 
 export const CustomInput = ({
   className,
@@ -172,25 +174,41 @@ export const SelectInputForm = ({
 
 interface AppButtonProps extends ComponentProps<"button"> {
   title: string;
-  disabled: boolean;
+  disabled?: boolean;
+  isLoading?: boolean;
+  bgColor?: string;
 }
 
 export const AppButton = ({
   className,
   title,
   disabled,
+  isLoading,
+  bgColor,
   ...props
 }: AppButtonProps) => {
   return (
     <button
       {...props}
+      disabled={disabled}
       className={twMerge(
         `${
-          disabled ? "bg-gray-500 cursor-not-allowed" : "bg-red"
-        } rounded py-[12px] font-normal text-lg text-white  ${manrope_400}`,
+          disabled || isLoading
+            ? "bg-gray-500 cursor-not-allowed"
+            : bgColor
+            ? bgColor
+            : "bg-red"
+        } flex flex-row items-center justify-center rounded py-[12px] font-normal text-lg text-white  ${manrope_400}`,
         className
       )}
     >
+      {isLoading && (
+        <Lottie
+          animationData={LoadingSpinner}
+          loop
+          style={{ width: 35, height: 35, marginRight: 5 }}
+        />
+      )}
       {title}
     </button>
   );

@@ -1,48 +1,56 @@
-export const RP_Overview = [
-  {
-    name: "Total Movies/Series",
-    value: "912000",
-  },
-  {
-    name: "Total Documentaries",
-    value: "850",
-  },
-  {
-    name: "Total Skits",
-    value: "215000",
-  },
-  {
-    name: "Total Music Videos",
-    value: "675000",
-  },
-  {
-    name: "Total Events",
-    value: "1",
-  },
-  {
-    name: "Total Channels",
-    value: "37",
-  },
-];
+import { IDashboardTOTAL, IDashboardUsers } from "@/types/api/dashboard.types";
 
-export const RP_Overview_2 = [
-  {
-    name: "Total Balance",
-    value: "800000000",
-  },
-  {
-    name: "Total Users",
-    value: "970000",
-  },
-  {
-    name: "Active Subscriptions",
-    value: "615000",
-  },
-  {
-    name: "Free Users",
-    value: "970000",
-  },
-];
+export const RP_Overview = (data: IDashboardTOTAL | undefined) => {
+  if (!data) return [];
+  return [
+    {
+      name: "Total Movies/Series",
+      value: data.totalMovieSeries.toString() ?? "0",
+    },
+    {
+      name: "Total Documentaries",
+      value: data.totalContents.toString() ?? "0",
+    },
+    {
+      name: "Total Skits",
+      value: data.totalSkits.toString() ?? "0",
+    },
+    {
+      name: "Total Music Videos",
+      value: data.totalMusicVideos.toString() ?? "0",
+    },
+    {
+      name: "Total Events",
+      value: data.totalActiveEvents.toString() ?? "0",
+    },
+    {
+      name: "Total Channels",
+      value: "0",
+    },
+  ];
+};
+
+export const RP_Overview_2 = (data: IDashboardUsers | undefined) => {
+  if (!data) return [];
+  return [
+    {
+      name: "Total Balance",
+      value: data.totalBalance.total_balance.toString() ?? "0",
+    },
+    {
+      name: "Total Users",
+      value: data.totUsers.toString() ?? "0",
+    },
+    {
+      name: "Active Subscriptions",
+      value: data.activeSubscriptions.toString() ?? "0",
+    },
+    {
+      name: "Free Users",
+      value: data.freeUsers.toString() ?? "0",
+    },
+  ];
+};
 
 export const RP_Overview3 = [
   {

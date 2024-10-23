@@ -1,7 +1,11 @@
 "use client";
 
-import { roboto_400 } from "@/config/fonts";
+import { useGetUserProfileQuery } from "@/api/userSlice.api";
+import { roboto_400, roboto_500 } from "@/config/fonts";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
 import useToggle from "@/hooks/useToggle";
+import { selectUserProfile, setCredentials } from "@/store/slices/usersSlice";
+import Size from "@/utilities/useResponsiveSize";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -16,6 +20,8 @@ const navLinks = [
   "upcoming",
   "categories",
 ];
+
+const clientsLinks = ["dashboard", "live", "plans", "currency", "support"];
 
 const otherNavs = [
   "ad",
@@ -34,10 +40,12 @@ interface NavOptions {
 }
 
 const NavLink = ({ nav, className }: NavOptions) => {
+  const user = useAppSelector(selectUserProfile);
   const [options, setOptions] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const active = pathname.split("/")[1] === encodeURI(nav);
+  const isChannel = user?.profile.role === "channel";
 
   useEffect(() => {
     if (pathname.split("/")[1] !== "uploads") setOptions(false);
@@ -113,14 +121,16 @@ const NavLink = ({ nav, className }: NavOptions) => {
           <li
             className={`${
               roboto_400.className
-            } md:block hidden w-[180px] pl-5 capitalize font-normal text-base ${
+            } md:block hidden w-[180px] pl-5 capitalize font-normal text-base transition-all duration-150 hover:scale-110 ${
               active ? "text-white" : "text-grey_800"
             }`}
           >
             {nav === "plans"
-              ? "plans / subs"
+              ? `${isChannel ? "Create Live" : "plans / subs"}`
               : nav === "ad"
               ? "ad manager"
+              : nav === "support"
+              ? "support tickets"
               : nav}
           </li>
           {nav === "uploads" && (
@@ -203,14 +213,30 @@ const NavLink = ({ nav, className }: NavOptions) => {
 };
 
 function Siderbar() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const pathname = usePathname();
+  const user = useAppSelector(selectUserProfile);
+  const { data, isSuccess } = useGetUserProfileQuery(undefined, {});
+  // const isChannel = user?.profile.role === "channel";
+  const FullSideLinks = [...clientsLinks];
+  const WIDTH = Size.getWidth();
+  const isActive = pathname === "/cta";
+
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(setCredentials(data.data));
+    } else {
+      router.replace("/");
+    }
+  }, []);
 
   return (
     <>
       {pathname !== "/" && (
-        <nav className="bg-black3 lg:h-lvh md:w-[283px] w-[80px] transition-[width] duration-500 ease-in-out">
+        <nav className="bg-black3 h-full  md:w-[283px] w-[70px] transition-[width] duration-500 ease-in-out">
           <div className="flex flex-col items-center">
-            <Image src="/logoSM.png" width={186} height={157} alt="" />
+            <Image src={"/logoSM.png"} width={186} height={157} alt="" />
 
             <div className="relative w-[50px] h-[50px] md:-mt-10 transition-all duration-500 ease-in-out">
               <Image
@@ -221,21 +247,21 @@ function Siderbar() {
                 //   className="mr-2"
               />
 
-              <button className="absolute right-0 bottom-2">
+              {/* <button className="absolute right-0 bottom-2">
                 <Image
                   src="/editIcon.svg"
                   alt="editIcon"
                   width={11}
                   height={11}
                 />
-              </button>
+              </button> */}
             </div>
             {/* UserDetails */}
             <div
               className={`${roboto_400.className} mt-4 hidden opacity-0 md:block md:opacity-100 transition-all delay-200 duration-500 ease-in-out`}
             >
               <h4 className="font-normal text-base text-white uppercase">
-                EDDELS BETTE
+                {user?.profile.first_name} {user?.profile.last_name}
               </h4>
               <p className="text-grey_600 text-sm text-center uppercase mt-1">
                 ADMIN PANEL
@@ -244,16 +270,46 @@ function Siderbar() {
 
             {/* navigation */}
             <ul className="w-full mt-6">
-              {navLinks.map((link, index) => {
+              {(user?.profile.role !== "superadmin"
+                ? user?.profile.role !== "channel"
+                  ? FullSideLinks.splice(4, 0, "withdrawal")
+                  : clientsLinks
+                : navLinks
+              ).map((link, index) => {
                 return <NavLink key={index} nav={link} />;
               })}
             </ul>
 
-            <ul className="w-full mt-2 border-t border-grey_dark">
-              {otherNavs.map((link, index) => {
-                return <NavLink key={index} nav={link} className="" />;
-              })}
-            </ul>
+            {user?.profile.role === "superadmin" && (
+              <ul className="w-full mt-2 border-t border-grey_dark">
+                {otherNavs.map((link, index) => {
+                  return <NavLink key={index} nav={link} className="" />;
+                })}
+              </ul>
+            )}
+
+            <div>
+              <button
+                onClick={() => router.push("/cta")}
+                className={`${roboto_500.className} ${
+                  isActive
+                    ? "bg-input_grey text-grey_2"
+                    : "bg-red_500 text-white"
+                } hidden sm:inline rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
+              >
+                Call To Action
+              </button>
+              <button
+                onClick={() => router.push("/cta")}
+                className={`${roboto_500.className} ${
+                  isActive
+                    ? "bg-input_grey text-grey_2"
+                    : "bg-red_500 text-white"
+                } sm:hidden rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
+              >
+                CTA
+              </button>
+            </div>
           </div>
         </nav>
       )}

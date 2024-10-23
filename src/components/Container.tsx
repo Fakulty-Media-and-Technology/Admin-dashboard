@@ -15,9 +15,12 @@ const Container = ({ children }: Props) => {
   return (
     <>
       {step ? (
-        <section className="flex items-start w-full bg-black2">
+        <section
+          style={{ height: "100vh" }}
+          className="overflow-hidden flex items-start w-full bg-black2"
+        >
           <Siderbar />
-          <div className="flex-1">
+          <div className="overflow-y-auto h-full flex-1">
             <Header />
             <AccScreen />
           </div>

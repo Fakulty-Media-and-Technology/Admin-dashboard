@@ -1,54 +1,112 @@
 "use client";
 
 import {
+  addFeaturedContent,
+  searchFeaturedContent,
+  useSearchFeaturedContentMutation,
+} from "@/api/featureSlice";
+import {
+  AppButton,
   CustomInput,
   InputWithIcon,
   SelectInput,
   SelectInputForm,
 } from "@/components/AppLayout";
-import { F_Table, F_TableHeads } from "@/config/data/featured.data";
+import {
+  EmptyFeatured,
+  F_Table,
+  F_TableHeads,
+} from "@/config/data/featured.data";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
+import Lottie from "lottie-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-
+import { toast } from "react-toastify";
+import LoadingSpinner from "@/config/lottie/loading.json";
+import { IAddFeatured, ILiveContents } from "@/types/api/featured.types";
+import { getFutureDateInISO } from "@/utilities/dateUtilities";
 
 const page = () => {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
-  const [clientRole, setClientRole] = useState<string>("Select Client type");
-  const [userPic, setUserPic] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("Regular");
-  const [phoneNo, setPhoneNo] = useState<string>("");
-  const [gender, setGender] = useState<string>("Select your gender");
-  const [verifyUser, setVerifyUser] = useToggle();
-  const [subscriptionStatus, setSubscriptionStatus] = useToggle();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingX, setLoadingX] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [expiryHours, setExpiryHours] = useState<number>(0);
+  const [addFeatured, setAddFeatured] = useState<IAddFeatured>(EmptyFeatured);
+  const [contentImg, setContentImg] = useState({
+    potrait: "",
+    landscape: "",
+  });
+  const [searchContent, { isLoading }] = useSearchFeaturedContentMutation();
+  const [searchedContentList, setContentList] = useState<ILiveContents[]>([]);
+  const [selectedContent, setSelectedContent] = useState<ILiveContents | null>(
+    null
+  );
 
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files) setUserPic(files[0]);
+  function handleExpiryHours(e: React.ChangeEvent<HTMLInputElement>) {
+    const inputValue = e.target.value;
+    if (/^\d*$/.test(inputValue)) {
+      setExpiryHours(Number(inputValue));
+      const expTime = getFutureDateInISO(Number(inputValue));
+      setAddFeatured((prev) => ({
+        ...prev,
+        expiry: expTime,
+      }));
+    }
   }
 
-  const handleAccForm = (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     e.preventDefault();
-  };
+    setSearchTerm(e.target.value);
 
-  useEffect(() => {
-    if (userRole === "Client") {
-      setRole("client");
-    } else {
-      setRole("user");
+    if (e.target.value === "") setContentList([]);
+    try {
+      setLoading(true);
+      const res = await searchFeaturedContent(e.target.value);
+      console.log(res);
+      if ((res.status === 200 || res.status === 201) && res.data) {
+        // let nameList: string[] = [];
+        // res.data.data.lives_contents.map((x) => nameList.push(x.title));
+        setContentList(res.data.data.lives_contents);
+      }
+    } catch (error) {
+      toast("Opps! couldn't search for content!", { type: "error" });
+    } finally {
+      setLoading(false);
     }
-  }, [userRole]);
+  }
+
+  async function handleAddFeatured() {
+    try {
+      setLoadingX(true);
+      const res = await addFeaturedContent(addFeatured);
+      console.log(res);
+      if (res.ok && res.data) {
+        toast("Featured content added successfully", { type: "success" });
+        setAddFeatured(EmptyFeatured);
+        setSelectedContent(null);
+        setExpiryHours(0);
+      }
+    } catch (error) {
+      toast("Opps! add featured content", { type: "error" });
+    } finally {
+      setLoadingX(false);
+    }
+  }
 
   switch (stage) {
     case "main":
       return (
         <section
-          className={`${roboto_400.className} relative h-[92%] overflow-y-auto pl-5`}
+          className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
         >
           <div className="bg-black3 py-3 px-10">
-            <p className="font-normal text-lg text-grey_700">Home / Featured Content</p>
+            <p className="font-normal text-lg text-grey_700">
+              Home / Featured Content
+            </p>
           </div>
 
           <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
@@ -131,7 +189,6 @@ const page = () => {
                               </div>
                             </div>
                           </div>
-
                         </td>
                         <td className="text-center font-normal text-xs">
                           {tx.rating}
@@ -173,7 +230,7 @@ const page = () => {
             </div>
           </div>
 
-          <div className="w-100 bg-black2 relative top- z-50">
+          {/* <div className="bg-black2 relative z-50">
             <div
               className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
             >
@@ -200,88 +257,155 @@ const page = () => {
                 Next <span className="text-white mr-2">{`>>`}</span>
               </button>
             </div>
-          </div>
+          </div> */}
         </section>
       );
 
     case "add":
       return (
         <section
-          className={`${roboto_400.className} relative h-[92%] overflow-y-auto pl-5`}
+          className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
         >
-        <div className="bg-black3 py-3 px-10">
+          <div className="bg-black3 py-3 px-10">
             <p className="font-normal text-lg text-grey_700">
               Home / Featured Content {role === "user" ? "/ Add" : ""}
             </p>
           </div>
 
-
-          <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
-            <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
-              <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
-                <Image
-                  src="/searchIcon.svg"
-                  width={20}
-                  height={20}
-                  alt="search"
+          <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5 relative">
+            <div className="relative">
+              <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
+                <button className="rounded-l-[10px] bg-red_500 py-[14px] flex items-center justify-center w-[63px]">
+                  {loading ? (
+                    <Lottie
+                      animationData={LoadingSpinner}
+                      loop
+                      style={{ width: 20, height: 20 }}
+                    />
+                  ) : (
+                    <Image
+                      src="/searchIcon.svg"
+                      width={20}
+                      height={20}
+                      alt="search"
+                    />
+                  )}
+                </button>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  placeholder="Search Content to add"
+                  className="font-normal text-[17px] py-[11.5px] pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
+                  onChange={(e) => handleSearch(e)}
                 />
-              </button>
-              <input
-                type="text"
-                placeholder="Search Content to add"
-                className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-              />
+              </div>
+
+              {searchedContentList.length > 0 && (
+                <div className="absolute top-12 mt-2 w-full border border-grey_1 rounded">
+                  {searchedContentList.map((content, i) => {
+                    return (
+                      <div
+                        onClick={() => [
+                          setSelectedContent(content),
+                          setSearchTerm(""),
+                          setContentList([]),
+                          setAddFeatured((prev) => ({
+                            ...prev,
+                            id: content._id,
+                            type: content.type === "vod" ? "vod" : "event",
+                          })),
+                        ]}
+                        className="text-white bg-black2 p-3 w-full"
+                        key={i}
+                      >
+                        {content.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-             {/* add butn */}
-             <div
+            {/* add butn */}
+            <div
               onClick={() => setStage("main")}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
             </div>
+          </div>
+
+          <div className="mt-20 bg-black3 p-6 px-6 lg:px-12">
+            <div className="">
+              <label
+                htmlFor="firstName"
+                className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
+              >
+                TITLE
+              </label>
+              <CustomInput
+                type="text"
+                id="firstName"
+                readOnly
+                className="font-normal text-grey_500 text-sm py-2 mt-2 mb-5 border border-border_grey rounded-sm"
+                value={selectedContent?.title ?? ""}
+              />
+              <label
+                htmlFor="firstName"
+                className={`${roboto_500.className} font-medium text-white text-center ml-2.5 pt-4`}
+              >
+                EXPIRES IN{" "}
+                <span
+                  className={`${roboto_400.className} text-sm text-grey_800`}
+                >
+                  (Hours)
+                </span>
+              </label>
+              <CustomInput
+                type="text"
+                id="firstName"
+                value={expiryHours}
+                className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                onChange={(e) => handleExpiryHours(e)}
+              />
             </div>
 
-            <div className="feature">
-            <div className="Two-feature">
-            <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
-                    >
-                      TITLE
-                    </label>
-                    <CustomInput
-                      type="text"
-                      id="firstName"
-                      className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                    />
-            <label
-                      htmlFor="firstName"
-                      className={`${roboto_500.className} font-medium text-white text-center ml-2.5 pt-4`}
-                    >
-                      EXPIRES IN
-                    </label>
-                    <CustomInput
-                      type="text"
-                      id="firstName"
-                      className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                    />
-            </div>
+            {(contentImg.landscape !== "" || contentImg.potrait !== "") && (
+              <div className="mt-8 min-h-[436px] flex">
+                <Image
+                  src={contentImg.potrait}
+                  alt=""
+                  width={347}
+                  height={436}
+                  className="w-[347px] h-[436px] mr-2"
+                />
+                <Image
+                  src={contentImg.landscape}
+                  alt=""
+                  width={347}
+                  height={436}
+                  className="max-w-[700px] h-[436px] flex-1 object-cover"
+                />
+              </div>
+            )}
 
-            <div className="mt-4 flex">
-            <img src="/tablepic/swallowtwo.png" alt="" className="swallowone"/>
-            <img src="/tablepic/swallowone.png" alt="" className="swallowtwo" />
+            {/* savebutton */}
+            <div className="mt-10">
+              <AppButton
+                disabled={
+                  addFeatured.expiry === "" ||
+                  addFeatured.id === "" ||
+                  addFeatured.type === ""
+                }
+                title="SAVE"
+                className="py-2 px-14 text-xl"
+                isLoading={loadingX}
+                onClick={handleAddFeatured}
+              />
             </div>
-
-
-          {/* savebutton */}
-          <button><h1
-          className="save">
-            save</h1></button>
-            </div>
-          </section>
+          </div>
+        </section>
       );
   }
 };
 
 export default page;
-

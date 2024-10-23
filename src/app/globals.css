@@ -8,6 +8,71 @@
   }
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #181818 inset !important;
+  -webkit-text-fill-color: #c4c4c4 !important;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.check {
+  height: 80px !important;
+}
+
+/* html,
+body {
+  height: 100% !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* border: 1px solid green; */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* For horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #181818;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 0.5px solid #555;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+input[type="file"] {
+  font-family: "Roboto", sans-serif;
+  font-weight: normal;
+  font-size: 12px;
+  color: #c4c4c4;
+
+  /* font-style: oblique; */
+}
+input[type="file"]::file-selector-button {
+  display: none;
+  border: 1px solid white;
+  background-color: #c4c4c4;
+  border-radius: 3px;
+  padding: 0 5;
+  margin-right: 8px;
+}
+
 .table {
   min-width: 700px !important;
 }
@@ -17,7 +82,11 @@
 }
 
 .box {
-  height: calc(100vh - 280px);
+  /* height: calc(100vh - 280px); */
+}
+
+.textarea {
+  resize: none;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -25,34 +94,34 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #fff;
   border-radius: 4px;
 }
-.feature{
+.feature {
   height: 762px;
   width: 1080px;
   background: #212121;
   margin-top: 40px;
 }
-.Two-feature{
+.Two-feature {
   margin-top: 10px;
   width: 1020px;
   margin-left: 15px;
   padding-top: 20px;
   align-items: center;
 }
-.swallowone{
+.swallowone {
   height: 436px;
   width: 347px;
   margin-top: 20px;
   margin-left: 15px;
 }
 
-.swallowtwo{
-  height:436px;
+.swallowtwo {
+  height: 436px;
   width: 570px;
   margin-top: 20px;
   margin-left: 10px;
 }
-.save{
-  background: #EE2726;
+.save {
+  background: #ee2726;
   padding-top: 20px;
   padding-right: 40px;
   padding-bottom: 20px;
@@ -62,19 +131,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: white;
   text-transform: capitalize;
 }
-.total{
+.total {
   display: flex;
   align-items: center;
   gap: 100px;
   margin-top: 30px;
   margin-left: 40px;
 }
-.total-2{
+.total-2 {
   margin-left: 40px;
   display: flex;
   gap: 100px;
 }
-.Input-container{
+.Input-container {
   width: 500px;
   margin: 20px auto;
   padding-top: 10px;

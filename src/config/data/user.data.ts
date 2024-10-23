@@ -1,3 +1,6 @@
+import { IEditUser } from "@/types/api/profile.types";
+import { IUserExample } from "@/types/api/users.types";
+
 export const U_Table = [
   {
     name: "Mum's Soldier",
@@ -74,3 +77,25 @@ export const U_TableHeads = [
   "verified",
   "options",
 ];
+
+export const Empty_User: IEditUser = {
+  country_code: "",
+  email: "",
+  first_name: "",
+  last_name: "",
+  mobile: "",
+  password: "",
+  photo: {
+    Bucket: "",
+    Key: "",
+  },
+};
+
+export const Empty_UserRP: IUserExample = {
+  email: "",
+  fullname: "",
+  joined: "",
+  subs: "",
+  substatus: "",
+  verified: "",
+};

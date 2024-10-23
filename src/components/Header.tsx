@@ -1,24 +1,42 @@
 "use client";
 
 import { roboto_400 } from "@/config/fonts";
-import { useAppDispatch } from "@/hooks/reduxHook";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
 import useToggle from "@/hooks/useToggle";
-import { setShowAcc } from "@/store/slices/usersSlice";
+import { selectUserProfile, setShowAcc } from "@/store/slices/usersSlice";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { destroyCookie } from "nookies";
 import React, { useState } from "react";
 
 const userOptions = ["account", "reports", "light mode", "log out"];
 
 function Header() {
+  const user = useAppSelector(selectUserProfile);
   const pathname = usePathname();
   const [activeMode, setActiveMode] = useState<boolean>(false);
   const [showOptions, setShowOptions] = useToggle();
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  console.log(user, "user");
+  const isChannel = user?.profile.role === "channel" ?? false;
+
+  console.log(pathname);
 
   function handleOption(query: string) {
     if (query === "account") {
-      dispatch(setShowAcc(true));
+      // dispatch(setShowAcc(true));
+      router.push("/account");
+      setShowOptions();
+    }
+    console.log(query);
+
+    if (query === "log out") {
+      localStorage.removeItem("auth_token");
+      destroyCookie(null, "auth_token", {
+        path: "/",
+      });
+      router.push("/");
       setShowOptions();
     }
   }
@@ -26,11 +44,13 @@ function Header() {
   return (
     <>
       {pathname !== "/" && (
-        <header className="relative pt-7 pb-4">
+        <header className="relative pt-7 pb-4 h-[80px]">
           <div className="flex items-center justify-end gap-x-6 pr-6">
-            <button>
-              <Image src="/broadcast.svg" alt="" width={20} height={20} />
-            </button>
+            {!isChannel && (
+              <button>
+                <Image src="/broadcast.svg" alt="" width={20} height={20} />
+              </button>
+            )}
             <button>
               <Image src="/notification.svg" alt="" width={24} height={24} />
             </button>
@@ -42,7 +62,8 @@ function Header() {
               <span
                 className={`${roboto_400.className} font-normal text-lg text-white mr-2`}
               >
-                EB
+                {user?.profile.first_name.charAt(0).toUpperCase()}
+                {user?.profile.last_name.charAt(0).toUpperCase()}
               </span>
               <button onClick={setShowOptions}>
                 <Image

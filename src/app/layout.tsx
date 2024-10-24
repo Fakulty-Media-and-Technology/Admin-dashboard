@@ -36,7 +36,7 @@ export default function RootLayout({
           <div className="bg-black2 overflow-y-auto flex-1">
             {/* header */}
             <Header />
-            <div className="h-[89%]">{children}</div>
+            <div className="h-[calc(100%-80px)]">{children}</div>
           </div>
           <ToastContainer
             autoClose={5000}

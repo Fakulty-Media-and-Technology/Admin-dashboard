@@ -74,9 +74,8 @@ export const SelectInput = ({
     <div className="relative">
       <div className="flex items-center border border-input_grey rounded w-full py-[14px] px-5 ">
         <p
-          className={`${textStyles ? textStyles : "text-input_grey"} ${
-            roboto_400.className
-          } flex-1 font-normal text-base`}
+          className={`${textStyles ? textStyles : "text-input_grey"} ${roboto_400.className
+            } flex-1 font-normal text-base`}
         >
           {placeholder}
         </p>
@@ -99,9 +98,8 @@ export const SelectInput = ({
             return (
               <li
                 onClick={() => [setType(x), setShowSelect(!showSelect)]}
-                className={`${roboto_400.className} ${
-                  active && "bg-black/50"
-                } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
+                className={`${roboto_400.className} ${active && "bg-black/50"
+                  } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
                 key={index}
               >
                 {x}
@@ -151,15 +149,14 @@ export const SelectInputForm = ({
       </div>
 
       {showSelect && (
-        <ul className="absolute bg-black1 w-full py-2 space-y-2">
+        <ul className="absolute bg-black1 w-full z-[99999] py-2 space-y-2">
           {selectData.map((x, index) => {
             const active = placeholder === x;
             return (
               <li
                 onClick={() => [setType(x), setShowSelect(!showSelect)]}
-                className={`${roboto_400.className} ${
-                  active && "bg-black/50"
-                } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
+                className={`${roboto_400.className} ${active && "bg-black/50"
+                  } hover:bg-gray-800 py-2 px-3 font-normal text-sm text-white cursor-pointer`}
                 key={index}
               >
                 {x}
@@ -192,10 +189,9 @@ export const AppButton = ({
       {...props}
       disabled={disabled}
       className={twMerge(
-        `${
-          disabled || isLoading
-            ? "bg-gray-500 cursor-not-allowed"
-            : bgColor
+        `${disabled || isLoading
+          ? "bg-gray-500 cursor-not-allowed"
+          : bgColor
             ? bgColor
             : "bg-red"
         } flex flex-row items-center justify-center rounded py-[12px] font-normal text-lg text-white  ${manrope_400}`,

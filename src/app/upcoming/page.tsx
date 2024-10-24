@@ -301,7 +301,7 @@ const page = () => {
           </div>
 
           {/* Implementing inside element */}
-          <div className="border bg-black3 mt-[40px] px-5 md:px-10 lg:px-14 flex flex-col  md:flex-row items-start  md:gap-x-10 lg:gap-x-16 ">
+          <div className="bg-black3 mt-[40px] px-5 md:px-10 lg:px-14 flex flex-col  md:flex-row items-start  md:gap-x-10 lg:gap-x-16 ">
             <div className="flex-1 ">
               <div className="flex-1">
                 <div className="h-[68px] w-full md:w-[364px] mt-10 items-center">

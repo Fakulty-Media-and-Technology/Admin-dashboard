@@ -23,9 +23,7 @@ import { ImageProps } from "../plans/page";
 const page = () => {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
-  const [userPic, setUserPic] = useState<File | null>(null);
-  const [folderpic, setFolderPic] = useState<File | null>(null);
-  const [userRole, setUserRole] = useState<string>("Regular");
+
   const [searchParams, setSearchParams] = useState<string>("");
   const [image, setImage] = useState<ImageProps | null>(null);
   const [coverImage, setCoverImage] = useState<ImageProps | null>(null);
@@ -90,14 +88,7 @@ const page = () => {
       }
     }
   }
-  function handleInputs(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files) setFolderPic(files[0]);
-  }
 
-  const handleAccForm = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-  };
 
   useEffect(() => {
     handleUpcomingList(upcomingData);

@@ -26,6 +26,7 @@ function page() {
   const [tab, setTab] = useState<string>('category');
   const [categoryTable, setTable] = useState<Table[]>([])
   const [categoryTableFiltered, setFilteredTable] = useState<Table[]>([])
+  const [searchParams, setSearchParams] = useState<string>("");
   const {
     data: categories,
     refetch,
@@ -93,6 +94,17 @@ function page() {
     }
   }
 
+  function handleSearchfilter(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchParams(e.target.value);
+
+    setFilteredTable(
+      categoryTable.filter((x) => x.title.includes(searchParams))
+    );
+    if (e.target.value === "") {
+      setFilteredTable(categoryTable);
+    }
+  }
+
   function handleCategoryList(data: ICastResponse | ICategoryResponse | undefined) {
     if (!data) return;
     const categoryList = transformEventData(data.data);
@@ -128,10 +140,10 @@ function page() {
         </button>
         <input
           type="text"
-          placeholder="Search Upcoming"
+          placeholder={`Search ${tab}`}
           className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-        // value={searchParams}
-        // onChange={(e) => handleSearchfilter(e)}
+          value={searchParams}
+          onChange={(e) => handleSearchfilter(e)}
         />
       </div>
 

@@ -94,6 +94,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #fff;
   border-radius: 4px;
 }
+
+input~.checkbox-container{
+  background-color: 'transparent';
+}
 .feature {
   height: 762px;
   width: 1080px;

@@ -131,7 +131,7 @@ const page = () => {
     setUsersListFiltered(filtered);
   }
 
-  async function handleAddUser() {}
+  async function handleAddUser() { }
 
   async function handleDelete(id: string) {
     setUsersList(usersList.filter((user) => user._id !== id));
@@ -317,34 +317,7 @@ const page = () => {
           </div>
 
           {/* PAGINATION..................... */}
-          {/* <div className="w-full bg-black2 absolute bottom-6 z-50">
-            <div
-              className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
-            >
-              <button
-                className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_500`}
-              >
-                <span className="text-white mr-2">{`<<`}</span>
-                Previous
-              </button>
-              <div className="text-grey_500 text-[17px] font-medium space-x-1.5">
-                <span className="text-red">1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span className="ml-2 -mr-2">.....</span>
-              </div>
-              <button
-                className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_500`}
-              >
-                Next <span className="text-white mr-2">{`>>`}</span>
-              </button>
-            </div>
-          </div> */}
+
         </section>
       );
 
@@ -635,7 +608,7 @@ const page = () => {
                           placeholder="Nigeria"
                           className="font-normal text-sm py-2 mt-2 border text-grey_500 placeholder:text-input_grey border-border_grey rounded-sm"
                           readOnly
-                          // value={}
+                        // value={}
                         />
                       </div>
                     </div>
@@ -651,31 +624,28 @@ const page = () => {
                     {isView ? "Verified status" : "Verify User"} *
                   </p>
                   <div
-                    className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
-                      (
+                    className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${(
                         isView
                           ? selectedUser.verified.toLowerCase() === "yes"
                           : verifyUser
                       )
                         ? `${isView ? "bg-[#00E3A373]" : "bg-[#FF131373]"}`
                         : "bg-[#BCBDBD73]"
-                    }`}
+                      }`}
                   >
                     <div
                       onClick={() =>
                         isView ? console.log("nothing") : setVerifyUser
                       }
-                      className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${
-                        (
+                      className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${(
                           isView
                             ? selectedUser.verified.toLowerCase() === "yes"
                             : verifyUser
                         )
-                          ? `translate-x-5 ${
-                              isView ? "bg-[#00E3A3]" : "bg-red"
-                            }`
+                          ? `translate-x-5 ${isView ? "bg-[#00E3A3]" : "bg-red"
+                          }`
                           : "-translate-x-0 bg-[#BCBDBD]"
-                      } `}
+                        } `}
                     />
                   </div>
                 </div>
@@ -688,17 +658,15 @@ const page = () => {
                       Make admin *
                     </p>
                     <div
-                      className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
-                        subscriptionStatus ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
-                      }`}
+                      className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${subscriptionStatus ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
+                        }`}
                     >
                       <div
                         onClick={setSubscriptionStatus}
-                        className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${
-                          subscriptionStatus
+                        className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${subscriptionStatus
                             ? "bg-[#00E3A3]"
                             : "-translate-x-0 bg-[#BCBDBD]"
-                        } `}
+                          } `}
                       />
                     </div>
                   </div>

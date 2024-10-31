@@ -149,7 +149,7 @@ const page = () => {
 
 
         <div className="w-full overflow-x-auto">
-          {suggestionList.map((suggestion, i) => {
+          {suggestionFilteredList.map((suggestion, i) => {
             if (suggestion.user.length === 0) return;
             const isChecked = selectedIds.includes(suggestion._id);
 

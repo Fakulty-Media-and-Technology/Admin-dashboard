@@ -16,20 +16,23 @@ import React, { useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import Lottie from "lottie-react";
 import ReactPlayer from "react-player";
+import SuperAdminComp from "./SuperAdminComp";
 
 const page = () => {
   const user = useAppSelector(selectUserProfile);
   const isSuperAdmin = user?.profile?.role === "superadmin";
+  const isClient = user?.profile?.role === "channel" || user?.profile?.role === "tvshow" || user?.profile?.role === "event" || user?.profile?.role === "podcast";
 
   return (
-    <section className={`${roboto_400.className} overflow-y-auto pl-5`}>
+    <section className={`${roboto_400.className} h-full overflow-y-auto pl-5`}>
       <div className="bg-black3 py-3 px-10">
         <p className="font-normal text-lg text-grey_700">
           Home / {isSuperAdmin ? "Sub" : "create"}
         </p>
       </div>
 
-      {!isSuperAdmin && <ClientsComponent />}
+      {isSuperAdmin && <SuperAdminComp />}
+      {isClient && <ClientsComponent />}
     </section>
   );
 };
@@ -56,11 +59,11 @@ export const ClientsComponent = () => {
   );
   const [catText, setCatText] = useState("");
   const [items, setItems] = useState<string[]>([]);
-  const [details, setDetails] = useState(""); // State to store the textarea content
   const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
   const [eventHours, setEventHours] = useState<string>("0");
+  const [details, setDetails] = useState(""); // State to store the textarea content
   const maxLength = 200;
   const isEVENT = user?.profile?.role === "event";
   const isTVSHOW = user?.profile?.role === "tvshow";
@@ -347,17 +350,15 @@ export const ClientsComponent = () => {
                   Active
                 </span>
                 <div
-                  className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
-                    isActive ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
-                  }`}
+                  className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${isActive ? "bg-[#00E3A373]" : "bg-[#BCBDBD73]"
+                    }`}
                 >
                   <div
                     onClick={() => setActive(!isActive)}
-                    className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${
-                      isActive
-                        ? "translate-x-5 bg-green_400"
-                        : "-translate-x-0 bg-[#BCBDBD]"
-                    } `}
+                    className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isActive
+                      ? "translate-x-5 bg-green_400"
+                      : "-translate-x-0 bg-[#BCBDBD]"
+                      } `}
                   />
                 </div>
               </div>
@@ -522,23 +523,6 @@ export const ClientsComponent = () => {
                 <div className="h-[165px] flex flex-row items-end mt-3 justify-center gap-x-3">
                   {videoTrailer && (
                     <>
-                      {/* <Image
-                        id="upload"
-                        src={coverImage.url}
-                        width={232}
-                        height={133}
-                        alt="uploaded"
-                        className="rounded-[10px]"
-                      /> */}
-
-                      {/* <video
-                        controls={false}
-                        width="232"
-                        height="133"
-                        className="rounded-[10px] w-[232px] h-[133px]"
-                      >
-                        <source src={videoTrailer.url} type="video/mp4" />
-                      </video> */}
                       <div className="rounded-[10px] w-[292px] h-[159px] relative overflow-hidden">
                         <div
                           style={{ zIndex: isPlaying ? 20 : 0 }}
@@ -554,7 +538,7 @@ export const ClientsComponent = () => {
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                            // onReady={() => setIsPlayerReady(true)}
+                          // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
 

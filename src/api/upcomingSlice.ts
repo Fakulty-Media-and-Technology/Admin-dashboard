@@ -1,9 +1,6 @@
-import {
-  IAddFeatured,
-  IFeaturedContentResponse,
-} from "@/types/api/featured.types";
+
 import { apiSlice } from "./apiSlice";
-import { apiCall, createAuth } from "./auth.api";
+import { apiCall } from "./auth.api";
 import { IUpcomingQuery, IUpcomingResponse } from "@/types/api/upcoming.types";
 
 export const upcomingApiSlice = apiSlice.injectEndpoints({

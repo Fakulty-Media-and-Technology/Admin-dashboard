@@ -33,7 +33,7 @@ export default function RootLayout({
         <ProviderContainer>
           {/* SideBar */}
           <Sidebar />
-          <div className="bg-black2 overflow-y-auto flex-1">
+          <div className="bg-black2 overflow-y-auto relative flex-1">
             {/* header */}
             <Header />
             <div className="h-[calc(100%-80px)]">{children}</div>

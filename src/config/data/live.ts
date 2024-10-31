@@ -8,8 +8,6 @@ export const LIVE_TH = [
 ]
 
 
-
-
 export const CLIENT_TH = [
     'Name',
     'Title',
@@ -19,3 +17,24 @@ export const CLIENT_TH = [
     'Verified',
     'Options'
 ]
+
+
+export const DEPOSITS = [
+    'Title',
+    'Amount',
+    'Deposit DATE',
+    'Status',
+    'Options'
+]
+
+
+export const WITHDRAWALS = [
+    'Title',
+    'Amount',
+    'Date Requesteed',
+    'Date Processed',
+    'Withdrawal Details',
+    'Status',
+    'Options'
+]
+

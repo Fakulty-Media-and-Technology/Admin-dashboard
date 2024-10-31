@@ -16,3 +16,23 @@ export interface IClientsData {
     verified: boolean;
     createdat: string
 }
+
+
+export interface IClientCreate {
+    first_name: string;
+    last_name: string;
+    email: string;
+    password: string;
+    cpassword: string;
+    country_code: string;
+    mobile: string;
+    verified: boolean;
+    client_type: string;
+    photo?: IPhoto
+}
+
+
+export interface IPhoto {
+    Bucket: string;
+    Key: string;
+}

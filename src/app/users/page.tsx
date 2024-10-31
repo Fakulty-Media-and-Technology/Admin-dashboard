@@ -30,11 +30,11 @@ const page = () => {
   const [stage, setStage] = useState<string>("main");
   const [userPic, setUserPic] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("Regular");
-  const [isView, setIsView] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [phoneNo, setPhoneNo] = useState<string>("");
   const [gender, setGender] = useState<string>("Select your gender");
   const [verifyUser, setVerifyUser] = useToggle();
+  const [isView, setIsView] = useState<boolean>(false);
   const [subscriptionStatus, setSubscriptionStatus] = useToggle();
   const [usersList, setUsersList] = useState<IUserExample[]>([]);
   const [usersListFiltered, setUsersListFiltered] = useState<IUserExample[]>(
@@ -625,26 +625,26 @@ const page = () => {
                   </p>
                   <div
                     className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${(
-                        isView
-                          ? selectedUser.verified.toLowerCase() === "yes"
-                          : verifyUser
-                      )
-                        ? `${isView ? "bg-[#00E3A373]" : "bg-[#FF131373]"}`
-                        : "bg-[#BCBDBD73]"
+                      isView
+                        ? selectedUser.verified.toLowerCase() === "yes"
+                        : verifyUser
+                    )
+                      ? `${isView ? "bg-[#00E3A373]" : "bg-[#FF131373]"}`
+                      : "bg-[#BCBDBD73]"
                       }`}
                   >
                     <div
                       onClick={() =>
-                        isView ? console.log("nothing") : setVerifyUser
+                        isView ? console.log("nothing") : setVerifyUser()
                       }
                       className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${(
-                          isView
-                            ? selectedUser.verified.toLowerCase() === "yes"
-                            : verifyUser
-                        )
-                          ? `translate-x-5 ${isView ? "bg-[#00E3A3]" : "bg-red"
-                          }`
-                          : "-translate-x-0 bg-[#BCBDBD]"
+                        isView
+                          ? selectedUser.verified.toLowerCase() === "yes"
+                          : verifyUser
+                      )
+                        ? `translate-x-5 ${isView ? "bg-[#00E3A3]" : "bg-red"
+                        }`
+                        : "-translate-x-0 bg-[#BCBDBD]"
                         } `}
                     />
                   </div>
@@ -664,8 +664,8 @@ const page = () => {
                       <div
                         onClick={setSubscriptionStatus}
                         className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${subscriptionStatus
-                            ? "bg-[#00E3A3]"
-                            : "-translate-x-0 bg-[#BCBDBD]"
+                          ? "bg-[#00E3A3]"
+                          : "-translate-x-0 bg-[#BCBDBD]"
                           } `}
                       />
                     </div>

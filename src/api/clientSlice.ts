@@ -2,7 +2,8 @@
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IPagination } from "@/types/api/suggestion.types";
-import { IClientsResponse } from "@/types/api/clients.types";
+import { IClientCreate, IClientsResponse } from "@/types/api/clients.types";
+import { IGeneric } from "@/types/api/auth.types";
 
 export const clientsApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -31,9 +32,9 @@ export const getAllClients = async (data: IPagination) =>
     );
 
 
-// export const addCategoryEnums = async (data: IAddCategory, path: string) =>
-//   await apiCall<IGeneric>((baseApi) =>
-//     baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data)
-//   );
+export const createCLientAcc = async (data: IClientCreate) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.post<IGeneric>(`/superadmin/create-clients`, data)
+    );
 
 

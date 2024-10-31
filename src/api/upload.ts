@@ -1,11 +1,9 @@
+import { IUploadImage } from "@/types/api/upload.types";
+import { apiCall } from "./auth.api";
+
 export const uploadImage = async (data: FormData, token: string) =>
-  await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/superadmin/media/upload-image`,
-    {
-      method: "POST",
-      headers: {
-        "superadmin-auth": `${token}`,
-      },
-      body: data,
-    }
+  await apiCall<IUploadImage>(baseApi => baseApi.post<IUploadImage>(
+    `/superadmin/media/upload-image`,
+    data
+  )
   );

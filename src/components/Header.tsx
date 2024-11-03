@@ -8,6 +8,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { destroyCookie } from "nookies";
 import React, { useState } from "react";
+import { motion } from 'framer-motion';
+
 
 const userOptions = ["account", "reports", "light mode", "log out"];
 
@@ -18,10 +20,8 @@ function Header() {
   const [showOptions, setShowOptions] = useToggle();
   const dispatch = useAppDispatch();
   const router = useRouter();
-  console.log(user, "user");
   const isChannel = user?.profile.role === "channel" ?? false;
 
-  console.log(pathname);
 
   function handleOption(query: string) {
     if (query === "account") {
@@ -29,7 +29,12 @@ function Header() {
       router.push("/account");
       setShowOptions();
     }
-    console.log(query);
+    if (query === "reports") {
+      // dispatch(setShowAcc(true));
+      router.push("/report");
+      setShowOptions();
+    }
+    // console.log(query);
 
     if (query === "log out") {
       localStorage.removeItem("auth_token");
@@ -71,52 +76,55 @@ function Header() {
                   width={17}
                   height={12}
                   alt=""
-                  className={`transition-all duration-500 ease-in-out ${
-                    showOptions ? "rotate-180" : ""
-                  }`}
+                  className={`transition-all duration-500 ease-in-out ${showOptions ? "rotate-180" : ""
+                    }`}
                 />
               </button>
             </div>
           </div>
 
-          {showOptions && (
-            <div className="w-[215px] h-[230px] bg-white pt-8 pl-4 space-y-4 absolute right-7 mt-2 z-50">
-              {userOptions.map((options, index) => {
-                return (
-                  <div
-                    onClick={() => handleOption(options)}
-                    key={index}
-                    className="flex items-center gap-x-[18px] cursor-pointer"
-                  >
-                    {options !== "light mode" ? (
-                      <Image
-                        src={`/${options}.svg`}
-                        alt=""
-                        width={22}
-                        height={22}
-                      />
-                    ) : (
-                      <div
-                        onClick={() => setActiveMode(!activeMode)}
-                        className="w-[25px] h-[13px] bg-black3 rounded-[24px]"
-                      >
-                        <div
-                          className={`w-[8px] h-[8px] mt-[2.5px] ml-[3px] transition-all duration-500 ease-in-out rounded-full bg-white ${
-                            activeMode ? "translate-x-3" : "translate-x-0"
-                          }`}
-                        />
-                      </div>
-                    )}
-                    <span
-                      className={`${roboto_400.className}  capitalize font-normal text-lg text-black3`}
+          {/* {showOptions && ( */}
+          <motion.div
+            initial={{ translateX: 250, display: 'none' }}
+            animate={{ display: showOptions ? 'block' : 'none', translateX: showOptions ? 15 : 250 }}
+            transition={{ duration: .5 }}
+
+            className="w-[215px] h-[230px] rounded bg-white pt-8 pl-4 space-y-4 absolute right-7 mt-2 z-50">
+            {userOptions.map((options, index) => {
+              return (
+                <div
+                  onClick={() => handleOption(options)}
+                  key={index}
+                  className="flex items-center gap-x-[18px] cursor-pointer"
+                >
+                  {options !== "light mode" ? (
+                    <Image
+                      src={`/${options}.svg`}
+                      alt=""
+                      width={22}
+                      height={22}
+                    />
+                  ) : (
+                    <div
+                      onClick={() => setActiveMode(!activeMode)}
+                      className="w-[25px] h-[13px] bg-black3 rounded-[24px]"
                     >
-                      {options}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      <div
+                        className={`w-[8px] h-[8px] mt-[2.5px] ml-[3px] transition-all duration-500 ease-in-out rounded-full bg-white ${activeMode ? "translate-x-3" : "translate-x-0"
+                          }`}
+                      />
+                    </div>
+                  )}
+                  <span
+                    className={`${roboto_400.className}  capitalize font-normal text-lg text-black3`}
+                  >
+                    {options}
+                  </span>
+                </div>
+              );
+            })}
+          </motion.div>
+          {/* )} */}
         </header>
       )}
     </>

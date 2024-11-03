@@ -522,6 +522,7 @@ function SuperAdminComp() {
                             <input
                               type="file"
                               id="file"
+                              accept="image/png, image/jpeg, image/jpg"
                               onChange={(e) => handleInput(e, "cover")}
                               className="absolute z-20 opacity-0"
                             />

@@ -26,3 +26,11 @@ export function getFutureDateInISO(hours: number) {
 
   return currentDate.toISOString(); // Return the ISO string representation of the new date and time
 }
+
+
+export function isExpired(expiry_date: string): boolean {
+  const currentDate = new Date();
+  const expiryDate = new Date(expiry_date);
+
+  return currentDate > expiryDate;
+}

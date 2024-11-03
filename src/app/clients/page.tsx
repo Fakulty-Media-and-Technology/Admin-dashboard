@@ -625,7 +625,6 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                     />
                   </div>
                 </div>
-
               }
             </div>
 

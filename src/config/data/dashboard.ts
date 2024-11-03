@@ -87,3 +87,19 @@ export const TableHeads_Dashboard = [
   "top music videos",
   "top channels",
 ];
+
+
+export const IAGEData = [
+  {
+    name: '18 - 27',
+    value: '50'
+  },
+  {
+    name: '28 - 40',
+    value: '35'
+  },
+  {
+    name: '41 - 70',
+    value: '15'
+  },
+]

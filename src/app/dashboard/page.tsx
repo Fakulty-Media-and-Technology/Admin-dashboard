@@ -34,7 +34,7 @@ import {
 } from "@/api/dashboard";
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
-interface OverviewProps {
+export interface OverviewProps {
   name: string;
   value: string;
 }
@@ -62,6 +62,10 @@ function page() {
   const [mute, setMute] = useState<boolean>(false);
   const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false);
   const isSuperAdmin = user?.profile.role === "superadmin";
+  const isEVENT = user?.profile?.role === "event";
+  const isTVSHOW = user?.profile?.role === "tvshow";
+  const isChannel = user?.profile?.role === "channel";
+  const isPodcast = user?.profile?.role === "podcast";
   const [clientOverview, setClientOverview] = useState<OverviewProps[]>([
     ...overviewPOints,
   ]);
@@ -137,9 +141,8 @@ function page() {
               >
                 <div
                   onClick={() => setCurrentId(`${i}${x}`)}
-                  className={`${
-                    active ? "border-t-[5px] border-red_500" : ""
-                  } min-w-[170px] h-[100px] bg-black2 flex flex-col items-center justify-center`}
+                  className={`${active ? "border-t-[5px] border-red_500" : ""
+                    } min-w-[170px] h-[100px] bg-black2 flex flex-col items-center justify-center`}
                 >
                   <p
                     className={`${roboto_400.className} font-normal text-sm text-white `}
@@ -166,7 +169,7 @@ function page() {
         </div>
       </div>
 
-      {isSuperAdmin ? (
+      {isSuperAdmin && (
         <>
           <div className="px-10 bg-black3 py-12 pb-9 mt-8">
             <div className="flex sm:flex-row flex-col items-start justify-between gap-x-5 flex-wrap">
@@ -179,9 +182,8 @@ function page() {
                   >
                     <div
                       onClick={() => setCurrentId2(`${i}${x}`)}
-                      className={`${
-                        active ? "border-t-[5px] border-red_500" : ""
-                      } min-w-[250px] h-[100px] bg-black2 flex flex-col items-center justify-center`}
+                      className={`${active ? "border-t-[5px] border-red_500" : ""
+                        } min-w-[250px] h-[100px] bg-black2 flex flex-col items-center justify-center`}
                     >
                       <p
                         className={`${roboto_400.className} font-normal text-sm text-white `}
@@ -281,7 +283,10 @@ function page() {
             </div>
           </div>
         </>
-      ) : (
+      )}
+
+      {(isEVENT || isPodcast || isChannel || isTVSHOW) &&
+
         <div className="px-10 h-[65%] min-h-[370px] overflow-hidden bg-black3 py-12 pb-9 ">
           <div className="h-full max-w-full lg:w-[65.5%] relative mx-auto">
             <div
@@ -392,8 +397,7 @@ function page() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        </div>}
     </section>
   );
 }

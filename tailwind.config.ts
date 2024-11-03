@@ -35,6 +35,7 @@ const config: Config = {
         red_500: "#CD201F",
         blue_200: "#379AE6",
         green_400: "#29A87C",
+        grey_3: '#D9D9D9'
       },
       fontFamily: {
         // manrope_400: [inter2.className],

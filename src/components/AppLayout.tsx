@@ -59,11 +59,13 @@ interface SelectProps extends ComponentProps<"div"> {
   selectData: string[];
   setType: React.Dispatch<React.SetStateAction<string>>;
   textStyles?: string;
+  categoryListing?: JSX.Element
 }
 
 export const SelectInput = ({
   className,
   placeholder,
+  categoryListing,
   selectData,
   setType,
   textStyles,
@@ -73,12 +75,12 @@ export const SelectInput = ({
   return (
     <div className="relative">
       <div className="flex items-center border border-input_grey rounded w-full py-[14px] px-5 ">
-        <p
+        {categoryListing ? categoryListing : <p
           className={`${textStyles ? textStyles : "text-input_grey"} ${roboto_400.className
             } flex-1 font-normal text-base`}
         >
           {placeholder}
-        </p>
+        </p>}
 
         <button onClick={() => setShowSelect(!showSelect)}>
           <Image
@@ -118,6 +120,7 @@ export const SelectInputForm = ({
   selectData,
   textStyles,
   setType,
+  categoryListing,
   ...props
 }: SelectProps) => {
   const [showSelect, setShowSelect] = useToggle();
@@ -128,14 +131,12 @@ export const SelectInputForm = ({
           `flex items-center border border-input_grey rounded w-full py-[8px] px-5 ${className}`
         )}
       >
-        <p
-          className={twMerge(
-            `${roboto_400.className} flex-1 font-normal text-base text-input_grey`,
-            textStyles
-          )}
+        {categoryListing ? categoryListing : <p
+          className={`${textStyles ? textStyles : "text-input_grey"} ${roboto_400.className
+            } flex-1 font-normal text-base`}
         >
           {placeholder}
-        </p>
+        </p>}
 
         <button onClick={() => setShowSelect(!showSelect)}>
           <Image

@@ -15,8 +15,8 @@ import { toast } from "react-toastify";
 
 const page = () => {
   const [giftCardList, setList] = useState<IGiftCardData[]>([])
-  const [searchParams, setSearchParams] = useState<string>("");
   const [giftCardFilteredList, setFilteredList] = useState<IGiftCardData[]>([])
+  const [searchParams, setSearchParams] = useState<string>("");
   const [isAdd, setShowModal] = useState<boolean>();
   const [loading, setLoading] = useState<boolean>(false)
   const [pg, setPg] = useState<number>(1)

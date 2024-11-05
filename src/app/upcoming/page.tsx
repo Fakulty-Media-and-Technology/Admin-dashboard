@@ -18,9 +18,13 @@ import {
 import { formatAmount } from "@/utilities/formatAmount";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { ImageProps } from "../plans/page";
+import { ImageProps } from "../plans/ClientComponent";
 
-const page = () => {
+
+export const runtime = "edge";
+
+
+export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
 
@@ -485,4 +489,3 @@ const page = () => {
   }
 };
 
-export default page;

@@ -9,15 +9,16 @@ import { truncateText } from "@/utilities/textUtils";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
-import { ImageProps } from "../plans/page";
 import { ModalComponent } from "./ModalComp";
 import { CURRENCY_TH } from "@/config/data/setting";
+import { ImageProps } from "../plans/ClientComponent";
 
 const TABS = ['General', 'App settings', 'Currency', 'Email', 'API']
 
+export const runtime = "edge";
 
 
-const page = () => {
+export default function page() {
   const [tab, setTab] = useState<string>('general');
   const [minWithdrawal, setMin_W] = useState<string>('')
   const [maxWithdrawal, setMax_W] = useState<string>('')
@@ -1105,7 +1106,6 @@ const page = () => {
     ;
 };
 
-export default page;
 
 
 

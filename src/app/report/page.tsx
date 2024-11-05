@@ -17,9 +17,10 @@ import { CLIENT_REPORT, REPORT_TH, client_report, overviewPOints, payment_report
 const TABS = ['Users', 'Clients', 'Payments'];
 
 
+export const runtime = "edge";
 
 
-function page() {
+export default function page() {
     const user = useAppSelector(selectUserProfile);
     const [tab, setTab] = useState<string>('users');
     const [currentId, setCurrentId] = useState<string | null>(null);
@@ -258,5 +259,3 @@ function page() {
         </section>
     )
 }
-
-export default page

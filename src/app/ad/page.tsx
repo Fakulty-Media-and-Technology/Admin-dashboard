@@ -12,6 +12,9 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import AddComponent from "./AddComponentAD";
 
 
+export const runtime = "edge";
+
+
 const page = () => {
   const [ADsList, setList] = useState<IAdsData[]>([])
   const [searchParams, setSearchParams] = useState<string>("");

@@ -13,8 +13,10 @@ interface IsViewMsgProps {
   index: number
 }
 
+export const runtime = "edge";
 
-const page = () => {
+
+export default function page() {
   const [suggestionList, setList] = useState<ISuggestionData[]>([])
   const [suggestionFilteredList, setFilteredList] = useState<ISuggestionData[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -315,5 +317,3 @@ const page = () => {
 
 
 }
-
-export default page;

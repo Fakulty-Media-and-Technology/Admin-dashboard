@@ -10,10 +10,10 @@ import { IEventData, IEventResponse } from '@/types/api/live.types';
 import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
 import ReactPlayer from 'react-player';
 import { formatAmount } from '@/utilities/formatAmount';
-import { ImageProps } from '../plans/page';
 import { getDates } from '@/utilities/dateUtilities';
 import { useEventEstimateMutation } from '@/api/extra.api';
 import { truncateText } from '@/utilities/textUtils';
+import { ImageProps } from '../plans/ClientComponent';
 
 
 const TABS = ['Channels', 'Events', 'Tv Shows', 'Podcast']

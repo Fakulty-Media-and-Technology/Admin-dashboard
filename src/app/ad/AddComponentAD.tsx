@@ -6,8 +6,8 @@ import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
 import ReactPlayer from "react-player";
-import { ImageProps } from "../plans/page";
 import useToggle from "@/hooks/useToggle";
+import { ImageProps } from "../plans/ClientComponent";
 
 const TABS = ['General', 'Movie Ad', 'Web', 'Mobile']
 

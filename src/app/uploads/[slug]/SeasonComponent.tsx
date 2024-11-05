@@ -9,10 +9,10 @@ import { AppButton, CustomInput } from '@/components/AppLayout';
 import ReactPlayer from 'react-player';
 import { truncateText } from '@/utilities/textUtils';
 import { LinkViewProps } from '@/types/packages';
-import { ImageProps } from '@/app/plans/page';
 import { isValidUrl, normalizeUrl, transformResponse } from '@/utilities/linkUtils';
 import { toast } from 'react-toastify';
 import { getPreview } from '@/app/server';
+import { ImageProps } from '@/app/plans/ClientComponent';
 
 
 interface Props {

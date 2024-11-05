@@ -15,13 +15,13 @@ import { useGetCategoryQuery, useGetGenreQuery } from '@/api/categorySlice'
 import { ICategory } from '@/types/api/category.types'
 import { formatAmount } from '@/utilities/formatAmount'
 import ReactPlayer from 'react-player'
-import { ImageProps } from '@/app/plans/page'
 import { truncateText } from '@/utilities/textUtils'
 import { getLinkPreview } from "link-preview-js";
 import { isValidUrl, normalizeUrl, transformResponse } from '@/utilities/linkUtils'
 import { getPreview } from '@/app/server'
 import { LinkViewProps } from '@/types/packages'
 import SeasonComponent from './SeasonComponent'
+import { ImageProps } from '@/app/plans/ClientComponent'
 
 
 

@@ -54,6 +54,9 @@ const overviewPOints = [
   },
 ];
 
+export const runtime = "edge";
+
+
 function page() {
   const user = useAppSelector(selectUserProfile);
   const [currentId, setCurrentId] = useState<string | null>(null);

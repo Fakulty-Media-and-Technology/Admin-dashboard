@@ -27,7 +27,10 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import { IAddFeatured, ILiveContents } from "@/types/api/featured.types";
 import { getFutureDateInISO } from "@/utilities/dateUtilities";
 
-const page = () => {
+export const runtime = "edge";
+
+
+export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
   const [userRole, setUserRole] = useState<string>("Regular");
@@ -408,4 +411,3 @@ const page = () => {
   }
 };
 
-export default page;

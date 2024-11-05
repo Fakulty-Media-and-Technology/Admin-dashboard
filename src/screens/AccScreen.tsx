@@ -55,15 +55,12 @@ const AccScreen = () => {
     data.append("photo", files[0]);
 
     const res = await uploadImage(data, authToken);
-    const result: IUploadImage = await res.json();
-    if (
-      (result.status === 200 || result.message.includes("Successful")) &&
-      result.data
+    if (res.ok && res.data && res.data.message.includes("Successful")
     ) {
       setLoadingImg(false);
       const photo = {
-        Bucket: result.data.Bucket,
-        Key: result.data.Key,
+        Bucket: res.data.data.Bucket,
+        Key: res.data.data.Key,
       };
       setUserDetails((prev) => ({
         ...prev,

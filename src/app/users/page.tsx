@@ -26,7 +26,10 @@ import { toast } from "react-toastify";
 const Roles = ["Regular", "Client", "Admin", "Super Admin"];
 const ClientRoles = ["Channels", "Events", "Tv Show", "Podcast"];
 
-const page = () => {
+export const runtime = "edge";
+
+
+export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [userPic, setUserPic] = useState<File | null>(null);
   const [userRole, setUserRole] = useState<string>("Regular");
@@ -718,4 +721,3 @@ const page = () => {
   }
 };
 
-export default page;

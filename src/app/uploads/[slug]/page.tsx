@@ -5,6 +5,9 @@ import Image from "next/image";
 import React, { useState } from "react";
 import MainComponent from "./mainComponent";
 
+export const runtime = "edge";
+
+
 const page = async ({
   params,
 }: {

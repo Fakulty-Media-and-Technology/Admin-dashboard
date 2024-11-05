@@ -16,11 +16,11 @@ const ProviderContainer = ({ children }: Props) => {
     // <AnimatePresence >
     //     <ThemeProvider enableSystem={true} attribute="class">
     <Provider store={store}>
-      {/* <AuthGuard> */}
-      {/* <Container> */}
-      {children}
-      {/* </Container> */}
-      {/* </AuthGuard> */}
+      <AuthGuard>
+        {/* <Container> */}
+        {children}
+        {/* </Container> */}
+      </AuthGuard>
     </Provider>
     //     </ThemeProvider>
     // </AnimatePresence>

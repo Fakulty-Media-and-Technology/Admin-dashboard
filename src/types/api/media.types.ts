@@ -4,28 +4,51 @@ export interface IMediaResponse extends IGeneric {
     data: IMediaData[]
 }
 
+interface ICategory {
+    _id: string;
+    name: string;
+    position: number
+}
+interface ICast {
+    _id: string;
+    name: string;
+    title: number
+}
+
 
 export interface IMediaData {
     _id: string;
     admin_id: string;
     title: string;
+    artistName?: string;
     sub_title: string;
+    description: string;
+    viewsCount: number;
     type: string;
     bucket: string;
     key: string;
-    vid_class: string;
+    vidClass: string;
     pg: string;
-    genre: [];
-    category: [];
-    cast: string[];
-    releaseed_date: string;
-    expiry_date: string;
+    genre: ICategory[];
+    category: ICategory[];
+    cast: ICast[];
+    releaseDate: string;
+    expiryDate: string;
     likes: [];
     runtime: string;
-    default_rating: number;
+    defaultRating: number;
+    averageRating: number;
     featured: boolean;
+    active: boolean;
+    showViews: boolean;
+    landscapePhoto: string;
+    portraitPhoto: string;
+    video: string;
+    trailer: string;
     is_series: boolean;
     episodes?: IEpisodes[]
+    seasons: [];
+    createdAt: string
 }
 
 

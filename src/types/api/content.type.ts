@@ -1,4 +1,5 @@
 import { ImageProps } from "@/app/plans/ClientComponent";
+import { IGeneric } from "./auth.types";
 
 export interface ContentData {
   title: string;
@@ -7,13 +8,14 @@ export interface ContentData {
   category: string[];
   genre: string[];
   cast: string[];
-  description: string;
+  description?: string;
   runtime: string;
   defaultRating: string;
   expiryDate: string;
   vidClass: string;
   videoLink?: string;
   trailerLink?: string;
+  artistName?: string;
 }
 
 export interface ContentFormData {
@@ -22,4 +24,32 @@ export interface ContentFormData {
   trailer?: ImageProps | null;
   video?: ImageProps | null;
   data: ContentData;
+}
+
+
+export interface ISeasonResponse extends IGeneric {
+  data: ISeasonData[]
+}
+
+export interface ISeasonData {
+  _id: string;
+  admin: string
+  video: string;
+  serial_number: number;
+  episodes: IEpisodeData[];
+  viewsCount: number;
+  trailer: string;
+  landscapePhoto: string | null;
+  portraitPhoto: string | null;
+}
+
+export interface IEpisodeData {
+  _id: string;
+  admin: string
+  season: string;
+  episodeNumber: number;
+  title: string;
+  description: string;
+  video: string;
+  trailer: string;
 }

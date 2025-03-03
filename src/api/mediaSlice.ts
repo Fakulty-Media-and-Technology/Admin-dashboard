@@ -11,7 +11,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/uploads/movie/fetch/?page=${data.page}&limit=${data.limit}`,
+                    url: `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -24,7 +24,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/uploads/skit/fetch/?page=${data.page}&limit=${data.limit}`,
+                    url: `/superadmin/uploads/fetch/skit?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -38,7 +38,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/uploads/music-video/fetch/?page=${data.page}&limit=${data.limit}`,
+                    url: `/superadmin/uploads/fetch/music-video?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -52,7 +52,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/uploads/series/fetch/?page=${data.page}&limit=${data.limit}`,
+                    url: `/superadmin/uploads/fetch/series?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -70,7 +70,7 @@ export const { useGetAllMovieQuery, useGetAllMusicQuery, useGetAllSeriesQuery, u
 export const getFetchMovies = async (data: IPagination) =>
     await apiCall<IMediaResponse>((baseApi) =>
         baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/movie/fetch/?page=${data.page}&limit=${data.limit}`,
+            `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
         )
     );
 

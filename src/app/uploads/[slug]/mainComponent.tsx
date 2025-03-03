@@ -20,6 +20,7 @@ import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { AddComponent } from "./components/UploadComponent";
+import { deleteContent } from "@/api/contentSlice";
 
 interface Props {
   slug: string;
@@ -28,6 +29,7 @@ interface Props {
 function MainComponent({ slug }: Props) {
   const [isAdd, setIsAdd] = useState<boolean>(false);
   const [mediaList, setMediaList] = useState<IMediaData[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<IMediaData | null>(null);
   const [mediaFilteredList, setFilteredList] = useState<IMediaData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [pg, setPg] = useState<number>(1);
@@ -43,12 +45,12 @@ function MainComponent({ slug }: Props) {
     isSuccess,
     isLoading,
   } = useGetAllMovieQuery({ limit: 5, page: pg }, {});
-  const { data: skitsData } = useGetAllSkitsQuery({ limit: 5, page: pg }, {});
-  const { data: musicVideoData } = useGetAllMusicQuery(
+  const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery({ limit: 5, page: pg }, {});
+  const { data: musicVideoData, refetch: refetchMusiVid } = useGetAllMusicQuery(
     { limit: 5, page: pg },
     {}
   );
-  const { data: seriesData } = useGetAllSeriesQuery({ limit: 5, page: pg }, {});
+  const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery({ limit: 5, page: pg }, {});
 
   const handleNext = () => {
     setPaginationList((prevList) =>
@@ -62,6 +64,24 @@ function MainComponent({ slug }: Props) {
       prevList.map((num) => Math.max(1, num - paginationStep))
     );
   };
+
+
+  async function handleDelete(id: string) {
+    setMediaList(mediaList.filter((media) => media._id !== id));
+    setFilteredList(mediaFilteredList.filter((media) => media._id !== id));
+    const res = await deleteContent({ id, slug });
+    if (
+      res.ok &&
+      res.data &&
+      res.data.message.includes("deleted successfully")
+    ) {
+      toast("user deleted successfully", { type: "info" });
+      slug.includes('movie') ? await refetch() : slug.includes('skit') ? await refetchSkits() : slug.includes('videos') ? await refetchMusiVid() : await refetchSeries();
+    } else {
+      toast("Opps! couldn't delete user", { type: "info" });
+    }
+    await refetch();
+  }
 
   function handleSearchfilter(query: string) {
     setSearchParams(query);
@@ -86,11 +106,12 @@ function MainComponent({ slug }: Props) {
         slug === "movies"
           ? await getFetchMovies({ limit: 5, page: query ?? pg })
           : slug === "skits"
-          ? await getFetchSkit({ limit: 5, page: query ?? pg })
-          : slug === "series"
-          ? await getFetchSeries({ limit: 5, page: query ?? pg })
-          : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
+            ? await getFetchSkit({ limit: 5, page: query ?? pg })
+            : slug === "series"
+              ? await getFetchSeries({ limit: 5, page: query ?? pg })
+              : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
       if (res.ok && res.data) {
+        console.log(res.data)
         handleMediaList(res.data);
       } else {
         toast(`Opps! couldn't get ${slug} list`, { type: "error" });
@@ -109,6 +130,13 @@ function MainComponent({ slug }: Props) {
     if (slug.toLowerCase() === "series") handleMediaList(seriesData);
   }, [slug, moviesData, skitsData, seriesData, musicVideoData, isSuccess]);
 
+  useEffect(() => {
+    refetch();
+    refetchMusiVid();
+    refetchSeries();
+    refetchSkits();
+  }, [isAdd]);
+
   return (
     <section className={`${roboto_400.className} h-full pl-5`}>
       <div className="bg-black3 py-3 px-10">
@@ -126,8 +154,8 @@ function MainComponent({ slug }: Props) {
             type="text"
             placeholder={`Search ${decodeURI(slug)}`}
             className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:capitalize placeholder:text-grey_700"
-            // value={searchParams}
-            // onChange={(e) => handleSearchfilter(e)}
+            value={searchParams}
+            onChange={(e) => handleSearchfilter(e.target.value)}
           />
         </div>
 
@@ -172,13 +200,13 @@ function MainComponent({ slug }: Props) {
                             className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
                             key={indx}
                           >
-                            <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
+                            <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit min-w-[140px]">
                               <Image
-                                src={`/tablepic/mum.png`}
+                                src={tx.portraitPhoto}
                                 width={42}
                                 height={42}
                                 alt="profiles"
-                                className="object-contain rounded-full"
+                                className="object-cover h-[42px] rounded-full"
                               />
                               <div className="ml-2.5">
                                 <p
@@ -196,7 +224,7 @@ function MainComponent({ slug }: Props) {
                                   <p
                                     className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
                                   >
-                                    0
+                                    {tx.viewsCount}
                                   </p>
                                 </div>
                               </div>
@@ -204,23 +232,23 @@ function MainComponent({ slug }: Props) {
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {tx.default_rating}
+                            {tx.averageRating}
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {tx.vid_class}
+                            {tx.vidClass}
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {new Date(tx.releaseed_date).getFullYear()}
+                            {new Date(tx.releaseDate).getFullYear()}
                           </td>
                           <td className="text-center font-normal text-xs capitalize">
-                            {isExpired(tx.expiry_date) ? "Active" : "Inactive"}
+                            {isExpired(tx.expiryDate) ? "Active" : "Inactive"}
                           </td>
 
                           <td className="w-[50px] xl:w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
-                              <button>
+                              <button onClick={() => [setSelectedMedia(tx), setIsAdd(!isAdd)]}>
                                 <Image
                                   src="/edit.svg"
                                   width={14}
@@ -228,7 +256,7 @@ function MainComponent({ slug }: Props) {
                                   alt="edit"
                                 />
                               </button>
-                              <button>
+                              <button onClick={() => handleDelete(tx._id)}>
                                 <Image
                                   src="/delete.svg"
                                   width={15}
@@ -266,9 +294,8 @@ function MainComponent({ slug }: Props) {
                               setPg(num),
                               handleRefreshMedia(num),
                             ]}
-                            className={`${
-                              active ? "text-red" : "text-[#C4C4C4]"
-                            } cursor-pointer`}
+                            className={`${active ? "text-red" : "text-[#C4C4C4]"
+                              } cursor-pointer`}
                           >
                             {num}
                           </p>
@@ -298,7 +325,11 @@ function MainComponent({ slug }: Props) {
         </>
       ) : (
         <>
-          <AddComponent slug={slug} />
+          <AddComponent
+            slug={slug}
+            selectedMedia={selectedMedia}
+            handleClose={() => setIsAdd(!isAdd)}
+          />
         </>
       )}
     </section>

@@ -23,13 +23,16 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
-import { ContentFormData } from "@/types/api/content.type";
-import { createContent } from "@/api/contentSlice";
+import { ContentFormData, ISeasonData } from "@/types/api/content.type";
+import { addSeason, addSubtitle, createContent, editContent, getSeasons } from "@/api/contentSlice";
+import { IMediaData } from "@/types/api/media.types";
+import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 
 interface ModalProps {
-  // handleClose: () => void;
+  handleClose: () => void;
   // handleReset: () => void;
   slug: string;
+  selectedMedia: IMediaData | null
 }
 
 export interface ISeason {
@@ -42,55 +45,54 @@ export interface ISubtitle {
   srtFile: ImageProps;
 }
 
-export const AddComponent = ({ slug }: ModalProps) => {
+export interface IFile extends ImageProps {
+  file?: File
+}
+
+export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isGenre, setIsGenre] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>("");
+  const [title, setTitle] = useState<string>(selectedMedia ? ((slug.includes('videos') && selectedMedia.artistName) ? selectedMedia.artistName : selectedMedia.title) : "");
   const [subtitle, setSubTitle] = useState<string>("");
-  const [releaseDate, setReleaseDate] = useState<string>("");
-  const [expiryDate, setExpiryDate] = useState<string>("");
-  const [class_, setClass] = useState<string>("Select");
+  const [releaseDate, setReleaseDate] = useState<string>(selectedMedia ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString()) : "");
+  const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : "");
+  const [class_, setClass] = useState<string>(selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select");
   const [amount, setAmount] = useState<string>("");
-  const [PG, setPG] = useState<string>("Select");
-  const [portrait, setPortrait] = useState<ImageProps | null>(null);
-  const [portrait_L, setPortrait_L] = useState<ImageProps | null>(null);
-  const [subtitleFile, setSubtitleFile] = useState<ImageProps | null>(null);
-  const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
-  const [videoTrailer_2, setVideoTrailer_2] = useState<ImageProps | null>(null);
+  const [PG, setPG] = useState<string>(selectedMedia ? selectedMedia.pg === '0' ? 'G' : `${selectedMedia.pg}+` : "Select");
+  const [portrait, setPortrait] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.portraitPhoto } : null);
+  const [portrait_L, setPortrait_L] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.landscapePhoto } : null);
+  const [subtitleFile, setSubtitleFile] = useState<IFile | null>(null);
+  const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
+  const [videoTrailer_2, setVideoTrailer_2] = useState<IFile | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [thumbnailUrl_2, setThumbnailUrl_2] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPlaying_2, setIsPlaying_2] = useState<boolean>(false);
   const [urlLink, setUrlLink] = useState<string>("");
   const [urlLink_2, setUrlLink_2] = useState<string>("");
-  const [time, setTime] = useState<string>("");
-  const [rating, setRating] = useState<string>("Select");
+  const [time, setTime] = useState<string>(selectedMedia ? selectedMedia.runtime : "");
+  const [rating, setRating] = useState<string>(selectedMedia ? selectedMedia.averageRating.toString() : "Select");
   const [views, setViews] = useState<string>("Select");
   const [options, setOptions] = useState<string>("Select");
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
 
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
   const [cat_List, setCat_List] = useState<ICategory[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([
-    "popular on REEPLAY",
-  ]);
-  const [selectedGenries, setSelectedGenries] = useState<string[]>([]);
-  const [selectedCasts, setSelectedCasts] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(selectedMedia ? selectedMedia.category.map(x => x.name) : []);
+  const [selectedGenries, setSelectedGenries] = useState<string[]>(selectedMedia ? selectedMedia.genre.map(x => x.name) : []);
+  const [selectedCasts, setSelectedCasts] = useState<string[]>(selectedMedia ? selectedMedia.cast.map(x => x.name) : []);
   const [castTxt, setCastTxt] = useState<string>("");
   const [genriesPlaceholder, setGenriesPlaceholder] = useState<string>("");
   const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
-  const [links, setLinks] = useState<LinkViewProps | null>(null);
-  const [links_2, setLinks_2] = useState<LinkViewProps | null>(null);
+  const [links, setLinks] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.trailer } : null);
+  const [links_2, setLinks_2] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.video } : null);
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [isPreview_2, setIsPreview_2] = useState<boolean>(false);
-  const [details, setDetails] = useState("");
+  const [details, setDetails] = useState(selectedMedia ? selectedMedia.description ?? '' : "");
+  const [srtLoading, setSrtLoading] = useState<boolean>(false);
+  const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
   const maxLength = 200;
-  const [seasons, setSeasons] = useState<ISeason[]>([
-    {
-      index: 1,
-      episodes: [],
-    },
-  ]);
+  const [seasons, setSeasons] = useState<ISeasonData[]>([]);
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
@@ -99,22 +101,20 @@ export const AddComponent = ({ slug }: ModalProps) => {
   );
 
   const isDisabled =
-    title !== "" ||
-    class_ !== "" ||
-    PG !== "" ||
-    releaseDate !== "" ||
-    expiryDate !== "" ||
-    selectedGenries.length === 3 ||
-    selectedCategories.length > 0 ||
-    links !== null ||
-    videoTrailer !== null ||
-    details !== "" ||
-    time !== "" ||
-    rating !== "" ||
-    links_2 !== null ||
-    videoTrailer_2 !== null ||
-    portrait !== null ||
-    portrait_L !== null;
+    title === "" ||
+    class_ === "" ||
+    PG === "" ||
+    releaseDate === "" ||
+    expiryDate === "" ||
+    selectedGenries.length !== 3 ||
+    selectedCategories.length === 0 ||
+    (links || videoTrailer) === null ||
+    details === "" ||
+    time === "" ||
+    rating === "" ||
+    portrait === null ||
+    portrait_L === null;
+
 
   function handleValidInput(query: string) {
     const inputValue = query;
@@ -167,9 +167,13 @@ export const AddComponent = ({ slug }: ModalProps) => {
     }
   };
 
-  function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, type?: string) {
     e.preventDefault();
-    setIsPlaying(true);
+    if (type === '2') {
+      setIsPlaying_2(true);
+    } else {
+      setIsPlaying(true);
+    }
   }
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
@@ -180,12 +184,21 @@ export const AddComponent = ({ slug }: ModalProps) => {
         //   name: files[0].name,
         //   url: URL.createObjectURL(files[0]),
         // });
-      } else if (type === "video") {
+      } else if (type === "video" || type === "trailer") {
         const videoObjectUrl = URL.createObjectURL(files[0]);
-        setVideoTrailer({
-          name: files[0].name,
-          url: videoObjectUrl,
-        });
+        if (type === 'trailer') {
+          setVideoTrailer({
+            name: files[0].name,
+            url: videoObjectUrl,
+            file: files[0]
+          });
+        } else {
+          setVideoTrailer_2({
+            name: files[0].name,
+            url: videoObjectUrl,
+            file: files[0]
+          });
+        }
         const video = document.createElement("video");
         video.src = videoObjectUrl;
         video.currentTime = 2;
@@ -197,23 +210,30 @@ export const AddComponent = ({ slug }: ModalProps) => {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+            if (type === 'trailer') {
+              setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+            } else {
+              setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
+            }
           }
         };
       } else if (type === "subtitle") {
         setSubtitleFile({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0]
         });
       } else if (type === "portrait") {
         setPortrait({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0]
         });
       } else if (type === "landscape") {
         setPortrait_L({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0]
         });
       } else {
         // setImage({
@@ -284,11 +304,91 @@ export const AddComponent = ({ slug }: ModalProps) => {
     }
   };
 
+  async function handleAddSubtitle() {
+    if (!selectedMedia || !subtitleFile || !subtitleFile.file) return
+    try {
+      setSrtLoading(true);
+      const formdata = new FormData();
+      formdata.append("parentId", selectedMedia._id);
+      formdata.append("parentType", slug.includes('series') ? "episode" : "vod");
+      formdata.append("language", subtitle_);
+      formdata.append("subtitle", subtitleFile.file);
+      const res = await addSubtitle(formdata)
+
+      if (res.ok && res.data) {
+        toast(res.data.message, { type: "success" });
+
+        setSRTArray((prev) => [
+          { language: subtitle_, srtFile: { name: subtitleFile?.name ?? '', url: subtitleFile?.url ?? '' } },
+          ...prev,
+        ])
+
+      } else {
+        toast(res.data?.message, { type: "error" });
+      }
+    } catch (error) {
+      toast(`${error}`, { type: "error" });
+    } finally {
+      setSrtLoading(false);
+    }
+  }
+
+  async function handleFetchSeasons() {
+    if (!selectedMedia) return;
+    const res = await getSeasons({ id: selectedMedia._id });
+    if (res.ok && res.data) {
+      setSeasons(res.data.data);
+    }
+  }
+
+  async function handleCreateSeason() {
+    if (!selectedMedia || !slug.includes('series')) return
+    try {
+      setSeasonLoading(true);
+      const formdata = new FormData();
+      formdata.append("trailerLink", 'undefined');
+      const res = await addSeason(formdata, selectedMedia._id);
+      if (res.ok && res.data) {
+        toast(res.data.message, { type: "success" });
+        setSeasons((prev) => [
+          ...prev,
+          {
+            _id: '',
+            admin: '',
+            episodes: [],
+            landscapePhoto: null,
+            portraitPhoto: null,
+            serial_number: prev[prev.length - 1].serial_number + 1,
+            trailer: '',
+            video: '',
+            viewsCount: 0
+          },
+        ])
+      } else {
+        toast(res.data?.message, { type: "error" });
+      }
+
+    } catch (error) {
+      toast(`${error}`, { type: "error" });
+    } finally {
+      setSeasonLoading(false);
+    }
+  }
+
   async function handleCreateContent() {
     if (!portrait_L || !portrait) return;
     try {
       setLoading(true);
       const formdata = new FormData();
+      const category = selectedCategories.map(name => {
+        const foundCategory = cat_List.find(cat => cat.name === name);
+        return foundCategory ? foundCategory._id : '';
+      }).filter(id => id !== '');
+
+      const genre = selectedGenries.map(name => {
+        const foundGenre = genriesList.find(g => g.name === name);
+        return foundGenre ? foundGenre._id : '';
+      }).filter(id => id !== '');
 
       const content: ContentFormData = {
         landscapePoster: portrait_L,
@@ -297,32 +397,44 @@ export const AddComponent = ({ slug }: ModalProps) => {
         video: videoTrailer_2,
         data: {
           cast: selectedCasts,
-          category: selectedCategories,
+          category,
           defaultRating: rating,
-          description: details,
           expiryDate: new Date(expiryDate).toISOString(),
-          genre: selectedGenries,
-          pg: PG,
+          genre,
+          // description: details,
+          pg: PG === 'G' ? '0' : PG.replace('+', ''),
           releasedDate: new Date(releaseDate).toISOString(),
           runtime: time,
-          title,
-          vidClass: class_,
-          trailerLink: links?.url ?? urlLink,
-          videoLink: links_2?.url ?? urlLink_2,
+          title: slug.includes('videos') ? subtitle : title,
+          vidClass: class_.toLowerCase(),
         },
       };
 
+      if (!slug.includes('series')) content.data.description = details
+      if (slug.includes('videos')) content.data.artistName = title
+
+      if (videoTrailer && videoTrailer.file) {
+        formdata.append("trailer", videoTrailer.file)
+      } else {
+        content.data.trailerLink = links?.url ?? urlLink;
+      };
+      if (videoTrailer_2 && videoTrailer_2.file && !slug.includes('series')) {
+        formdata.append("video", videoTrailer_2.file)
+      } else {
+        if (!slug.includes('series')) content.data.videoLink = links_2?.url ?? urlLink_2
+      }
+
       formdata.append("data", JSON.stringify(content.data));
-      formdata.append("landscapePoster", portrait.url);
-      formdata.append("portraitPoster", portrait_L.url);
-      if (videoTrailer) formdata.append("trailer", videoTrailer.url);
-      if (videoTrailer_2) formdata.append("trailer", videoTrailer_2.url);
+      if (portrait.file) formdata.append("landscapePoster", portrait.file);
+      if (portrait_L.file) formdata.append("portraitPoster", portrait_L.file);
 
-      const res = await createContent(formdata, slug);
-      console.log(res, res.data);
-      //   if(res.ok && res.data){
-
-      //   }
+      const res = selectedMedia ? await editContent(formdata, selectedMedia._id) : await createContent(formdata, slug.includes('movies') ? 'movie' : slug.includes('skits') ? 'skit' : slug.includes('music') ? 'music-video' : slug);
+      if (res.ok && res.data) {
+        toast(res.data.message, { type: "success" });
+        handleClose();
+      } else {
+        toast(res.data?.message, { type: "error" });
+      }
     } catch (error) {
       toast(`${error}`, { type: "error" });
     } finally {
@@ -340,9 +452,13 @@ export const AddComponent = ({ slug }: ModalProps) => {
     if (categories) setCat_List(categories.data);
   }, [genries, categories, isSuccess_C, isSuccess]);
 
+  useEffect(() => {
+    if (slug.includes('series')) handleFetchSeasons();
+  }, [slug, selectedMedia])
+
   return (
     <div className="mt-5 h-full flex flex-col">
-      {slug === "movies" && (
+      {/* {slug === "movies" && (
         <div className="flex-1 mt-10 ml-16 flex items-center gap-x-6">
           <p
             className={`${roboto_500.className} capitalize font-medium text-white text-base ml-2.5`}
@@ -350,19 +466,17 @@ export const AddComponent = ({ slug }: ModalProps) => {
             Show on Genre
           </p>
           <div
-            className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${
-              isGenre ? `bg-[#FF131373]` : "bg-[#BCBDBD73]"
-            }`}
+            className={`w-[45px] h-[18px] flex items-center rounded-[15px] ${isGenre ? `bg-[#FF131373]` : "bg-[#BCBDBD73]"
+              }`}
           >
             <div
               onClick={() => setIsGenre(!isGenre)}
-              className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${
-                isGenre ? `translate-x-5 bg-red` : "-translate-x-0 bg-[#BCBDBD]"
-              } `}
+              className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isGenre ? `translate-x-5 bg-red` : "-translate-x-0 bg-[#BCBDBD]"
+                } `}
             />
           </div>
         </div>
-      )}
+      )} */}
       <div className="mt-6 bg-black3 py-10 flex-1">
         <div className="space-y-6">
           {/* First level */}
@@ -530,7 +644,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                       type="date"
                       className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
                       value={releaseDate.replaceAll("/", "-")}
-                      onChange={(e) => setReleaseDate(e.target.value)}
+                      onChange={(e) => [setReleaseDate(e.target.value), console.log(e.target.value)]}
                     />
                   </div>
                 )}
@@ -545,7 +659,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                     placeholder="DD/MM/YYYY"
                     type="date"
                     className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
-                    value={expiryDate.replaceAll("/", "-")}
+                    value={selectedMedia ? formatDateToDDMMYYYY(expiryDate) : expiryDate.replaceAll("/", "-")}
                     onChange={(e) => setExpiryDate(e.target.value)}
                   />
                 </div>
@@ -688,7 +802,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                       <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                         <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                           <Image
-                            src={links.image ? links.image : ""}
+                            src={links.image ? links.image : selectedMedia ? selectedMedia.portraitPhoto : ""}
                             width={42}
                             height={42}
                             alt="profiles"
@@ -739,7 +853,8 @@ export const AddComponent = ({ slug }: ModalProps) => {
                   {/* preview */}
                   {isPreview && links && (
                     <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
-                      <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
+                      <div
+                        className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
                         <button
                           style={{ display: isPlaying ? "none" : "inline" }}
                           onClick={(e) => handleVideo(e)}
@@ -761,14 +876,14 @@ export const AddComponent = ({ slug }: ModalProps) => {
                           <ReactPlayer
                             playing={isPlaying}
                             muted={false}
-                            controls={false}
+                            controls={isPlaying}
                             // onProgress={e => }
                             url={links.url}
                             width="100%" // Set to 100%
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                            // onReady={() => setIsPlayerReady(true)}
+                          // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -804,17 +919,15 @@ export const AddComponent = ({ slug }: ModalProps) => {
                       type="file"
                       id="file"
                       accept="video/*"
-                      onChange={(e) => handleInput(e, "video")}
+                      onChange={(e) => handleInput(e, "trailer")}
                       className="absolute z-20 opacity-0"
                       disabled={links ? true : false}
                     />
                   </div>
                   <div
-                    className={`${
-                      roboto_500.className
-                    } cursor-pointer text-white text-[15px] ${
-                      links ? "bg-grey_800" : "bg-[#EE2726]"
-                    } h-[42px] px-4 flex items-center justify-center`}
+                    className={`${roboto_500.className
+                      } cursor-pointer text-white text-[15px] ${links ? "bg-grey_800" : "bg-[#EE2726]"
+                      } h-[42px] px-4 flex items-center justify-center`}
                   >
                     UPLOAD
                   </div>
@@ -900,14 +1013,14 @@ export const AddComponent = ({ slug }: ModalProps) => {
                           <ReactPlayer
                             playing={isPlaying}
                             muted={false}
-                            controls={false}
+                            controls={isPlaying}
                             // onProgress={e => }
                             url={videoTrailer.url}
                             width="100%" // Set to 100%
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                            // onReady={() => setIsPlayerReady(true)}
+                          // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -938,6 +1051,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                     <textarea
                       name="details"
                       maxLength={maxLength}
+                      value={details}
                       onChange={(e) => handleTextChange(e.target.value)}
                       className={`${roboto_400.className} textarea w-full h-[80px] p-1 pl-2 outline-none bg-transparent text-sm text-white`}
                     />
@@ -991,19 +1105,19 @@ export const AddComponent = ({ slug }: ModalProps) => {
                 {/* right */}
                 <div className="flex flex-col flex-1">
                   <label
-                    htmlFor="trailer"
+                    htmlFor="movie"
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
                   >
                     {slug === "skits"
                       ? "SKIT"
                       : slug.includes("videos")
-                      ? "VIDEO"
-                      : "MOVIE"}{" "}
+                        ? "VIDEO"
+                        : "MOVIE"}{" "}
                     FILE *
                   </label>
                   <CustomInput
                     type="text"
-                    id="trailer"
+                    id="movie"
                     placeholder="Paste Deep link Url ex. Youtube"
                     className="font-normal w-full sm:min-w-[364px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                     value={urlLink_2}
@@ -1021,7 +1135,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                           <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                               <Image
-                                src={links_2.image ? links_2.image : ""}
+                                src={links_2.image ? links_2.image : selectedMedia ? selectedMedia.portraitPhoto : ""}
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -1074,8 +1188,8 @@ export const AddComponent = ({ slug }: ModalProps) => {
                         <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
                           <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
                             <button
-                              style={{ display: isPlaying ? "none" : "inline" }}
-                              onClick={(e) => handleVideo(e)}
+                              style={{ display: isPlaying_2 ? "none" : "inline" }}
+                              onClick={(e) => handleVideo(e, '2')}
                             >
                               <Image
                                 src="/playBtn.svg"
@@ -1094,14 +1208,14 @@ export const AddComponent = ({ slug }: ModalProps) => {
                               <ReactPlayer
                                 playing={isPlaying_2}
                                 muted={false}
-                                controls={false}
+                                controls={isPlaying_2}
                                 // onProgress={e => }
                                 url={links_2.url}
                                 width="100%" // Set to 100%
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                                // onReady={() => setIsPlayerReady(true)}
+                              // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1121,8 +1235,8 @@ export const AddComponent = ({ slug }: ModalProps) => {
                       {slug === "skits"
                         ? "Skit"
                         : slug.includes("videos")
-                        ? "Video"
-                        : "Movie"}{" "}
+                          ? "Video"
+                          : "Movie"}{" "}
                       *
                     </p>
                     <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
@@ -1149,11 +1263,9 @@ export const AddComponent = ({ slug }: ModalProps) => {
                         />
                       </div>
                       <div
-                        className={`${
-                          roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${
-                          links_2 ? "bg-grey_800" : "bg-[#EE2726]"
-                        } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${roboto_500.className
+                          } cursor-pointer text-white text-[15px] ${links_2 ? "bg-grey_800" : "bg-[#EE2726]"
+                          } h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1216,13 +1328,15 @@ export const AddComponent = ({ slug }: ModalProps) => {
                       {/* preview */}
                       {isPreview_2 && videoTrailer_2 && (
                         <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
-                          <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
+                          <div
+                            onClick={() => setIsPlaying_2(false)}
+                            className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
                             <button
                               style={{
                                 display: isPlaying_2 ? "none" : "inline",
                                 zIndex: 20,
                               }}
-                              onClick={(e) => handleVideo(e)}
+                              onClick={(e) => handleVideo(e, '2')}
                             >
                               <Image
                                 src="/playBtn.svg"
@@ -1237,18 +1351,19 @@ export const AddComponent = ({ slug }: ModalProps) => {
                             <div
                               style={{ zIndex: isPlaying_2 ? 20 : 0 }}
                               className="absolute w-full h-full"
+
                             >
                               <ReactPlayer
-                                playing={isPlaying}
+                                playing={isPlaying_2}
                                 muted={false}
-                                controls={false}
+                                controls={isPlaying_2}
                                 // onProgress={e => }
                                 url={videoTrailer_2.url}
                                 width="100%" // Set to 100%
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                                // onReady={() => setIsPlayerReady(true)}
+                              // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1271,6 +1386,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
                   <textarea
                     name="details"
                     maxLength={maxLength}
+                    value={details}
                     onChange={(e) => handleTextChange(e.target.value)}
                     className={`${roboto_400.className} textarea w-full h-[80px] p-1 pl-2 outline-none bg-transparent text-sm text-white`}
                   />
@@ -1284,7 +1400,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
             )}
 
             {/* subtitle */}
-            {class_ !== "AD" && (
+            {(class_ !== "AD" && !slug.includes('series')) && (
               <div className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
                 <div className="flex flex-col flex-1">
                   <label
@@ -1342,11 +1458,9 @@ export const AddComponent = ({ slug }: ModalProps) => {
                         />
                       </div>
                       <div
-                        className={`${
-                          roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${
-                          links_2 ? "bg-grey_800" : "bg-[#EE2726]"
-                        } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${roboto_500.className
+                          } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"
+                          } h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1355,14 +1469,13 @@ export const AddComponent = ({ slug }: ModalProps) => {
 
                   <AppButton
                     title="Add Subtitle"
-                    bgColor="bg-green_400"
+                    bgColor={selectedMedia ? "bg-green_400" : "bg-grey_500"}
+                    disabled={!selectedMedia}
+                    isLoading={srtLoading}
                     className="ml-auto mt-6 px-6 py-3"
                     onClick={() =>
-                      subtitleFile && subtitle_.toLowerCase().includes("select")
-                        ? setSRTArray((prev) => [
-                            { language: subtitle_, srtFile: subtitleFile },
-                            ...prev,
-                          ])
+                      (subtitleFile && !subtitle_.toLowerCase().includes("select"))
+                        ? handleAddSubtitle()
                         : toast("select srt file", { type: "info" })
                     }
                   />
@@ -1371,7 +1484,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
             )}
 
             {/* list of subtitle */}
-            {class_ !== "AD" && (
+            {(class_ !== "AD" && slug.includes('series')) && (
               <div className="px-10 lg:px-16 flex flex-wrap gap-x-12 pl-10 gap-y-14 items-start py-6">
                 {srtArray.map((x, i) => {
                   return (
@@ -1391,7 +1504,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                        // onClick={() => setVideoTrailer_2(null)}
+                      // onClick={() => setVideoTrailer_2(null)}
                       >
                         <Image
                           src="/delete.svg"
@@ -1407,7 +1520,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
             )}
 
             {/* options and views */}
-            <div className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-end gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
+            <div style={slug === 'series' ? { marginTop: -30 } : {}} className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-end gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
               <div className="flex-1">
                 <label
                   className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -1443,25 +1556,21 @@ export const AddComponent = ({ slug }: ModalProps) => {
             </div>
 
             {/* Adding seasons */}
-            {slug === "series" && (
+            {(slug === "series" && selectedMedia) && (
               <div className="pt-10">
                 <div className="px-10 lg:px-16">
                   <AppButton
                     title="Add Season"
                     bgColor="bg-[#EE2726]"
                     className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
-                    onClick={() =>
-                      setSeasons((prev) => [
-                        ...prev,
-                        { index: prev.length + 1, episodes: [] },
-                      ])
-                    }
+                    onClick={handleCreateSeason}
+                    isLoading={seasonLoading}
                   />
                 </div>
 
                 <div className="mt-8">
                   {seasons.map((season, i) => {
-                    return <SeasonComponent season={season} key={i} />;
+                    return <SeasonComponent season={season} key={i} handleFunc={() => handleFetchSeasons()} />;
                   })}
                 </div>
               </div>
@@ -1587,7 +1696,7 @@ export const AddComponent = ({ slug }: ModalProps) => {
         <div className="px-10 lg:px-16 mt-4">
           <AppButton
             title="UPLOAD"
-            disabled={isDisabled}
+            disabled={isDisabled && !slug.includes('series') && (links_2 || videoTrailer_2) === null}
             isLoading={loading}
             bgColor="bg-[#EE2726]"
             className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"

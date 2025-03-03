@@ -70,7 +70,7 @@ export default function page() {
         return {
           ...CAT,
           title: CAT.name,
-          position: "0",
+          position: "position" in CAT ? CAT.position : '0',
         };
       } else {
         return {
@@ -92,8 +92,8 @@ export default function page() {
         tab === "category"
           ? await geetFetchCategories()
           : tab === "genre"
-          ? await geetFetchGenres()
-          : await geetFetchCast();
+            ? await geetFetchGenres()
+            : await geetFetchCast();
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -103,8 +103,8 @@ export default function page() {
         tab === "category"
           ? await geetFetchCategories()
           : tab === "genre"
-          ? await geetFetchGenres()
-          : await geetFetchCast();
+            ? await geetFetchGenres()
+            : await geetFetchCast();
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -175,13 +175,10 @@ export default function page() {
             <div
               key={i}
               onClick={() => setTab(x.toLowerCase())}
-              className={`${
-                roboto_500.className
-              } text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${
-                active ? "text-white" : "text-grey_800"
-              } w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${
-                active ? "bg-[#0096D6C9]" : "bg-black3"
-              }`}
+              className={`${roboto_500.className
+                } text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? "text-white" : "text-grey_800"
+                } w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? "bg-[#0096D6C9]" : "bg-black3"
+                }`}
             >
               {x}
             </div>
@@ -205,15 +202,14 @@ export default function page() {
                   {(tab === "category"
                     ? CATEGORY_TH
                     : tab === "genre"
-                    ? GENRE_TH
-                    : CAST_TH
+                      ? GENRE_TH
+                      : CAST_TH
                   ).map((t, i) => {
                     return (
                       <th
                         key={i}
-                        className={`${roboto_500.className} ${
-                          t.toLowerCase() === "options" && "text-right"
-                        } font-medium text-lg text-white uppercase`}
+                        className={`${roboto_500.className} ${t.toLowerCase() === "options" && "text-right"
+                          } font-medium text-lg text-white uppercase`}
                       >
                         {t}
                       </th>

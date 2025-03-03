@@ -44,6 +44,7 @@ export const ModalComponent = ({
     setTitle(tab === "cast" ? "Select" : "");
     setNames("");
     setLink("");
+    handleClose();
   }
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -59,10 +60,15 @@ export const ModalComponent = ({
       const data =
         tab === "cast"
           ? {
-              name: names,
-              title,
+            name: names,
+            title,
+          }
+          : tab === 'genre' ?
+            {
+              name: title,
+              position: Number(position)
             }
-          : {
+            : {
               name: title,
             };
       const res = await addCategoryEnums(data, tab);
@@ -75,8 +81,8 @@ export const ModalComponent = ({
           tab === "category"
             ? await geetFetchCategories()
             : tab === "genre"
-            ? await geetFetchGenres()
-            : await geetFetchCast();
+              ? await geetFetchGenres()
+              : await geetFetchCast();
         if (resCAT.ok && resCAT.data) {
           handleReset(resCAT.data);
         }

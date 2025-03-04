@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { ContentFormData, ISeasonData } from "@/types/api/content.type";
-import { addSeason, addSubtitle, createContent, editContent, getSeasons } from "@/api/contentSlice";
+import { addSeason, addSubtitle, createContent, editContent, getSeasons, seriesButtonValidity } from "@/api/contentSlice";
 import { IMediaData } from "@/types/api/media.types";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 
@@ -94,6 +94,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const maxLength = 200;
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
+  const [isDisabled_Seasons, setDisabled] = useState<boolean>(true);
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
@@ -304,6 +305,19 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     }
   };
 
+  async function handleDisableButton() {
+    if (!selectedMedia) return
+    try {
+      setSeasonLoading(true);
+      const res = await seriesButtonValidity(selectedMedia._id, 'seasons');
+      if (res.ok && res.data) setDisabled(false)
+    } catch (error) {
+      toast(`${error}`, { type: 'error' })
+    } finally {
+      setSeasonLoading(false)
+    }
+  }
+
   async function handleAddSubtitle() {
     if (!selectedMedia || !subtitleFile || !subtitleFile.file) return
     try {
@@ -345,9 +359,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     if (!selectedMedia || !slug.includes('series')) return
     try {
       setSeasonLoading(true);
-      const formdata = new FormData();
-      formdata.append("trailerLink", 'undefined');
-      const res = await addSeason(formdata, selectedMedia._id);
+      const res = await addSeason(selectedMedia._id);
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
         setSeasons((prev) => [
@@ -401,7 +413,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
           defaultRating: rating,
           expiryDate: new Date(expiryDate).toISOString(),
           genre,
-          // description: details,
+          description: details,
           pg: PG === 'G' ? '0' : PG.replace('+', ''),
           releasedDate: new Date(releaseDate).toISOString(),
           runtime: time,
@@ -410,7 +422,6 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
         },
       };
 
-      if (!slug.includes('series')) content.data.description = details
       if (slug.includes('videos')) content.data.artistName = title
 
       if (videoTrailer && videoTrailer.file) {
@@ -453,7 +464,10 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   }, [genries, categories, isSuccess_C, isSuccess]);
 
   useEffect(() => {
-    if (slug.includes('series')) handleFetchSeasons();
+    if (slug.includes('series')) {
+      handleFetchSeasons();
+      handleDisableButton();
+    };
   }, [slug, selectedMedia])
 
   return (
@@ -1520,7 +1534,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
             )}
 
             {/* options and views */}
-            <div style={slug === 'series' ? { marginTop: -30 } : {}} className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-end gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
+            {/* <div style={slug === 'series' ? { marginTop: -30 } : {}} className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-end gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
               <div className="flex-1">
                 <label
                   className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -1553,11 +1567,11 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                   className="border-border_grey text-grey_500 rounded-sm flex-1"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Adding seasons */}
             {(slug === "series" && selectedMedia) && (
-              <div className="pt-10">
+              <div className="-pt-10">
                 <div className="px-10 lg:px-16">
                   <AppButton
                     title="Add Season"
@@ -1565,6 +1579,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                     className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
                     onClick={handleCreateSeason}
                     isLoading={seasonLoading}
+                    disabled={!selectedMedia || seasonLoading || isDisabled_Seasons}
                   />
                 </div>
 

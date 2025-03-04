@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import useToggle from '@/hooks/useToggle';
 import { roboto_400, roboto_400_italic, roboto_500 } from '@/config/fonts';
@@ -21,15 +21,16 @@ interface Props {
     episode: IEpisodeData;
     seasonId: string
     handleFunc?: () => void
+    setIsViewEp: React.Dispatch<React.SetStateAction<string>>;
+    isViewEp: string
 }
-function EpisodeComponent({ episode, seasonId, handleFunc }: Props) {
-    const [number, setNumber] = useState<string>(episode.episodeNumber.toString())
+function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc }: Props) {
     const [name, setName] = useState<string>(episode.title)
-    const [showSelect, setShowSelect] = useToggle();
+    const [showSelect, setShowSelect] = useState(false);
     const [details, setDetails] = useState(episode.description);
-    const [links, setLinks] = useState<LinkViewProps | null>(null)
-    const [videoTrailer, setVideoTrailer] = useState<IFile | null>(episode.video !== '' ? { name: '', url: episode.video } : null);
-    const [videoTrailer_intro, setVideoTrailer_intro] = useState<IFile | null>(episode.trailer !== '' ? { name: '', url: episode.trailer } : null);
+    const [links, setLinks] = useState<LinkViewProps | null>(episode ? { title: truncateText(20, episode.video), url: episode.video } : null)
+    const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
+    const [videoTrailer_intro, setVideoTrailer_intro] = useState<IFile | null>(episode.trailer !== '' ? { name: truncateText(20, episode.trailer), url: episode.trailer } : null);
     const [videoTrailer_recap, setVideoTrailer_recap] = useState<IFile | null>(null);
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const [thumbnailUrl_intro, setThumbnailUrl_intro] = useState<string | null>(null);
@@ -48,20 +49,13 @@ function EpisodeComponent({ episode, seasonId, handleFunc }: Props) {
     const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
     const maxLength = 200;
 
-    const isDisabled = name === '' || details === "" || number === '' || (links || videoTrailer) === null || (videoTrailer_recap || videoTrailer_intro) === null
+    const isDisabled = name === '' || details === "" || (links || videoTrailer) === null || (videoTrailer_recap || videoTrailer_intro) === null
 
     const handleTextChange = (newText: string) => {
         if (newText.length <= maxLength) {
             setDetails(newText);
         }
     };
-
-    function handleValidInput(query: string,) {
-        const inputValue = query;
-        if (/^\d*$/.test(inputValue)) {
-            setNumber(inputValue);
-        }
-    }
 
     function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.preventDefault();
@@ -176,12 +170,17 @@ function EpisodeComponent({ episode, seasonId, handleFunc }: Props) {
     async function handleAddEpisode() {
         try {
             setEpisodeLoading(true);
-            const data = { title: name, description: details }
+            const data: any = { title: name, description: details }
             const formdata = new FormData();
 
             formdata.append('data', JSON.stringify(data));
-            if (videoTrailer && videoTrailer.file) formdata.append('video', videoTrailer.file);
+            if (videoTrailer && videoTrailer.file) {
+                formdata.append('video', videoTrailer.file);
+            } else {
+                data.videoLink = links?.url ?? urlLink
+            }
             if (videoTrailer_intro && videoTrailer_intro.file) formdata.append('trailer', videoTrailer_intro.file);
+
 
 
             const res = await addEpisodes(formdata, seasonId);
@@ -200,42 +199,34 @@ function EpisodeComponent({ episode, seasonId, handleFunc }: Props) {
         }
     }
 
+    useEffect(() => {
+        if (isViewEp === episode._id) {
+            setShowSelect(true);
+        } else {
+            setShowSelect(false);
+        }
+    }, [isViewEp]);
+
     return (
-        <div style={{ backfaceVisibility: "hidden" }} className={`relative z-0 overflow-y-hidden ${showSelect && 'h-[70px]'}`}>
+        <div style={{ backfaceVisibility: "hidden" }} className={`relative z-0 overflow-y-hidden ${!showSelect && 'h-[40px]'}`}>
             <div className='bg-black3'>
                 <div className={`w-full px-10 lg:px-16 flex items-center gap-x-3 bg-black3 py-5 transition-all duration-300 z-[9999999]`}>
-                    <button onClick={() => setShowSelect(!showSelect)}>
+                    <button onClick={() => setIsViewEp(prev => prev === episode._id ? '' : episode._id)}>
                         <Image
-                            src={!showSelect ? '/colorDropDwn.svg' : "/bigDown.svg"}
+                            src={showSelect ? '/colorDropDwn.svg' : "/bigDown.svg"}
                             width={16}
                             height={11}
                             alt=""
-                            className={showSelect ? "-rotate-90 transition-all duration-300" : "rotate-0 transition-all duration-300"}
+                            className={!showSelect ? "-rotate-90 transition-all duration-300" : "rotate-0 transition-all duration-300"}
                         />
                     </button>
 
-                    <span className={`${roboto_400.className} text-base ${!showSelect ? 'text-[#F8A72D]' : 'text-white'} font-medium`}>Episode {episode.episodeNumber}</span>
+                    <span className={`${roboto_400.className} text-base ${showSelect ? 'text-[#F8A72D]' : 'text-white'} font-medium`}>Episode {episode.episodeNumber}</span>
                 </div>
             </div>
 
-            <div className={`px-10 lg:px-16 relative mt-5 -z-[10] space-y-6 transition-all duration-300 ${!showSelect ? 'translate-y-0 mb-5' : '-translate-y-[550px]'}`}>
-                <div className='flex items-center gap-x-20'>
-                    <div className='flex flex-col'>
-                        <label
-                            htmlFor="number"
-                            className={`${roboto_500.className} font-medium text-grey_500 text-base ml-2.5`}
-                        >
-                            Episode Number *
-                        </label>
-                        <CustomInput
-                            type="text"
-                            id="number"
-                            className="font-normal w-[170px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                            value={number}
-                            onChange={(e) => handleValidInput(e.target.value)}
-                        />
-                    </div>
-
+            <div className={`px-10 lg:px-16 relative mt-5 -z-[10] space-y-6 transition-all duration-300 ${showSelect ? 'translate-y-0 mb-5' : '-translate-y-[550px]'}`}>
+                <div>
                     <div className='flex flex-col'>
                         <label
                             htmlFor="name"
@@ -898,7 +889,7 @@ function EpisodeComponent({ episode, seasonId, handleFunc }: Props) {
                 </div>
 
                 <AppButton
-                    title={`${episode._id !== '' ? 'Edit' : 'Add'} Episode`}
+                    title={`${episode._id !== '' ? 'Edit' : 'Add'} Episode ${episode.episodeNumber}`}
                     bgColor={(isDisabled) ? 'bg-gray-500' : 'bg-green_400'}
                     className='mt-6 px-10 py-2.5'
                     onClick={handleAddEpisode}

@@ -38,9 +38,6 @@ export interface ISeasonData {
   serial_number: number;
   episodes: IEpisodeData[];
   viewsCount: number;
-  trailer: string;
-  landscapePhoto: string | null;
-  portraitPhoto: string | null;
 }
 
 export interface IEpisodeData {

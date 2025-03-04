@@ -20,13 +20,18 @@ export const editContent = async (data: FormData, id: string) =>
     })
   );
 
-export const addSeason = async (data: FormData, seriesId: string) =>
+export const addSeason = async (seriesId: string) =>
   await apiCall<ISeasonResponse>((baseApi) =>
-    baseApi.post<ISeasonResponse>(`/superadmin/uploads/seasons/add/${seriesId}`, data, {
+    baseApi.post<ISeasonResponse>(`/superadmin/uploads/seasons/add/${seriesId}`, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     })
+  );
+
+export const seriesButtonValidity = async (id: string, type: string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.get<IGeneric>(`/superadmin/uploads/${type}/can-add/${id}`)
   );
 
 export const addSubtitle = async (data: FormData) =>
@@ -51,4 +56,4 @@ export const deleteContent = async (data: { id: string, slug: string }) =>
   await apiCall<IGeneric>(baseApi => baseApi.delete<IGeneric>(`/superadmin/uploads/remove/${data.id}/${data.slug}`))
 
 export const getSeasons = async (data: { id: string }) =>
-  await apiCall<ISeasonResponse>(baseApi => baseApi.get<ISeasonResponse>(`/superadmin/uploads/seasons/fetch/${data.id}`))
+  await apiCall<ISeasonResponse>(baseApi => baseApi.get<ISeasonResponse>(`/superadmin/uploads/seasons/fetch/${data.id}?page=1&limit=40000&withMediaSources=true`))

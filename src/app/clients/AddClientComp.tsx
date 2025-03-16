@@ -12,6 +12,7 @@ import LoadingSpinner from "@/config/lottie/loading.json";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { TableComp } from "@/screens/AccScreen";
+import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 
 
 
@@ -43,10 +44,10 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
     const [gender, setGender] = useState<string>("Select your gender");
     const [photo, setPhoto] = useState<IPhoto>({ Bucket: '', Key: '' })
     const [clientType, setClientType] = useState<string>(selectedUser ? selectedUser.role : ClientType[0]);
-    const [firstName, setFirstName] = useState<string>(selectedUser ? selectedUser.first_name : '');
-    const [lastName, setLastName] = useState<string>(selectedUser ? selectedUser.last_name : '');
+    const [firstName, setFirstName] = useState<string>(selectedUser ? selectedUser.fullname.split(' ')[0] : '');
+    const [lastName, setLastName] = useState<string>(selectedUser ? selectedUser.fullname.split(' ')[1] : '');
     const [DOB, setDOB] = useState<string>("");
-    const isDisable = firstName === '' || lastName === '' || DOB === '' || photo.Bucket === '' || gender.includes('Select') || location === '' || email === '' || password === '' || mobile === '' || phoneNo === ''
+    const isDisable = firstName === '' || lastName === '' || DOB === '' || (selectedUser?.photo === null || selectedUser?.photo === '' || userPic === null) || gender.includes('Select') || location === '' || email === '' || password === '' || mobile === '' || phoneNo === ''
 
     function reset() {
         setFirstName('');
@@ -72,53 +73,26 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
 
 
     async function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
-        const authToken = localStorage.getItem("auth_token");
         const files = e.target.files;
         if (files) setUserPic(files[0]);
-        const data = new FormData();
-
-        if (!files || !authToken) return;
-        setLoadingImg(true);
-        data.append("fileName", files[0].name);
-        data.append("fileHandle", "photo");
-        data.append("photo", files[0]);
-
-        const res = await uploadImage(data, authToken);
-        if (res.ok && res.data && res.data.message.includes("Successful")) {
-            setLoadingImg(false);
-            const photoData = {
-                Bucket: res.data.data.Bucket,
-                Key: res.data.data.Key,
-            };
-            setPhoto(photoData);
-            toast("Image uploaded successfully", {
-                type: "info",
-            });
-        }
-        else {
-            setLoadingImg(false);
-            toast("Opps! couldn't upload image", {
-                type: "error",
-            });
-        }
     }
 
     async function handleCreateAccount() {
         try {
-            setLoading(true)
-            const res = await createCLientAcc({
-                client_type: clientType.toLowerCase(),
-                country_code: phoneNo,
-                cpassword: password,
-                password,
-                email,
-                first_name: firstName,
-                last_name: lastName,
-                mobile,
-                verified: verifyUser,
-                photo
-            });
-            console.log(res)
+            setLoading(true);
+            const formdata = new FormData();
+            formdata.append('client_type', clientType.toLowerCase().replace(' ', ''));
+            formdata.append('last_name', lastName);
+            formdata.append('first_name', firstName);
+            formdata.append('email', email);
+            formdata.append('cpassword', password);
+            formdata.append('password', password);
+            formdata.append('mobile', mobile);
+            formdata.append('verified', `${verifyUser}`);
+            formdata.append('country_code', `${selectedUser?.country_code}`);
+            if (userPic) formdata.append('photo', userPic);
+
+            const res = await createCLientAcc(formdata);
             if (res.ok && res.data) {
                 toast(`Client created successfully`, { type: "success" });
                 handleReset();
@@ -158,11 +132,11 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                             />
                         ) : (
                             <Image
-                                src="/accDummy.svg"
+                                src={(selectedUser && selectedUser.photo) ? selectedUser.photo : "/accDummy.svg"}
                                 width={105}
                                 height={106}
                                 alt=""
-                                className="rounded"
+                                className="rounded w-[105px] h-[106px]"
                             />
                         )}
 
@@ -297,24 +271,6 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                     </div>
                                 </div>
 
-                                {isView && (
-                                    <div className="flex-1">
-                                        <label
-                                            htmlFor="subscription"
-                                            className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                                        >
-                                            TOTAL SUBSCRIPTION *
-                                        </label>
-                                        <CustomInput
-                                            type="text"
-                                            id="subscription"
-                                            placeholder="3 Months"
-                                            className="font-normal text-sm py-2 mt-2 border text-grey_500 placeholder:text-input_grey border-border_grey rounded-sm"
-                                            value={0 + "Months"}
-                                            readOnly
-                                        />
-                                    </div>
-                                )}
                             </div>
 
                             {!isView &&
@@ -469,7 +425,7 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                             placeholder="12 Nov 2020"
                                             className="font-normal text-sm py-2 mt-2 border text-grey_500 placeholder:text-input_grey border-border_grey rounded-sm"
                                             readOnly
-                                            value={'Not set'}
+                                            value={selectedUser ? formatDateToDDMMYYYY(new Date(selectedUser.joined).toISOString()) : 'Not set'}
                                         />
                                     </div>
 

@@ -1,15 +1,17 @@
 "use client"
 
-import { createCLientAcc, getAllClients, useGetAllClientsQuery } from "@/api/clientSlice";
+import { createCLientAcc, getAllClients, useGetAllClientsQuery, useGetClientsDepositQuery } from "@/api/clientSlice";
 import { CLIENT_TH, DEPOSITS, WITHDRAWALS } from "@/config/data/live";
 import { roboto_400, roboto_500, roboto_700 } from "@/config/fonts";
-import { IClientsData, IClientsResponse, IPhoto } from "@/types/api/clients.types";
+import { IClientsData, IClientsDepositData, IClientsResponse, IPhoto } from "@/types/api/clients.types";
 import Lottie from "lottie-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { AddCleintComp } from "./AddClientComp";
+import { formatAmount } from "@/utilities/formatAmount";
+import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 
 
 
@@ -23,6 +25,7 @@ export default function page() {
   const [isAdd, setAddClient] = useState<boolean>(false);
   const [tab, setTab] = useState<string>('clients');
   const [clientList, setClientList] = useState<IClientsData[]>([]);
+  const [deposits, setDeposits] = useState<IClientsDepositData[]>([]);
   const [clientFilteredList, setFilteredList] = useState<IClientsData[]>([]);
   const [page, setPage] = useState<number>(1);
   const [searchParams, setSearchParams] = useState<string>("");
@@ -38,11 +41,27 @@ export default function page() {
     isLoading,
   } = useGetAllClientsQuery({ limit: 5, page }, {});
 
+  const {
+    data: clientDepositData,
+    isSuccess: isSuccessDeposit,
+    refetch: refetchDeposit,
+  } = useGetClientsDepositQuery(undefined, {});
+
   function handleGetLists(data: IClientsResponse | undefined) {
     if (!data) return;
     const clients = data.data
     setClientList(clients);
     setFilteredList(clients);
+  }
+
+  function handleSearchfilter(value: string) {
+    setSearchParams(value)
+    setFilteredList(
+      clientList.filter((x) => x.fullname.includes(value))
+    );
+    if (value === "") {
+      setFilteredList(clientList);
+    }
   }
 
   async function handleGetRefreshList(query?: number) {
@@ -64,7 +83,9 @@ export default function page() {
 
   useEffect(() => {
     if (tab === 'clients') handleGetLists(clientData)
-  }, [tab, clientData, isSuccess]);
+
+    if (tab === 'deposits' && clientDepositData) setDeposits(clientDepositData.data)
+  }, [tab, clientData, isSuccess, isSuccessDeposit]);
 
   return <section className={`${roboto_400.className} h-full pl-5`}>
     <div className="bg-black3 py-3 px-10">
@@ -115,7 +136,7 @@ export default function page() {
             placeholder={`Search ${tab}`}
             className="font-normal text-[17px] placeholder:capitalize py-3 pl-6 text-grey_700 flex-1 bg-[#181818] outline-none placeholder:text-grey_700"
             value={searchParams}
-          // onChange={(e) => handleSearchfilter(e.target.value)}
+            onChange={(e) => handleSearchfilter(e.target.value)}
           />
         </div>
 
@@ -144,96 +165,120 @@ export default function page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(tab === 'clients' ? clientFilteredList : []).map((tx, indx) => {
+                  {(tab === 'clients' ? clientFilteredList : tab === 'deposits' ? deposits : []).map((tx, indx) => {
                     return (
 
                       <tr key={indx} className={`${roboto_400.className} text-white h-[110px]`}>
-                        <td
+                        {("fullname" in tx) && <> <td
                           className=" text-white py-2 w-[200px]"
                           key={indx}
                         >
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
                             <Image
-                              src={`/tablepic/mum.png`}
+                              src={tx.photo ?? `/tablepic/mum.png`}
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-contain rounded-full"
+                              className="object-contain h-[42px] rounded-full"
                             />
                             <div className="ml-2.5">
                               <p
                                 className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}
                               >
-                                {tx.first_name} {tx.last_name}
+                                {tx.fullname.split(' ')[0]} {tx.fullname.split(' ')[1]}
                               </p>
                             </div>
                           </div>
                         </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.fullname.split(' ')[0]} {tx.fullname.split(' ')[1]}
+                          </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.role}
+                          </td>
 
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.first_name} {tx.last_name}
-                        </td>
+                          <td className="text-center font-normal text-xs">
+                            {tx.email}
+                          </td>
 
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.role}
-                        </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.substatus}
+                          </td>
+
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.verified ? 'Yes' : 'No'}
+                          </td>
+                        </>
+                        }
+
+                        {"full_name" in tx &&
+                          <>
+                            <td className="text-center font-normal text-xs capitalize">
+                              {tx.full_name}
+                            </td>
+
+                            <td className="text-center font-normal text-xs capitalize">
+                              {formatAmount(tx.amount.toString())}
+                            </td>
+
+                            <td className="text-center font-normal text-xs capitalize">
+                              {formatDateToDDMMYYYY(new Date(tx.createdAt).toISOString())}
+                            </td>
+
+                            <td className="text-center font-normal text-xs capitalize">
+                              {tx.status}
+                            </td>
+                          </>
+                        }
 
 
-                        <td className="text-center font-normal text-xs">
-                          {tx.email}
-                        </td>
 
-                        <td className="text-center font-normal text-xs capitalize">
-                          Not set
-                        </td>
-
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.verified ? 'Yes' : 'No'}
-                        </td>
 
                         <td className="">
                           <div className="flex items-center justify-center gap-x-5">
-                            {tab !== 'clients' ?
+                            {(tab !== 'clients' && "full_name" in tx) ?
                               <>
-                                <button className={`${roboto_700.className} bg-[#29A87C] text-[11px] text-white py-1 px-2.5`}>
+                                <button disabled={tx.is_used} className={`${roboto_700.className} ${tx.is_used ? 'bg-[#C4C4C4]' : 'bg-[#29A87C]'} text-[11px] text-white py-1 px-2.5`}>
                                   Confirm
                                 </button>
-                                <button className={`${roboto_700.className} bg-[#EE2726] text-[11px] text-white py-1 px-2.5`}>
+                                <button disabled={tx.is_used} className={`${roboto_700.className} ${tx.is_used ? 'bg-[#C4C4C4]' : 'bg-[#EE2726]'} text-[11px] text-white py-1 px-2.5`}>
                                   Failed
                                 </button>
                               </>
                               :
                               <>
-                                <button
-                                  onClick={() => [setIsViewClient(tx), setAddClient(true)]}
-                                >
-                                  <Image
-                                    src="/eyeWH.svg"
-                                    width={20}
-                                    height={20}
-                                    alt="view button"
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => [setIsEditClient(tx), setAddClient(true)]}
-                                >
-                                  <Image
-                                    src="/edit.svg"
-                                    width={14}
-                                    height={14}
-                                    alt="edit"
-                                  />
-                                </button>
-                                <button
-                                // onClick={() => handleDelete(tx._id)}
-                                >
-                                  <Image
-                                    src="/delete.svg"
-                                    width={15}
-                                    height={18}
-                                    alt="delete"
-                                  />
-                                </button>
+                                {"fullname" in tx && <>
+                                  <button
+                                    onClick={() => [setIsViewClient(tx), setAddClient(true)]}
+                                  >
+                                    <Image
+                                      src="/eyeWH.svg"
+                                      width={20}
+                                      height={20}
+                                      alt="view button"
+                                    />
+                                  </button>
+                                  <button
+                                    onClick={() => [setIsEditClient(tx), setAddClient(true)]}
+                                  >
+                                    <Image
+                                      src="/edit.svg"
+                                      width={14}
+                                      height={14}
+                                      alt="edit"
+                                    />
+                                  </button>
+                                  <button
+                                  // onClick={() => handleDelete(tx._id)}
+                                  >
+                                    <Image
+                                      src="/delete.svg"
+                                      width={15}
+                                      height={18}
+                                      alt="delete"
+                                    />
+                                  </button>
+                                </>}
                               </>
                             }
                           </div>

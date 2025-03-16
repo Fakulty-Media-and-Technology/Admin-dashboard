@@ -2,7 +2,7 @@
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IPagination } from "@/types/api/suggestion.types";
-import { IClientCreate, IClientsResponse } from "@/types/api/clients.types";
+import { IClientCreate, IClientsDepositResponse, IClientsResponse } from "@/types/api/clients.types";
 import { IGeneric } from "@/types/api/auth.types";
 
 export const clientsApiSlice = apiSlice.injectEndpoints({
@@ -19,10 +19,23 @@ export const clientsApiSlice = apiSlice.injectEndpoints({
                 };
             },
         }),
+
+        getClientsDeposit: builder.query<IClientsDepositResponse, void>({
+            query: (data) => {
+                const authToken = localStorage.getItem("auth_token");
+                return {
+                    url: `/superadmin/clients/deposits`,
+                    method: "GET",
+                    headers: {
+                        "superadmin-auth": `${authToken}`,
+                    },
+                };
+            },
+        }),
     }),
 });
 
-export const { useGetAllClientsQuery } = clientsApiSlice;
+export const { useGetClientsDepositQuery, useGetAllClientsQuery } = clientsApiSlice;
 
 export const getAllClients = async (data: IPagination) =>
     await apiCall<IClientsResponse>((baseApi) =>
@@ -32,7 +45,7 @@ export const getAllClients = async (data: IPagination) =>
     );
 
 
-export const createCLientAcc = async (data: IClientCreate) =>
+export const createCLientAcc = async (data: FormData) =>
     await apiCall<IGeneric>((baseApi) =>
         baseApi.post<IGeneric>(`/superadmin/create-clients`, data)
     );

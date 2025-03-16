@@ -3,6 +3,7 @@
 import {
   addFeaturedContent,
   searchFeaturedContent,
+  useGetFeaturesQuery,
   useSearchFeaturedContentMutation,
 } from "@/api/featureSlice";
 import {
@@ -24,8 +25,11 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/config/lottie/loading.json";
-import { IAddFeatured, ILiveContents } from "@/types/api/featured.types";
-import { getFutureDateInISO } from "@/utilities/dateUtilities";
+import { IAddFeatured, IFeaturedContentResponse, ILiveContents } from "@/types/api/featured.types";
+import { formatDateToDDMMYYYY, getFutureDateInISO } from "@/utilities/dateUtilities";
+import { IUpcomingData } from "@/types/api/upcoming.types";
+import { IEventData } from "@/types/api/live.types";
+import { formatAmount } from "@/utilities/formatAmount";
 
 export const runtime = "edge";
 
@@ -33,21 +37,36 @@ export const runtime = "edge";
 export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
-  const [userRole, setUserRole] = useState<string>("Regular");
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingX, setLoadingX] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [expiryHours, setExpiryHours] = useState<number>(0);
   const [addFeatured, setAddFeatured] = useState<IAddFeatured>(EmptyFeatured);
-  const [contentImg, setContentImg] = useState({
-    potrait: "",
-    landscape: "",
-  });
-  const [searchContent, { isLoading }] = useSearchFeaturedContentMutation();
-  const [searchedContentList, setContentList] = useState<ILiveContents[]>([]);
-  const [selectedContent, setSelectedContent] = useState<ILiveContents | null>(
+  const [searchedContentList, setContentList] = useState<(IUpcomingData | IEventData)[]>([]);
+  const [searchParams, setSearchParams] = useState<string>("");
+  const [selectedContent, setSelectedContent] = useState<IUpcomingData | IEventData | null>(
     null
   );
+  const [featuredEvents, setFeaturedEvents] = useState<
+    (IEventData | IUpcomingData)[]
+  >([]);
+  const [featuredEventsFiltered, setFeaturedEventsFiltered] = useState<
+    (IEventData | IUpcomingData)[]
+  >([]);
+  const {
+    data: featuredData,
+    refetch,
+    error,
+    isSuccess,
+    isLoading,
+  } = useGetFeaturesQuery({ limit: 10, page: 1 }, {});
+
+  function handleContentList(data: IFeaturedContentResponse | undefined) {
+    if (!data) return;
+    const featuredList = data.data;
+    setFeaturedEvents([...featuredList.vods_contents, ...featuredList.lives_contents]);
+    setFeaturedEventsFiltered([...featuredList.vods_contents, ...featuredList.lives_contents]);
+  }
 
   function handleExpiryHours(e: React.ChangeEvent<HTMLInputElement>) {
     const inputValue = e.target.value;
@@ -61,19 +80,27 @@ export default function page() {
     }
   }
 
-  async function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    e.preventDefault();
-    setSearchTerm(e.target.value);
+  function handleSearchfilter(value: string) {
+    if (stage === 'add') return
+    setSearchParams(value);
 
-    if (e.target.value === "") setContentList([]);
+    setFeaturedEventsFiltered(
+      featuredEvents.filter((x) => x.title.includes(searchParams))
+    );
+    if (value === "") {
+      setFeaturedEventsFiltered(featuredEvents);
+    }
+  }
+
+  async function handleSearch(value: string) {
+    setSearchTerm(value);
+
+    if (value === "") setContentList([]);
     try {
       setLoading(true);
-      const res = await searchFeaturedContent(e.target.value);
-      console.log(res);
+      const res = await searchFeaturedContent(value);
       if ((res.status === 200 || res.status === 201) && res.data) {
-        // let nameList: string[] = [];
-        // res.data.data.lives_contents.map((x) => nameList.push(x.title));
-        setContentList(res.data.data.lives_contents);
+        setContentList([...res.data.data.vods, ...res.data.data.events]);
       }
     } catch (error) {
       toast("Opps! couldn't search for content!", { type: "error" });
@@ -99,6 +126,10 @@ export default function page() {
       setLoadingX(false);
     }
   }
+
+  useEffect(() => {
+    handleContentList(featuredData);
+  }, [isSuccess]);
 
   switch (stage) {
     case "main":
@@ -126,6 +157,8 @@ export default function page() {
                 type="text"
                 placeholder="Search User"
                 className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
+                value={searchParams}
+                onChange={(e) => handleSearchfilter(e.target.value)}
               />
             </div>
 
@@ -156,7 +189,8 @@ export default function page() {
                   </tr>
                 </thead>
                 <tbody>
-                  {F_Table.map((tx, indx) => {
+                  {featuredEventsFiltered.map((tx, indx) => {
+                    const image = "coverPhoto" in tx ? tx.coverPhoto : tx.portraitPhoto
                     return (
                       <tr key={indx} className="text-white">
                         <td
@@ -165,11 +199,11 @@ export default function page() {
                         >
                           <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[160px]">
                             <Image
-                              src={`/tablepic/mum.png`}
+                              src={image}
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-contain rounded-full"
+                              className="object-contain h-[42px] rounded-full"
                             />
                             <div className="ml-2">
                               <p
@@ -187,27 +221,27 @@ export default function page() {
                                 <p
                                   className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
                                 >
-                                  {tx.views}
+                                  {tx.viewsCount}
                                 </p>
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="text-center font-normal text-xs">
-                          {tx.rating}
+                          {formatAmount("averageRating" in tx ? tx.defaultRating.toString() : '0')}
                         </td>
                         <td className="text-center font-normal text-xs capitalize">
-                          {tx.class}
+                          {tx.pg}
                         </td>
                         <td className="text-center font-normal text-xs capitalize">
                           {tx.type}
                         </td>
                         <td className="text-center font-normal text-xs capitalize">
-                          {tx.expired}
+                          {"expiryDate" in tx ? formatDateToDDMMYYYY(tx.expiryDate) : formatDateToDDMMYYYY(tx.expiry)}
                         </td>
                         <td>
                           <div className="flex items-center justify-center gap-x-4">
-                            <button>
+                            <button onClick={() => [setSelectedContent(tx), setStage("add")]}>
                               <Image
                                 src="/edit.svg"
                                 width={14}
@@ -233,34 +267,6 @@ export default function page() {
             </div>
           </div>
 
-          {/* <div className="bg-black2 relative z-50">
-            <div
-              className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
-            >
-              <button
-                className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_500`}
-              >
-                <span className="text-white mr-2">{`<<`}</span>
-                Previous
-              </button>
-              <div className="text-grey_500 text-[17px] font-medium space-x-1.5">
-                <span className="text-red">1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span className="ml-2 -mr-2">.....</span>
-              </div>
-              <button
-                className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_500`}
-              >
-                Next <span className="text-white mr-2">{`>>`}</span>
-              </button>
-            </div>
-          </div> */}
         </section>
       );
 
@@ -297,9 +303,9 @@ export default function page() {
                 <input
                   type="text"
                   value={searchTerm}
-                  placeholder="Search Content to add"
+                  placeholder="Search Content from Uploads to add"
                   className="font-normal text-[17px] py-[11.5px] pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-                  onChange={(e) => handleSearch(e)}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
               </div>
 
@@ -330,7 +336,7 @@ export default function page() {
             </div>
             {/* add butn */}
             <div
-              onClick={() => setStage("main")}
+              onClick={() => [setStage("main"), setSelectedContent(null)]}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
@@ -372,17 +378,17 @@ export default function page() {
               />
             </div>
 
-            {(contentImg.landscape !== "" || contentImg.potrait !== "") && (
+            {selectedContent && (
               <div className="mt-8 min-h-[436px] flex">
                 <Image
-                  src={contentImg.potrait}
+                  src={"portraitPhoto" in selectedContent ? selectedContent.portraitPhoto : selectedContent.coverPhoto}
                   alt=""
                   width={347}
                   height={436}
                   className="w-[347px] h-[436px] mr-2"
                 />
                 <Image
-                  src={contentImg.landscape}
+                  src={"portraitPhoto" in selectedContent ? selectedContent.portraitPhoto : selectedContent.coverPhoto}
                   alt=""
                   width={347}
                   height={436}

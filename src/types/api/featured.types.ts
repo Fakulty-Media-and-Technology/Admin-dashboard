@@ -1,4 +1,6 @@
 import { IGeneric } from "./auth.types";
+import { IEventData } from "./live.types";
+import { IUpcomingData } from "./upcoming.types";
 import { IPhotoData } from "./upload.types";
 
 export interface IFeaturedContentResponse extends IGeneric {
@@ -6,8 +8,8 @@ export interface IFeaturedContentResponse extends IGeneric {
 }
 
 export interface IFeaturedContent {
-  vods_contents: [];
-  lives_contents: ILiveContents[];
+  vods_contents: IUpcomingData[];
+  lives_contents: IEventData[];
 }
 
 export interface ILiveContents {

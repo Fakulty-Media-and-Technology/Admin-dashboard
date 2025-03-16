@@ -9,9 +9,25 @@ export interface IEventResponse extends IGeneric {
 export interface IEventData {
     _id: string;
     title: string;
-    cover_photo: IPhotoData;
-    vid_class: string;
-    pg: string;
+    location: string;
+    description: string;
     active: boolean;
+    expired: boolean;
+    type: string;
+    start: string;
+    sponsored: boolean;
+    popular: boolean;
+    featured: boolean;
+    coverPhoto: string;
+    createdAt: string;
+    updatedAt: string;
+    upcoming: boolean;
+    upcomingSubscribers: string[];
+    viewsCount: number;
+    streamKey: string;
+    vidClass: string
+    clientId: string;
+    previewVideoUploadDocSrc: string;
+    pg: string;
     expiry: string;
 }

@@ -4,10 +4,16 @@ export interface IUsersResponse extends IGeneric {
   data: IUser[];
 }
 
+export interface IUserResponse extends IGeneric {
+  data: IUser;
+}
+
 export interface IUser {
   _id: string;
   email: string;
   mobile: string;
+  country_code: string;
+  photo: string | null;
   verified: boolean;
   fullname: string;
   joined: string;
@@ -25,6 +31,8 @@ export interface IUserExample {
   mobile?: string;
   gender?: string;
   verified: string;
+  country_code: string;
+  photo: string | null;
 }
 
 export interface IEditUserRP {

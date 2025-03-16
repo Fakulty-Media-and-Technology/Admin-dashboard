@@ -19,9 +19,12 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import useToggle from "@/hooks/useToggle";
 import { TableComp } from "@/screens/AccScreen";
 import { IUser, IUserExample, IUsersResponse } from "@/types/api/users.types";
+import Lottie from "lottie-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import LoadingSpinner from "@/config/lottie/loading.json";
+
 
 const Roles = ["Regular", "Client", "Admin", "Super Admin"];
 const ClientRoles = ["Channels", "Events", "Tv Show", "Podcast"];
@@ -32,11 +35,10 @@ export const runtime = "edge";
 export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [userPic, setUserPic] = useState<File | null>(null);
-  const [userRole, setUserRole] = useState<string>("Regular");
   const [loading, setLoading] = useState<boolean>(false);
   const [phoneNo, setPhoneNo] = useState<string>("");
   const [gender, setGender] = useState<string>("Select your gender");
-  const [verifyUser, setVerifyUser] = useToggle();
+  const [verifyUser, setVerifyUser] = useState(false);
   const [isView, setIsView] = useState<boolean>(false);
   const [subscriptionStatus, setSubscriptionStatus] = useToggle();
   const [usersList, setUsersList] = useState<IUserExample[]>([]);
@@ -44,6 +46,7 @@ export default function page() {
     []
   );
   const [selectedUser, setSelectedUser] = useState<IUserExample>(Empty_UserRP);
+  const [pg, setPg] = useState<number>(1);
   const [firstName, setFirstName] = useState<string>(
     selectedUser.fullname.split(" ")[0]
   );
@@ -57,7 +60,24 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetUsersQuery(undefined, {});
+  } = useGetUsersQuery({ limit: 8, page: 1 }, {});
+  const [paginationList, setPaginationList] = useState(
+    [...Array(8)].map((_, i) => i + 1)
+  );
+  const paginationStep = 8;
+
+  const handleNext = () => {
+    setPaginationList((prevList) =>
+      prevList.map((num) => num + paginationStep)
+    );
+  };
+
+  const handlePrevious = () => {
+    if (paginationList[0] === 1) return;
+    setPaginationList((prevList) =>
+      prevList.map((num) => Math.max(1, num - paginationStep))
+    );
+  };
 
   const transformUserData = (usersRP: IUser[]) => {
     // if(usersRP.len) return [];
@@ -69,6 +89,8 @@ export default function page() {
       joined: new Date(user.joined).toLocaleDateString(),
       substatus: user.substatus,
       verified: user.verified ? "yes" : "no",
+      photo: user.photo,
+      country_code: user.country_code
     }));
   };
 
@@ -84,30 +106,48 @@ export default function page() {
     if (res.ok && res.data) {
       setSelectedUser((prev) => ({
         ...prev,
-        mobile: res.data?.data[0].mobile,
+        mobile: res.data?.data.mobile,
       }));
 
-      setGender(res.data.data[0].gender ?? "No gender selected");
+      setGender(res.data.data.gender ?? "No gender selected");
+      setVerifyUser(res.data.data.verified)
+    }
+  }
+
+  async function handleRefreshMedia(query?: number) {
+    try {
+      setLoading(true);
+      const res = await getAllUsers({ limit: 8, page: query ?? pg })
+      if (res.ok && res.data) {
+        handleUsersList(res.data);
+      } else {
+        toast(`Opps! couldn't get upcoming list`, { type: "error" });
+      }
+    } catch (error) {
+      toast(`Opps! couldn't get upcoming list`, { type: "error" });
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleUpdateUser() {
     try {
       setLoading(true);
-      const res = await updateUsers(
-        {
-          country_code: phoneNo,
-          date_of_birth: DOB,
-          first_name: firstName,
-          last_name: lastName,
-          email: selectedUser.email,
-          gender: gender,
-          mobile: selectedUser.mobile ?? "",
-        },
-        selectedUser._id
-      );
+      const formdata = new FormData();
+
+      if (userPic) formdata.append('photo', userPic);
+      formdata.append('firstName', firstName);
+      formdata.append('lastName', firstName);
+      formdata.append('email', selectedUser.email);
+      formdata.append('countryCode', selectedUser.country_code);
+      formdata.append('mobile', selectedUser.mobile ?? "");
+      formdata.append('gender', gender.toLowerCase());
+      formdata.append('dob', DOB);
+
+
+      const res = await updateUsers(formdata, selectedUser._id);
       if (res.ok && res.data) {
-        const resU = await getAllUsers();
+        const resU = await getAllUsers({ limit: 8, page: pg });
         if (resU.ok && resU.data) {
           handleUsersList(resU.data);
           setSelectedUser(Empty_UserRP);
@@ -116,6 +156,8 @@ export default function page() {
           setDOB("");
           setStage("main");
         }
+      } else {
+        toast(res.data?.message, { type: "error" });
       }
     } catch (error) {
       toast("Opps! could not update user", { type: "error" });
@@ -145,13 +187,13 @@ export default function page() {
       res.data.message.includes("deleted successfully")
     ) {
       toast("user deleted successfully", { type: "info" });
-      const resU = await getAllUsers();
+      const resU = await getAllUsers({ limit: 8, page: pg });
       if (resU.ok && resU.data) {
         handleUsersList(resU.data);
       }
     } else {
       toast("Opps! couldn't delete user", { type: "info" });
-      const resU = await getAllUsers();
+      const resU = await getAllUsers({ limit: 8, page: pg });
       if (resU.ok && resU.data) {
         handleUsersList(resU.data);
       }
@@ -213,109 +255,160 @@ export default function page() {
           </div>
 
           <div className="relative w-full md:h-[80%] h-[60%] pb-10 overflow-y-auto mt-8 pr-5">
-            <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
-              <table className={`${roboto_400.className} w-full min-w-[810px]`}>
-                <thead className="">
-                  <tr>
-                    {U_TableHeads.map((t, i) => {
+            <div className="absolute h-[700px] w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
+              <div className="h-full relative">
+                <table className={`${roboto_400.className} w-full min-w-[810px]`}>
+                  <thead className="">
+                    <tr>
+                      {U_TableHeads.map((t, i) => {
+                        return (
+                          <th
+                            key={i}
+                            className={`${roboto_500.className} font-medium text-lg text-white uppercase`}
+                          >
+                            {t}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usersListFiltered.map((tx, indx) => {
                       return (
-                        <th
-                          key={i}
-                          className={`${roboto_500.className} font-medium text-lg text-white uppercase`}
-                        >
-                          {t}
-                        </th>
+                        <tr key={indx} className="text-white">
+                          <td className="text-white py-2 min-w-[180px] pl-5">
+                            <div className="flex items-center justify-start pl-2 py-1 rounded">
+                              <Image
+                                src={tx.photo ? tx.photo : `/tablepic/mum.png`}
+                                width={42}
+                                height={42}
+                                alt="profiles"
+                                className="object-contain h-[42px] rounded-full"
+                              />
+                              <p
+                                className={`${roboto_500.className} ml-6 font-medium text-[#fff] text-[15px]`}
+                              >
+                                {tx.fullname}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="text-center font-normal text-xs underline">
+                            {tx.email}
+                          </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.subs} months
+                          </td>
+                          <td className="text-center font-normal text-xs">
+                            {tx.joined}
+                          </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.substatus}
+                          </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.verified}
+                          </td>
+                          <td>
+                            <div className="flex items-center justify-center gap-x-4">
+                              <button
+                                onClick={() => [
+                                  setIsView(true),
+                                  setStage("add"),
+                                  setSelectedUser(tx),
+                                  setFirstName(tx.fullname.split(" ")[0]),
+                                  setLastName(
+                                    tx.fullname.split(" ").slice(1).join(" ")
+                                  ),
+                                ]}
+                              >
+                                <Image
+                                  src="/eyeWH.svg"
+                                  width={16.97}
+                                  height={13.5}
+                                  alt="eyeWH"
+                                />
+                              </button>
+                              <button
+                                onClick={() => [
+                                  setStage("add"),
+                                  setSelectedUser(tx),
+                                  setFirstName(tx.fullname.split(" ")[0]),
+                                  setLastName(
+                                    tx.fullname.split(" ").slice(1).join(" ")
+                                  ),
+                                ]}
+                              >
+                                <Image
+                                  src="/edit.svg"
+                                  width={14}
+                                  height={14}
+                                  alt="edit"
+                                />
+                              </button>
+                              <button onClick={() => handleDelete(tx._id)}>
+                                <Image
+                                  src="/delete.svg"
+                                  width={15}
+                                  height={18}
+                                  alt="delete"
+                                />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
                       );
                     })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {usersListFiltered.map((tx, indx) => {
-                    return (
-                      <tr key={indx} className="text-white">
-                        <td className="text-white py-2 min-w-[180px] pl-5">
-                          <div className="flex items-center justify-start pl-2 py-1 rounded">
-                            <Image
-                              src={`/tablepic/mum.png`}
-                              width={42}
-                              height={42}
-                              alt="profiles"
-                              className="object-contain rounded-full"
-                            />
-                            <p
-                              className={`${roboto_500.className} ml-6 font-medium text-[#fff] text-[15px]`}
-                            >
-                              {tx.fullname}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="text-center font-normal text-xs underline">
-                          {tx.email}
-                        </td>
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.subs} months
-                        </td>
-                        <td className="text-center font-normal text-xs">
-                          {tx.joined}
-                        </td>
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.substatus}
-                        </td>
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.verified}
-                        </td>
-                        <td>
-                          <div className="flex items-center justify-center gap-x-4">
-                            <button
-                              onClick={() => [
-                                setIsView(true),
-                                setStage("add"),
-                                setSelectedUser(tx),
-                                setFirstName(tx.fullname.split(" ")[0]),
-                                setLastName(
-                                  tx.fullname.split(" ").slice(1).join(" ")
-                                ),
-                              ]}
-                            >
-                              <Image
-                                src="/eyeWH.svg"
-                                width={16.97}
-                                height={13.5}
-                                alt="eyeWH"
-                              />
-                            </button>
-                            <button
-                              onClick={() => [
-                                setStage("add"),
-                                setSelectedUser(tx),
-                                setFirstName(tx.fullname.split(" ")[0]),
-                                setLastName(
-                                  tx.fullname.split(" ").slice(1).join(" ")
-                                ),
-                              ]}
-                            >
-                              <Image
-                                src="/edit.svg"
-                                width={14}
-                                height={14}
-                                alt="edit"
-                              />
-                            </button>
-                            <button onClick={() => handleDelete(tx._id)}>
-                              <Image
-                                src="/delete.svg"
-                                width={15}
-                                height={18}
-                                alt="delete"
-                              />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+
+                <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  bottom-5 z-50 flex flex-row items-center">
+                  <div
+                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
+                  >
+                    <button
+                      onClick={handlePrevious}
+                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
+                    >
+                      <span className="text-white mr-2">{`<<`}</span>
+                      Previous
+                    </button>
+                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
+                      {paginationList.map((num, index) => {
+                        const active = pg === num;
+
+                        return (
+                          <p
+                            key={index}
+                            onClick={() => [
+                              setPg(num),
+                              handleRefreshMedia(num),
+                            ]}
+                            className={`${active ? "text-red" : "text-[#C4C4C4]"
+                              } cursor-pointer`}
+                          >
+                            {num}
+                          </p>
+                        );
+                      })}
+                      {"   "} ...
+                    </div>
+                    <button
+                      onClick={() => handleNext()}
+                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
+                    >
+                      Next <span className="text-white ml-2">{`>>`}</span>
+                    </button>
+                  </div>
+
+                  {loading && (
+                    <Lottie
+                      animationData={LoadingSpinner}
+                      loop
+                      style={{ width: 35, height: 35, marginLeft: 15 }}
+                    />
+                  )}
+                </div>
+
+              </div>
             </div>
           </div>
 
@@ -638,7 +731,7 @@ export default function page() {
                   >
                     <div
                       onClick={() =>
-                        isView ? console.log("nothing") : setVerifyUser()
+                        isView ? console.log("nothing") : setVerifyUser(!verifyUser)
                       }
                       className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${(
                         isView
@@ -693,7 +786,7 @@ export default function page() {
               )}
             </form>
 
-            <div className="mt-28">
+            {isView && <div className="mt-28">
               <p className={`${roboto_500.className} text-lg text-white`}>
                 PAYMENT HISTORY
               </p>
@@ -714,7 +807,7 @@ export default function page() {
               </div>
 
               <TableComp />
-            </div>
+            </div>}
           </div>
         </section>
       );

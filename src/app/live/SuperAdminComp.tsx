@@ -250,11 +250,11 @@ function SuperAdminComp() {
                         >
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
                             <Image
-                              src={`/tablepic/mum.png`}
+                              src={tx.coverPhoto}
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-contain rounded-full"
+                              className="object-cover h-[42px] rounded-full"
                             />
                             <div className="ml-2.5">
                               <p
@@ -272,7 +272,7 @@ function SuperAdminComp() {
                                 <p
                                   className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
                                 >
-                                  0
+                                  {tx.viewsCount}
                                 </p>
                               </div>
                             </div>
@@ -284,7 +284,7 @@ function SuperAdminComp() {
                         </td>
 
                         <td className="text-center font-normal text-xs capitalize">
-                          {tx.vid_class}
+                          {tx.vidClass}
                         </td>
 
 

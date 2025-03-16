@@ -1,4 +1,6 @@
 import { IGeneric } from "./auth.types";
+import { IEventData } from "./live.types";
+import { IMediaData } from "./media.types";
 
 export interface IUpcomingQuery {
   limit: number;
@@ -6,28 +8,21 @@ export interface IUpcomingQuery {
 }
 
 export interface IUpcomingResponse extends IGeneric {
-  data: IUpcomingData[];
+  data: {
+    vods: IUpcomingData[];
+    lives: IEventData[]
+  };
 }
 
-export interface IUpcomingData {
-  _id: string;
-  title: string;
+export interface IContentSearchResponse extends IGeneric {
+  data: {
+    vods: IUpcomingData[];
+    events: IEventData[]
+  };
+}
+
+export interface IUpcomingData extends IMediaData {
   type: string;
-  details: string;
-  reminder: [];
-  release_date: string;
-  active: boolean;
-  trailer_id: string;
-  portrait_photo: {
-    Bucket: string;
-    Key: string;
-    ContentType: string;
-  };
-  landscape_photo: {
-    Bucket: string;
-    Key: string;
-    ContentType: string;
-  };
 }
 
 export interface IUpcomingEventFormated {

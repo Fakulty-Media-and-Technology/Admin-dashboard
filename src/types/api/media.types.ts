@@ -24,9 +24,6 @@ export interface IMediaData {
     sub_title: string;
     description: string;
     viewsCount: number;
-    type: string;
-    bucket: string;
-    key: string;
     vidClass: string;
     pg: string;
     genre: ICategory[];
@@ -41,6 +38,8 @@ export interface IMediaData {
     featured: boolean;
     active: boolean;
     showViews: boolean;
+    upcoming: boolean;
+    upcomingSubscribers: string[]
     landscapePhoto: string;
     portraitPhoto: string;
     video: string;
@@ -49,6 +48,10 @@ export interface IMediaData {
     episodes?: IEpisodes[]
     seasons: [];
     createdAt: string
+}
+
+export interface IRemiders {
+    userId: string
 }
 
 

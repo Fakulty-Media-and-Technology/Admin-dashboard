@@ -1,7 +1,8 @@
 "use client";
 
-import { useGetUpcomingQuery } from "@/api/upcomingSlice";
+import { getUpcomingEvent, useGetUpcomingQuery } from "@/api/upcomingSlice";
 import {
+  AppButton,
   CustomInput,
   InputWithIcon,
   SelectInput,
@@ -19,6 +20,14 @@ import { formatAmount } from "@/utilities/formatAmount";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { ImageProps } from "../plans/ClientComponent";
+import { truncateText } from "@/utilities/textUtils";
+import { searchFeaturedContent } from "@/api/featureSlice";
+import { toast } from "react-toastify";
+import Lottie from "lottie-react";
+import LoadingSpinner from "@/config/lottie/loading.json";
+import { editContent } from "@/api/contentSlice";
+import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
+import { IEventData } from "@/types/api/live.types";
 
 
 export const runtime = "edge";
@@ -27,15 +36,17 @@ export const runtime = "edge";
 export default function page() {
   const [stage, setStage] = useState<string>("main");
   const [role, setRole] = useState<string>("user");
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loading_M, setLoading_M] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<string>("");
-  const [image, setImage] = useState<ImageProps | null>(null);
-  const [coverImage, setCoverImage] = useState<ImageProps | null>(null);
+  const [selectedUpcoming, setUpcoming] = useState<IEventData | IUpcomingData | null>(null)
+  const [searchedContentList, setContentList] = useState<(IEventData | IUpcomingData)[]>([]);
+  const [pg, setPg] = useState<number>(1);
   const [upcomingEvents, setUpcomingEvents] = useState<
-    IUpcomingEventFormated[]
+    (IEventData | IUpcomingData)[]
   >([]);
   const [upcomingEventsFiltered, setUpcomingEventsFiltered] = useState<
-    IUpcomingEventFormated[]
+    (IEventData | IUpcomingData)[]
   >([]);
 
   const {
@@ -45,51 +56,92 @@ export default function page() {
     isSuccess,
     isLoading,
   } = useGetUpcomingQuery({ limit: 10, page: 1 }, {});
+  const [paginationList, setPaginationList] = useState(
+    [...Array(8)].map((_, i) => i + 1)
+  );
+  const paginationStep = 8;
 
-  const transformEventData = (data: IUpcomingData[]) => {
-    // if(usersRP.len) return [];
-    return data.map((UP) => ({
-      ...UP,
-      title: UP.title,
-      reminder: formatAmount(UP.reminder.length.toString()),
-      type: UP.type,
-      option: "",
-      views: "0",
-    }));
+
+  const handleNext = () => {
+    setPaginationList((prevList) =>
+      prevList.map((num) => num + paginationStep)
+    );
+  };
+
+  const handlePrevious = () => {
+    if (paginationList[0] === 1) return;
+    setPaginationList((prevList) =>
+      prevList.map((num) => Math.max(1, num - paginationStep))
+    );
   };
 
   function handleUpcomingList(data: IUpcomingResponse | undefined) {
     if (!data) return;
-    const upcomingList = transformEventData(data.data);
-    setUpcomingEvents(upcomingList);
-    setUpcomingEventsFiltered(upcomingList);
+    const upcomingList = data.data;
+    setUpcomingEvents([...upcomingList.vods, ...upcomingList.lives]);
+    setUpcomingEventsFiltered([...upcomingList.vods, ...upcomingList.lives]);
   }
 
-  function handleSearchfilter(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearchParams(e.target.value);
+  function handleSearchfilter(value: string) {
+    if (stage === 'add') return
+    setSearchParams(value);
 
     setUpcomingEventsFiltered(
       upcomingEvents.filter((x) => x.title.includes(searchParams))
     );
-    if (e.target.value === "") {
+    if (value === "") {
       setUpcomingEventsFiltered(upcomingEvents);
     }
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
-    const files = e.target.files;
-    if (files) {
-      if (type === "cover") {
-        setCoverImage({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-        });
-      } else {
-        setImage({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-        });
+  async function handleSearch(value: string) {
+    setSearchParams(value);
+    if (value === "") setContentList([]);
+    try {
+      setLoading(true);
+      const res = await searchFeaturedContent(value);
+      if (res.ok && res.data) {
+        setContentList([...res.data.data.vods, ...res.data.data.events]);
       }
+    } catch (error) {
+      toast("Opps! couldn't search for content!", { type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpcomingToggle() {
+    if (!selectedUpcoming) return;
+    try {
+      setLoading_M(true);
+      const formdata = new FormData();
+      formdata.append('data', JSON.stringify({ upcoming: !selectedUpcoming.upcoming }));
+      const res = await editContent(formdata, selectedUpcoming._id);
+      if (res.ok && res.data) {
+        toast("Upcoming events!", { type: "success" });
+        setStage('main')
+        refetch();
+      }
+    } catch (error) {
+      toast("Opps! couldn't toggle upcoming events!", { type: "error" });
+    } finally {
+      setLoading_M(false);
+    }
+  }
+
+  async function handleRefreshMedia(query?: number) {
+    try {
+      setLoading(true);
+      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg })
+      if (res.ok && res.data) {
+        handleUpcomingList(res.data);
+      } else {
+        toast(`Opps! couldn't get upcoming list`, { type: "error" });
+      }
+    } catch (error) {
+      toast(`Opps! couldn't get upcoming list`, { type: "error" });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -97,6 +149,10 @@ export default function page() {
   useEffect(() => {
     handleUpcomingList(upcomingData);
   }, [isSuccess]);
+
+  useEffect(() => {
+    refetch();
+  }, [stage])
 
   switch (stage) {
     case "main":
@@ -123,7 +179,7 @@ export default function page() {
                 placeholder="Search Upcoming"
                 className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
                 value={searchParams}
-                onChange={(e) => handleSearchfilter(e)}
+                onChange={(e) => handleSearchfilter(e.target.value)}
               />
             </div>
 
@@ -137,132 +193,154 @@ export default function page() {
           </div>
 
           <div className="relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
-            <div className="absolute w-full py-5 pb-6 pl-0  sm:ml-0 sm:pl-3 md:pl-10 overflow-x-auto">
-              <table className={`${roboto_400.className} w-full min-w-[810px]`}>
-                <thead className="">
-                  <tr>
-                    {UP_TableHeads.map((t, i) => {
+            <div className="absolute h-[700px] w-full py-5 pb-6 pl-0  sm:ml-0 sm:pl-3 md:pl-10 overflow-x-auto">
+              <div className="h-full relative">
+                <table className={`${roboto_400.className} w-full min-w-[810px]`}>
+                  <thead className="">
+                    <tr>
+                      {UP_TableHeads.map((t, i) => {
+                        return (
+                          <th
+                            key={i}
+                            className={`${roboto_500.className} font-medium text-lg text-white uppercase`}
+                          >
+                            {t}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {upcomingEventsFiltered.map((tx, indx) => {
                       return (
-                        <th
-                          key={i}
-                          className={`${roboto_500.className} font-medium text-lg text-white uppercase`}
-                        >
-                          {t}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {upcomingEventsFiltered.map((tx, indx) => {
-                    return (
-                      <tr key={indx} className="text-white ">
-                        <td
-                          className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
-                          key={indx}
-                        >
-                          <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
-                            <Image
-                              src={`/tablepic/mum.png`}
-                              width={42}
-                              height={42}
-                              alt="profiles"
-                              className="object-contain rounded-full"
-                            />
-                            <div className="ml-2.5">
-                              <p
-                                className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}
-                              >
-                                {tx.title}
-                              </p>
-                              <div className="flex items-center -mt-[2px]">
-                                <Image
-                                  src="/views.svg"
-                                  width={12.5}
-                                  height={10}
-                                  alt="views"
-                                />
+                        <tr key={indx} className="text-white h-24">
+                          <td
+                            className="whitespace-nowrap text-white py-2 pr-4  w-[30px]"
+                            key={indx}
+                          >
+                            <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
+                              <Image
+                                src={"coverPhoto" in tx ? tx.coverPhoto : tx.portraitPhoto}
+                                width={42}
+                                height={42}
+                                alt="profiles"
+                                className="object-cover h-[42px] rounded-full"
+                              />
+                              <div className="ml-2.5">
                                 <p
-                                  className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
+                                  className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}
                                 >
-                                  {tx.views}
+                                  {tx.title}
                                 </p>
+                                <div className="flex items-center -mt-[2px]">
+                                  <Image
+                                    src="/views.svg"
+                                    width={12.5}
+                                    height={10}
+                                    alt="views"
+                                  />
+                                  <p
+                                    className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
+                                  >
+                                    {formatAmount(tx.viewsCount.toString())}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.reminder}
-                        </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {formatAmount((tx.upcomingSubscribers.length ?? 0).toString())}
+                          </td>
 
-                        <td className="text-center font-normal text-xs capitalize">
-                          {tx.type}
-                        </td>
+                          <td className="text-center font-normal text-xs capitalize">
+                            {tx.type}
+                          </td>
 
-                        <td className="w-[400px]">
-                          <div className="flex items-center justify-center gap-x-10">
-                            <button>
-                              <Image
-                                src="/edit.svg"
-                                width={14}
-                                height={14}
-                                alt="edit"
-                              />
-                            </button>
-                            <button>
-                              <Image
-                                src="/delete.svg"
-                                width={15}
-                                height={18}
-                                alt="delete"
-                              />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          <td className="w-[400px]">
+                            <div className="flex items-center justify-center gap-x-10">
+                              <button onClick={() => [setUpcoming(tx), setStage("add")]}>
+                                <Image
+                                  src="/edit.svg"
+                                  width={14}
+                                  height={14}
+                                  alt="edit"
+                                />
+                              </button>
+                              <button>
+                                <Image
+                                  src="/delete.svg"
+                                  width={15}
+                                  height={18}
+                                  alt="delete"
+                                />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  bottom-10 z-50 flex flex-row items-center">
+                  <div
+                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
+                  >
+                    <button
+                      onClick={handlePrevious}
+                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
+                    >
+                      <span className="text-white mr-2">{`<<`}</span>
+                      Previous
+                    </button>
+                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
+                      {paginationList.map((num, index) => {
+                        const active = pg === num;
+
+                        return (
+                          <p
+                            key={index}
+                            onClick={() => [
+                              setPg(num),
+                              handleRefreshMedia(num),
+                            ]}
+                            className={`${active ? "text-red" : "text-[#C4C4C4]"
+                              } cursor-pointer`}
+                          >
+                            {num}
+                          </p>
+                        );
+                      })}
+                      {"   "} ...
+                    </div>
+                    <button
+                      onClick={() => handleNext()}
+                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
+                    >
+                      Next <span className="text-white ml-2">{`>>`}</span>
+                    </button>
+                  </div>
+
+                  {loading && (
+                    <Lottie
+                      animationData={LoadingSpinner}
+                      loop
+                      style={{ width: 35, height: 35, marginLeft: 15 }}
+                    />
+                  )}
+                </div>
+
+              </div>
             </div>
           </div>
-
-          {/* <div className="w-100 bg-black2 relative top-18 z-50">
-            <div
-              className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
-            >
-              <button
-                className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_500`}
-              >
-                <span className="text-white mr-2">{`<<`}</span>
-                Previous
-              </button>
-              <div className="text-grey_500 text-[17px] font-medium space-x-1.5">
-                <span className="text-red">1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span className="ml-2 -mr-2">.....</span>
-              </div>
-              <button
-                className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_500`}
-              >
-                Next <span className="text-white mr-2">{`>>`}</span>
-              </button>
-            </div>
-          </div> */}
         </section>
       );
 
     case "add":
       return (
         <section
-          className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
+          className={`${roboto_400.className} relative h-full flex flex-col pl-5`}
         >
           <div className="bg-black3 py-3 px-10">
             <p className="font-normal text-lg text-grey_700">
@@ -271,24 +349,56 @@ export default function page() {
           </div>
 
           <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
-            <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
-              <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
-                <Image
-                  src="/searchIcon.svg"
-                  width={20}
-                  height={20}
-                  alt="search"
+            <div className="relative">
+              <div className="w-full sm:w-[326px] lg:w-[556px] flex items-center">
+                <button className="rounded-l-[10px] bg-red_500 py-[14px] flex items-center justify-center w-[63px]">
+                  {loading ? (
+                    <Lottie
+                      animationData={LoadingSpinner}
+                      loop
+                      style={{ width: 20, height: 20 }}
+                    />
+                  ) : (
+                    <Image
+                      src="/searchIcon.svg"
+                      width={20}
+                      height={20}
+                      alt="search"
+                    />
+                  )}
+                </button>
+                <input
+                  type="text"
+                  value={searchParams}
+                  placeholder="Search Content from Uploads to add"
+                  className="font-normal text-[17px] py-[11.5px] pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
-              </button>
-              <input
-                type="text"
-                placeholder="Search Content to add"
-                className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-              />
+              </div>
+
+              {searchedContentList.length > 0 && (
+                <div className="absolute top-12 mt-2 w-full border border-grey_1 rounded">
+                  {searchedContentList.map((content, i) => {
+                    return (
+                      <div
+                        onClick={() => [
+                          setUpcoming(content),
+                          setSearchParams(""),
+                          setContentList([])
+                        ]}
+                        className="text-white cursor-pointer bg-black2 p-3 w-full"
+                        key={i}
+                      >
+                        {content.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             {/* add butn */}
             <div
-              onClick={() => setStage("main")}
+              onClick={() => [setStage("main"), setSearchParams('')]}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
@@ -296,7 +406,7 @@ export default function page() {
           </div>
 
           {/* Implementing inside element */}
-          <div className="bg-black3 mt-[40px] px-5 md:px-10 lg:px-14 flex flex-col  md:flex-row items-start  md:gap-x-10 lg:gap-x-16 ">
+          <div className="bg-black3 flex-1 mt-[40px] px-5 md:px-10 lg:px-14 flex flex-col  md:flex-row items-start  md:gap-x-10 lg:gap-x-16 ">
             <div className="flex-1 ">
               <div className="flex-1">
                 <div className="h-[68px] w-full md:w-[364px] mt-10 items-center">
@@ -309,24 +419,27 @@ export default function page() {
                   <CustomInput
                     type="text"
                     id="title"
+                    value={selectedUpcoming?.title}
                     className="font-normal block w-full text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
+                    readOnly
                   />
                 </div>
               </div>
 
               {/* implementing details */}
               <div className="">
-                <div className="h-[139px] w-full md:w-[364px] mt-10">
+                <div className="h-[139px] flex flex-col w-full md:w-[364px] mt-10">
                   <label
-                    htmlFor="title"
+                    htmlFor="details"
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
                   >
                     Details *
                   </label>
-                  <CustomInput
-                    type="text"
-                    id="details"
-                    className="h-[111px] mt-3 border-[#D9D9D938]"
+                  <textarea
+                    name="details"
+                    value={selectedUpcoming?.description}
+                    className={`${roboto_400.className} textarea w-full h-[111px] mt-3 border-[#D9D9D938] border p-1 pl-2 outline-none bg-transparent text-sm text-white`}
+                    readOnly
                   />
                 </div>
               </div>
@@ -343,6 +456,7 @@ export default function page() {
                   type="text"
                   id="date"
                   readOnly
+                  value={!selectedUpcoming ? '' : formatDateToDDMMYYYY(new Date("start" in selectedUpcoming ? selectedUpcoming.start : selectedUpcoming?.releaseDate ?? '').toISOString())}
                   className="font-normal block w-[157px] text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
                 />
               </div>
@@ -350,13 +464,14 @@ export default function page() {
               {/* implementing the last save and  */}
               <div className="">
                 <div className="h-[200px] w-full md:w-[364px]">
-                  <button
-                    type="submit"
+                  <AppButton
                     style={{ alignSelf: "center" }}
                     className={`${roboto_500.className} font-medium text-lg text-white rounded-[5px] w-[145px] py-2 mt-20 bg-red_500`}
-                  >
-                    Save
-                  </button>
+                    onClick={handleUpcomingToggle}
+                    disabled={loading_M}
+                    isLoading={loading_M}
+                    title={selectedUpcoming?.upcoming ? 'Remove' : 'Save'}
+                  />
                 </div>
               </div>
               {/* last div for the body */}
@@ -372,22 +487,11 @@ export default function page() {
                   </p>
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
-                      <div
-                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                      >
-                        Choose File
-                      </div>
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {coverImage ? coverImage.name : "No File selected"}
+                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto) : "No File selected"}
                       </span>
-                      <input
-                        type="file"
-                        id="file"
-                        onChange={(e) => handleInput(e, "cover")}
-                        className="absolute z-20 opacity-0"
-                      />
                     </div>
                     <div
                       className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
@@ -397,17 +501,17 @@ export default function page() {
                   </div>
 
                   <div className="h-[150px] flex flex-row items-end mt-10 justify-center gap-x-3">
-                    {coverImage && (
+                    {selectedUpcoming && (
                       <>
                         <Image
                           id="upload"
-                          src={coverImage.url}
+                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto}
                           width={298}
                           height={159}
                           alt="uploaded"
-                          className="rounded-[10px]"
+                          className="object-cover w-[298px] h-[159px] rounded-[10px]"
                         />
-                        <button
+                        {/* <button
                           className="hover:scale-110 transition-all duration-200"
                           onClick={() => setCoverImage(null)}
                         >
@@ -417,7 +521,7 @@ export default function page() {
                             height={16}
                             alt="delete icon"
                           />
-                        </button>
+                        </button> */}
                       </>
                     )}
                   </div>
@@ -431,22 +535,11 @@ export default function page() {
                   </p>
                   <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
                     <div className="flex items-center ml-5 py-2 relative">
-                      <div
-                        className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                      >
-                        Choose File
-                      </div>
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {image ? image.name : "No File selected"}
+                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto) : "No File selected"}
                       </span>
-                      <input
-                        type="file"
-                        id="file"
-                        onChange={handleInput}
-                        className="absolute z-20 opacity-0"
-                      />
                     </div>
                     <div
                       className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[42px] px-4 flex items-center justify-center`}
@@ -455,18 +548,18 @@ export default function page() {
                     </div>
                   </div>
 
-                  <div className="h-[163px] flex flex-row items-end mt-1 justify-center gap-x-3">
-                    {image && (
+                  <div className="h-[173px] flex flex-row items-end mt-1 justify-center gap-x-3">
+                    {selectedUpcoming && (
                       <>
                         <Image
                           // id="upload"
-                          src={image.url}
-                          width={110}
-                          height={153}
+                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto}
+                          width={108}
+                          height={161}
                           alt="uploaded"
-                          className="h-[120px] rounded-[10px]"
+                          className="h-[161px] object-contain rounded-[10px]"
                         />
-                        <button
+                        {/* <button
                           className="hover:scale-110 transition-all duration-200"
                           onClick={() => setImage(null)}
                         >
@@ -476,7 +569,7 @@ export default function page() {
                             height={16}
                             alt="delete icon"
                           />
-                        </button>
+                        </button> */}
                       </>
                     )}
                   </div>

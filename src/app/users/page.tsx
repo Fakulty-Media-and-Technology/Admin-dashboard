@@ -84,13 +84,15 @@ export default function page() {
     return usersRP.map((user) => ({
       fullname: user.fullname,
       email: user.email,
-      subs: "0 ",
+      subs: `${user.subs.length > 0 ? user.subs[0].totalSubs : 0}`,
       _id: user._id,
       joined: new Date(user.joined).toLocaleDateString(),
       substatus: user.substatus,
       verified: user.verified ? "yes" : "no",
       photo: user.photo,
-      country_code: user.country_code
+      country_code: user.country_code,
+      walletBal: user.walletBal,
+      paymentHistory: user.paymentHistory,
     }));
   };
 
@@ -473,7 +475,7 @@ export default function page() {
                   >
                     WALLET BALANCE
                   </p>
-                  <p className="font-normal font-sm text-grey_500">$0</p>
+                  <p className="font-normal font-sm text-grey_500">{selectedUser.walletBal}</p>
                 </div>
               )}
             </div>
@@ -577,7 +579,7 @@ export default function page() {
                           id="subscription"
                           placeholder="3 Months"
                           className="font-normal text-sm py-2 mt-2 border text-grey_500 placeholder:text-input_grey border-border_grey rounded-sm"
-                          value={selectedUser.subs + "Months"}
+                          value={selectedUser.subs + " Months"}
                           readOnly
                         />
                       </div>

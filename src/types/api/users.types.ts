@@ -18,7 +18,10 @@ export interface IUser {
   fullname: string;
   joined: string;
   substatus: string;
+  paymentHistory: IPaymentHistory[]
   gender?: string;
+  walletBal: number
+  subs: ISubData[]
 }
 
 export interface IUserExample {
@@ -33,6 +36,8 @@ export interface IUserExample {
   verified: string;
   country_code: string;
   photo: string | null;
+  walletBal: number
+  paymentHistory: IPaymentHistory[]
 }
 
 export interface IEditUserRP {
@@ -43,4 +48,21 @@ export interface IEditUserRP {
   gender: string;
   country_code: string;
   mobile: string;
+}
+
+export interface IPaymentHistory {
+  _id: string;
+  amount: number;
+  reference: string;
+  status: string;
+  is_used: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ISubData {
+  _id: null | string;
+  plansDuration: number;
+  totalSubs: number;
+  totalAmount: number;
 }

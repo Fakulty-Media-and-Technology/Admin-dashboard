@@ -1,4 +1,5 @@
 import { IGeneric } from "./auth.types";
+import { IEventData } from "./live.types";
 
 export interface IDashboardTOTAL_Contents extends IGeneric {
   data: IDashboardTOTAL;
@@ -23,4 +24,14 @@ export interface IDashboardUsers {
   totUsers: number;
   freeUsers: number;
   activeSubscriptions: number;
+}
+
+export interface ILivestreamDetailsResponse extends IGeneric {
+  data: ILivestreamDetails[]
+}
+
+export interface ILivestreamDetails extends IEventData {
+  stream_server: string;
+  stream_url: string;
+  stream_key: string;
 }

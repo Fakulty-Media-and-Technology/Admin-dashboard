@@ -44,3 +44,28 @@ export function formatDateToDDMMYYYY(dateString: string) {
   const year = date.getFullYear();
   return `${year}-${month}-${day}`;
 }
+
+
+export function calculateEventDurationHours(startTime: string, expiryTime: string): number {
+  const startDate = new Date(startTime);
+  const expiryDate = new Date(expiryTime);
+
+  const durationMilliseconds = expiryDate.getTime() - startDate.getTime();
+  const durationHours = durationMilliseconds / (1000 * 60 * 60);
+
+  return durationHours;
+}
+
+export function calculateRemainingEventHours(expiryTime: string): number {
+  const expiryDate = new Date(expiryTime);
+  const currentDate = new Date();
+
+  if (currentDate.getTime() > expiryDate.getTime()) {
+    return 0; // Event has expired, return 0 hours
+  }
+
+  const remainingMilliseconds = expiryDate.getTime() - currentDate.getTime();
+  const remainingHours = remainingMilliseconds / (1000 * 60 * 60);
+
+  return remainingHours;
+}

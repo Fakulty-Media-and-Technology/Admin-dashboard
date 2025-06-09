@@ -27,6 +27,7 @@ import { ContentFormData, ISeasonData } from "@/types/api/content.type";
 import { addSeason, addSubtitle, createContent, editContent, getSeasons, seriesButtonValidity } from "@/api/contentSlice";
 import { IMediaData } from "@/types/api/media.types";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
+import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
 
 interface ModalProps {
   handleClose: () => void;
@@ -77,12 +78,12 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
 
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
-  const [cat_List, setCat_List] = useState<ICategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(selectedMedia ? selectedMedia.category.map(x => x.name) : []);
   const [selectedGenries, setSelectedGenries] = useState<string[]>(selectedMedia ? selectedMedia.genre.map(x => x.name) : []);
   const [selectedCasts, setSelectedCasts] = useState<string[]>(selectedMedia ? selectedMedia.cast.map(x => x.name) : []);
   const [castTxt, setCastTxt] = useState<string>("");
   const [genriesPlaceholder, setGenriesPlaceholder] = useState<string>("");
+  const [cat_List, setCat_List] = useState<ICategory[]>([]);
   const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
   const [links, setLinks] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.trailer } : null);
   const [links_2, setLinks_2] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.video } : null);
@@ -95,6 +96,8 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
   const [isDisabled_Seasons, setDisabled] = useState<boolean>(true);
+  const [showPicker, setColorPicker] = useState<boolean>(false);
+  const [color, setColor] = useState<string>(selectedMedia ? selectedMedia.primaryColor : '');
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
@@ -419,6 +422,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
           runtime: time,
           title: slug.includes('videos') ? subtitle : title,
           vidClass: class_.toLowerCase(),
+          primaryColor: color
         },
       };
 
@@ -1706,12 +1710,30 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
               </div>
             </div>
           </>
+
+        </div>
+
+        <div className="px-10 lg:px-16 my-10 cursor-pointer">
+          <p onClick={() => setColorPicker(!showPicker)} className={`${roboto_500.className} text-xl text-white`}>COVER COLOR SPLASH</p>
+          <p className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}>Select a prominent color from{"\n"}the cover poster above</p>
+
+          {showPicker &&
+            <div className="mt-5 color">
+
+              <HexAlphaColorPicker color={color} onChange={setColor} />
+
+              <div className="w-[380px] pl-7 pb-5 bg-[#33333a] pr-[30px] flex-row flex items-center">
+                <div className={`${roboto_500.className} text-lg px-2 pr-4 text-[#c4c4c4] w-fit p-1 rounded-lg border-2 border-[#686666]`}>Hex</div>
+                <div className={`${roboto_500.className} h-[38px] ml-2.5 text-lg px-2 pr-4 text-[#c4c4c4] flex-1 p-1 rounded-lg border-2 border-[#686666]`}>{color}</div>
+              </div>
+            </div>
+          }
         </div>
 
         <div className="px-10 lg:px-16 mt-4">
           <AppButton
             title="UPLOAD"
-            disabled={isDisabled && !slug.includes('series') && (links_2 || videoTrailer_2) === null}
+            disabled={isDisabled && !slug.includes('series') && (links_2 || videoTrailer_2) === null || color === ''}
             isLoading={loading}
             bgColor="bg-[#EE2726]"
             className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"

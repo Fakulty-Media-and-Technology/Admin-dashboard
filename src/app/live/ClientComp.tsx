@@ -4,9 +4,14 @@ import { outfit_500, roboto_400, roboto_500 } from "@/config/fonts";
 import Size from "@/utilities/useResponsiveSize";
 import Lottie from "lottie-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import Loading from "@/config/lottie/dots.json";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
+import { ILivestreamDetails } from "@/types/api/dashboard.types";
+import copy from 'copy-to-clipboard';
+import { toast } from "react-toastify";
+
 
 
 
@@ -14,23 +19,41 @@ export const ClientsComponent = () => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [mute, setMute] = useState<boolean>(false);
     const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false);
+    const [live, setLive] = useState<ILivestreamDetails | null>(null)
+    const {
+        data: livesteamDetails,
+        isSuccess: isSuccess_L,
+    } = useGetLivestreamDetailsQuery(undefined, {});
 
     function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.preventDefault();
         setIsPlaying(true);
     }
+
+    function handleCopy(value: string) {
+        copy(value);
+        toast('Copied!', { type: "info" })
+    }
+
+    useEffect(() => {
+        if (!livesteamDetails) return
+        setLive(livesteamDetails.data[0])
+    }, [isSuccess_L]);
+
+    console.log(live ? live.stream_url : '')
+
     return (
         <div className="lg:px-10 px-4 bg-black3 min-h-fit h-full py-5 pt-14 pb-6 mt-12 items-center flex flex-col">
             <div className="relative md:w-[55%] p-[2px] flex items-center bg-[#181818] h-11 justify-center">
                 <div className="flex items-center justify-center flex-1 px-4">
                     <input
                         type="text"
-                        value=""
+                        value={live?.stream_server}
                         readOnly
                         className={`${roboto_400.className} outline-none flex-1 text-center bg-transparent text-base text-[#747474]`}
                     />
                 </div>
-                <button className="lg:mr-6 mr-2">
+                <button onClick={() => handleCopy(live?.stream_server ?? '')} className="lg:mr-6 mr-2">
                     <Image
                         src="/copyIcon.svg"
                         alt=""
@@ -45,12 +68,12 @@ export const ClientsComponent = () => {
                 <div className="flex items-center justify-center flex-1 px-4">
                     <input
                         type="text"
-                        value=""
+                        value={live?.stream_key}
                         readOnly
                         className={`${roboto_400.className} outline-none flex-1 text-center bg-transparent text-base text-[#747474]`}
                     />
                 </div>
-                <button className="lg:mr-6 mr-2">
+                <button onClick={() => handleCopy(live?.stream_key ?? '')} className="lg:mr-6 mr-2">
                     <Image
                         src="/copyIcon.svg"
                         alt=""
@@ -78,7 +101,7 @@ export const ClientsComponent = () => {
                         muted={mute}
                         controls={false}
                         // onProgress={e => }
-                        url="https://dun8iiyns9vdz.cloudfront.net/Most%20beautiful%20girl%20in%20Turkey%20event%20preview/Most%20beautiful%20girl%20in%20Turkey%20event%20preview_720p.mp4?Expires=1726752358&Key-Pair-Id=K2PD9X1HYUOEDS&Signature=S3ycijr0mbVRnHrguslkHD7G9qXboq7dbdy~I80ELECJnO3JK7eI9f6gT~9DqSar1oV7IROXzWZcZTmAMDENs766LBof6FNJaXcMEg8cHJrdmT~jGRrUJTX21~fUuPaiD-In-jEhoixFLDwq2qiFSaMZ17s2zrKDglF7KZAlbXTRXAt9ViC5p0-zEA9sNhQozfHEHlWxm5BVjGrnMRM5lYyYx9HTVnUGfTuWnvxrhMtGmQYG6pLG3EarM0qbvvteJyJeS9AyCpmh4gEZEAQdjxoLovGmGzhiSm-Bo2j2WatIDZyn8kDtGh8K~AZeQAAEmrwlGN~rRg2Y-jolxQ5pmg__"
+                        url={live ? live.stream_url : ''}
                         width="100%" // Set to 100%
                         height="100%"
                         volume={1}

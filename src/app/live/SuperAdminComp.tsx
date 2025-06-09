@@ -1,4 +1,4 @@
-import { getFetchChannels, getFetchEvents, getFetchTVShows, useGetChannelsQuery, useGetEventsQuery, useGetTVShowsQuery } from '@/api/liveSlice';
+import { createLive, deleteLive, getFetchChannels, getFetchEvents, getFetchPodcast, getFetchSport, getFetchTVShows, useGetChannelsQuery, useGetEventsQuery, useGetPodcastQuery, useGetSportQuery, useGetTVShowsQuery } from '@/api/liveSlice';
 import { roboto_400, roboto_500 } from '@/config/fonts'
 import Lottie from 'lottie-react';
 import Image from 'next/image'
@@ -6,18 +6,25 @@ import React, { useEffect, useState } from 'react';
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from 'react-toastify';
 import { LIVE_TH } from '@/config/data/live';
-import { IEventData, IEventResponse } from '@/types/api/live.types';
+import { ICreateLiveData, IEventData, IEventResponse } from '@/types/api/live.types';
 import { AppButton, CustomInput, SelectInputForm } from '@/components/AppLayout';
 import ReactPlayer from 'react-player';
 import { formatAmount } from '@/utilities/formatAmount';
-import { getDates } from '@/utilities/dateUtilities';
+import { calculateEventDurationHours, calculateRemainingEventHours, getDates } from '@/utilities/dateUtilities';
 import { useEventEstimateMutation } from '@/api/extra.api';
 import { truncateText } from '@/utilities/textUtils';
 import { ImageProps } from '../plans/ClientComponent';
+import { ICategory } from '@/types/api/category.types';
+import { useGetCategoryQuery } from '@/api/categorySlice';
+import { searchClient } from '@/api/clientSlice';
+import { IClientsData } from '@/types/api/clients.types';
 
 
-const TABS = ['Channels', 'Events', 'Tv Shows', 'Podcast']
+const TABS = ['Channels', 'Events', 'Tv Shows', 'Podcasts', 'Sports']
 
+interface IFile extends ImageProps {
+  file?: File
+}
 
 function SuperAdminComp() {
   const [stage, setStage] = useState<string>('main')
@@ -25,6 +32,8 @@ function SuperAdminComp() {
   const [liveTable, setTable] = useState<IEventData[]>([])
   const [liveTableFiltered, setFilteredTable] = useState<IEventData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+  const [loading_B, setLoading_B] = useState<boolean>(false)
+  const [loading_C, setLoading_C] = useState<boolean>(false)
   const [pg, setPg] = useState<number>(1);
   const [paginationList, setPaginationList] = useState([...Array(8)].map((_, i) => i + 1));
   const paginationStep = 8;
@@ -32,19 +41,29 @@ function SuperAdminComp() {
   const isTVSHOW = tab.toLowerCase() === "tv shows";
   const isChannel = tab.toLowerCase() === "channels";
   const isPodcast = tab.toLowerCase() === "podcast";
-  const [catText, setCatText] = useState("");
-  const [items, setItems] = useState<string[]>([]);
   const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
   const [eventHours, setEventHours] = useState<string>("0");
-  const [details, setDetails] = useState(""); // State to store the textarea content
-  const [_class, setClass] = useState<string>("Select");
-  const [pg_M, setPG_] = useState<string>("Select");
-  const [isActive, setActive] = useState<boolean>(false);
-  const [coverImage, setCoverImage] = useState<ImageProps | null>(null);
-  const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
-  const [image, setImage] = useState<ImageProps | null>(null);
+  const [searchParams, setSearchParams] = useState<string>("");
+  const [selectedEvent, setEvent] = useState<IEventData | null>(null)
+  const [catText, setCatText] = useState("");
+  const [items, setItems] = useState<string[]>([]);
+  const [details, setDetails] = useState(selectedEvent ? selectedEvent.description : "");
+  const [_class, setClass] = useState<string>(selectedEvent ? selectedEvent.vidClass : "Select");
+  const [pg_M, setPG_] = useState<string>(selectedEvent ? selectedEvent.pg : "Select");
+  const [title, setTitle] = useState<string>(selectedEvent ? selectedEvent.title : "")
+  const [location, setLocation] = useState<string>(selectedEvent ? selectedEvent.location : "")
+  const [isActive, setActive] = useState<boolean>(selectedEvent ? selectedEvent.active : false);
+  const [coverImage, setCoverImage] = useState<IFile | null>(null);
+  const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
+  const [image, setImage] = useState<IFile | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [cat_List, setCat_List] = useState<ICategory[]>([]);
+  const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
+  const [searchClientParams, setSearchClient] = useState<string>("");
+  const [clientList, setClientList] = useState<IClientsData[]>([]);
+  const [client, setClient] = useState<IClientsData | null>(null);
   const maxLength = 200;
   const {
     data: allEvents,
@@ -59,6 +78,16 @@ function SuperAdminComp() {
   const {
     data: allTVShows,
   } = useGetTVShowsQuery({ limit: 5, page: pg }, {});
+  const {
+    data: allPodcast,
+  } = useGetPodcastQuery({ limit: 5, page: pg }, {});
+  const {
+    data: allSport,
+  } = useGetSportQuery({ limit: 5, page: pg }, {});
+  const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
+    undefined,
+    {}
+  );
 
   const [handleEstimate, { isLoading: isEstimatedLoading }] =
     useEventEstimateMutation();
@@ -80,41 +109,98 @@ function SuperAdminComp() {
     setFilteredTable(liveList);
   }
 
+  function handleSearchfilter(value: string) {
+    // if (stage === 'add') return
+    setSearchParams(value);
+
+    setFilteredTable(
+      liveTable.filter((x) => x.title.includes(searchParams))
+    );
+    if (value === "") {
+      setFilteredTable(liveTable);
+    }
+  }
+
+  async function handleSearch(value: string) {
+    setSearchClient(value);
+    if (value === "") setClientList([]);
+    try {
+      setLoading_C(true);
+      const res = await searchClient({ value });
+      if (res.ok && res.data) {
+        setClientList(res.data.data);
+      }
+    } catch (error) {
+      toast("Opps! couldn't find client!", { type: "error" });
+    } finally {
+      setLoading_C(false);
+    }
+  }
+
+  const handleInputChange = (value: string) => {
+    if (value === "") return;
+    if (!selectedCategories.includes(value)) setSelectedCategories([value, ...selectedCategories]);
+
+    setCat_Placeholder("");
+  };
 
   async function handleRefreshLive(query?: number) {
     try {
       setLoading(true);
-      const res = tab === 'channels' ? await getFetchChannels({ limit: 5, page: query ?? pg }) : tab === 'events' ? await getFetchEvents({ limit: 5, page: query ?? pg }) : await getFetchTVShows({ limit: 5, page: query ?? pg })
+      const res = tab === 'channels' ? await getFetchChannels({ limit: 5, page: query ?? pg }) : tab === 'events' ? await getFetchEvents({ limit: 5, page: query ?? pg }) : tab === 'podcasts' ? await getFetchPodcast({ limit: 5, page: query ?? pg }) : tab === 'sports' ? await getFetchSport({ limit: 5, page: query ?? pg }) : await getFetchTVShows({ limit: 5, page: query ?? pg })
       if (res.ok && res.data) {
-        // handleGetADSs(res.data)
+        handleLiveList(res.data)
       } else {
-        toast(`Opps! couldn't get ADSs list`, { type: "error" });
+        toast(`${res.data?.message}`, { type: "error" });
       }
     } catch (error) {
-      toast(`Opps! couldn't get ADSs list`, { type: "error" });
+      toast(`${error}`, { type: "error" });
     } finally {
       setLoading(false)
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.includes(",")) {
-      const newItem = value.split(",")[0].trim();
+  async function handleCreateLive() {
+    if (!client) return
+    console.log(tab.toLowerCase().slice(0, -1), coverImage?.name)
+    try {
+      setLoading_B(true);
+      const { end, start } = getDates(Number(eventHours));
+      const formdata = new FormData();
+      const data: ICreateLiveData = {
+        clientId: client._id,
+        title,
+        location,
+        description: details,
+        expiry: end,
+        pg: pg_M,
+        vidClass: _class.toLowerCase(),
+        type: tab.toLowerCase().slice(0, -1).trim().replace(' ', ''),
+        start,
+        subTitle: 'subtitle'
+      }
 
-      setItems([newItem, ...items]);
+      if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
+      if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
+      if (image && image.file) formdata.append('channelLogo', image.file);
+      formdata.append('data', JSON.stringify(data));
 
-      setCatText("");
-    } else {
-      setCatText(value);
+      const res = await createLive(formdata);
+      // console.log(res.data)
+      if (res.ok && res.data) {
+        toast(`${res.data.message}`, { type: "success" });
+        setStage('main')
+      } else {
+        toast(`${res.data?.message}`, { type: "error" });
+      }
+    } catch (error) {
+      toast(`${error}`, { type: "error" });
+    } finally {
+      setLoading_B(false);
+      handleRefreshLive();
     }
-  };
-
-
-
-  function handleDelete(value: string) {
-    setItems((prev) => prev.filter((item) => item !== value));
   }
+
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>, type?: string) {
     const files = e.target.files;
@@ -123,16 +209,19 @@ function SuperAdminComp() {
         setCoverImage({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0],
         });
       } else if (type === "video") {
         setVideoTrailer({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0],
         });
       } else {
         setImage({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
+          file: files[0],
         });
       }
     }
@@ -151,6 +240,23 @@ function SuperAdminComp() {
     }
   };
 
+  async function handleDelete(id: string) {
+    setFilteredTable(liveTableFiltered.filter((live) => live._id !== id));
+    setTable(liveTable.filter((live) => live._id !== id));
+    const res = await deleteLive({ _id: id });
+    if (
+      res.ok &&
+      res.data &&
+      res.data.message.includes("deleted successfully")
+    ) {
+      toast("Live deleted successfully", { type: "info" });
+      await handleRefreshLive();
+    } else {
+      toast("Opps! couldn't delete Live", { type: "info" });
+      await handleRefreshLive()
+    }
+  }
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     if (newText.length <= maxLength) {
@@ -163,16 +269,60 @@ function SuperAdminComp() {
     setIsPlaying(true);
   }
 
+  function handleImage() {
+    if (selectedEvent) {
+      setCoverImage({
+        name: truncateText(30, selectedEvent.coverPhoto),
+        url: selectedEvent.coverPhoto,
+      });
+
+      if (selectedEvent.type === 'channel') {
+        if (selectedEvent.channelLogo) setImage({
+          name: truncateText(30, selectedEvent.channelLogo),
+          url: selectedEvent.channelLogo,
+        })
+      } else {
+        setVideoTrailer({
+          name: truncateText(30, selectedEvent.previewVideo),
+          url: selectedEvent.previewVideo,
+        });
+      }
+
+      setTitle(selectedEvent.title);
+      setClass(selectedEvent.vidClass);
+      setPG_(selectedEvent.pg);
+      setLocation(selectedEvent.location);
+      setActive(selectedEvent.active);
+      setDetails(selectedEvent.description);
+
+      const hrs = calculateRemainingEventHours(selectedEvent.expiry)
+      setEventHours(formatAmount(hrs.toString()));
+    }
+  }
+
+  useEffect(() => {
+    handleImage();
+  }, [selectedEvent]);
+
+  useEffect(() => {
+    handleInputChange(cat_Placeholder);
+  }, [cat_Placeholder]);
+
+  useEffect(() => {
+    if (categories) {
+      const liveCategories = categories.data.filter(x => x.name.toLowerCase().includes('live'))
+      setCat_List(liveCategories)
+    };
+
+  }, [categories, isSuccess_C])
 
   useEffect(() => {
     if (tab === 'channels') handleLiveList(allChannels)
     if (tab === 'events') handleLiveList(allEvents)
     if (tab === 'tv shows') handleLiveList(allTVShows)
-    if (tab === 'podcast') {
-      setTable([])
-      setFilteredTable([])
-    }
-  }, [tab, allChannels, allTVShows, isSuccess])
+    if (tab === 'podcasts') handleLiveList(allPodcast)
+    if (tab === 'sports') handleLiveList(allSport)
+  }, [tab, allChannels, allTVShows, allPodcast, allSport, isSuccess])
 
 
   switch (stage) {
@@ -195,8 +345,8 @@ function SuperAdminComp() {
                   type="text"
                   placeholder={`Search Live`}
                   className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
-                //   value={searchParams}
-                //   onChange={(e) => handleSearchfilter(e)}
+                  value={searchParams}
+                  onChange={(e) => handleSearchfilter(e.target.value)}
                 />
               </div>
 
@@ -272,7 +422,7 @@ function SuperAdminComp() {
                                 <p
                                   className={`${roboto_400.className} font-normal text-[13px] text-grey_800 ml-1.5 `}
                                 >
-                                  {tx.viewsCount}
+                                  {formatAmount(tx.viewsCount.toString())}
                                 </p>
                               </div>
                             </div>
@@ -280,7 +430,7 @@ function SuperAdminComp() {
                         </td>
 
                         <td className="text-center font-normal text-xs capitalize">
-                          {tx.pg}+
+                          {tx.pg}
                         </td>
 
                         <td className="text-center font-normal text-xs capitalize">
@@ -298,9 +448,7 @@ function SuperAdminComp() {
 
                         <td className="">
                           <div className="flex items-center justify-center gap-x-5">
-                            <button
-                            // onClick={() => [setSelectedPlan({ data: { details: tx.details!, months: tx.month!, price: tx.price!, title: tx.title! }, _id: tx.id }), setShowModal(true)]}
-                            >
+                            <button>
                               <Image
                                 src="/liveGreen.svg"
                                 width={20}
@@ -309,7 +457,7 @@ function SuperAdminComp() {
                               />
                             </button>
                             <button
-                            // onClick={() => [setSelectedPlan({ data: { details: tx.details!, months: tx.month!, price: tx.price!, title: tx.title! }, _id: tx.id }), setShowModal(true)]}
+                              onClick={() => [setEvent(tx), setTab(tx.type + 's'), setStage('add')]}
                             >
                               <Image
                                 src="/edit.svg"
@@ -319,7 +467,7 @@ function SuperAdminComp() {
                               />
                             </button>
                             <button
-                            // onClick={() => handleDelete(tx._id)}
+                              onClick={() => handleDelete(tx._id)}
                             >
                               <Image
                                 src="/delete.svg"
@@ -388,7 +536,7 @@ function SuperAdminComp() {
 
             {/* add butn */}
             <div
-              onClick={() => setStage('main')}
+              onClick={() => [setStage('main'), setEvent(null), setVideoTrailer(null), setCoverImage(null), setImage(null)]}
               className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
             >
               Back
@@ -397,7 +545,7 @@ function SuperAdminComp() {
 
 
           <div className="mt-12 flex flex-row w-fit h-[43px]">
-            {TABS.map((x, i) => {
+            {!selectedEvent && TABS.map((x, i) => {
               const active = x.toLowerCase() === tab
               return (
                 <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
@@ -428,6 +576,8 @@ function SuperAdminComp() {
                           placeholder=""
                           id="name"
                           className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                          value={title}
+                          onChange={e => setTitle(e.target.value)}
                         />
                       </div>
                     ) : (
@@ -445,6 +595,8 @@ function SuperAdminComp() {
                             placeholder=""
                             id="name"
                             className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
                           />
                         </div>
 
@@ -453,7 +605,7 @@ function SuperAdminComp() {
                             htmlFor="subtitle"
                             className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
                           >
-                            SUB TITLE*
+                            LOCATION*
                           </label>
                           <CustomInput
                             required
@@ -461,6 +613,8 @@ function SuperAdminComp() {
                             placeholder=""
                             id="name"
                             className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                            value={location}
+                            onChange={e => setLocation(e.target.value)}
                           />
                         </div>
                       </>
@@ -605,14 +759,12 @@ function SuperAdminComp() {
                                   <ReactPlayer
                                     playing={isPlaying}
                                     muted={false}
-                                    controls={false}
-                                    // onProgress={e => }
+                                    controls={isPlaying}
                                     url={videoTrailer.url}
-                                    width="100%" // Set to 100%
+                                    width="100%"
                                     height="100%"
                                     volume={1}
                                     onEnded={() => setIsPlaying(false)}
-                                  // onReady={() => setIsPlayerReady(true)}
                                   />
                                 </div>
 
@@ -668,39 +820,46 @@ function SuperAdminComp() {
                     </span>
                     *
                   </label>
-                  <div className="h-[140px] border border-[#D9D9D938] mt-2 p-1 overflow-y-auto">
-                    <input
-                      type="text"
-                      placeholder="Start typing..."
-                      className={`${roboto_500.className} w-full outline-none bg-transparent text-sm text-white placeholder:text-grey_600/50`}
-                      value={catText}
-                      onChange={handleInputChange}
+                  <div className="h-[110px] mt-2">
+                    <SelectInputForm
+                      placeholder=""
+                      categoryListing={
+                        <div className="flex flex-1 flex-row flex-wrap gap-x-3 gap-y-1.5">
+                          {selectedCategories.map((item, i) => {
+                            return (
+                              <div
+                                key={i + item}
+                                className="flex flex-row items-center gap-x-[2px]"
+                              >
+                                <span
+                                  className={`${roboto_500.className} text-sm text-white`}
+                                >
+                                  {item}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    setSelectedCategories((prev) =>
+                                      prev.filter((x) => x !== item)
+                                    )
+                                  }
+                                >
+                                  <Image
+                                    src="/small_close_btn.svg"
+                                    width={9}
+                                    height={9}
+                                    alt=""
+                                  />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      }
+                      setType={setCat_Placeholder}
+                      selectData={cat_List.map((x) => x.name)}
+                      className="border-[#D9D9D938] h-[110px] items-start text-white rounded-sm flex-1"
                     />
 
-                    <div className="flex flex-row flex-wrap gap-x-3 gap-y-1.5 mt-2">
-                      {items.map((item, i) => {
-                        return (
-                          <div
-                            key={i + item}
-                            className="flex flex-row items-center gap-x-[2px]"
-                          >
-                            <span
-                              className={`${roboto_500.className} text-sm text-white`}
-                            >
-                              {item}
-                            </span>
-                            <button onClick={() => handleDelete(item)}>
-                              <Image
-                                src="/small_close_btn.svg"
-                                width={9}
-                                height={9}
-                                alt=""
-                              />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
                 </div>
 
@@ -716,6 +875,7 @@ function SuperAdminComp() {
                       maxLength={maxLength}
                       onChange={handleTextChange}
                       className={`${roboto_400.className} textarea w-full h-[80px] p-1 pl-2 outline-none bg-transparent text-sm text-white`}
+                      value={details}
                     />
                     <p
                       className={`${roboto_400.className} absolute bottom-0 right-1 text-sm text-[#C4C4C4]`}
@@ -727,20 +887,52 @@ function SuperAdminComp() {
 
                 <div className="pt-8 flex sm:flex-row flex-col flex-wrap gap-y-5 sm:items-end sm:justify-between">
                   {/* //here */}
-                  <div className="min-w-fit w-[257]">
-                    <label
-                      htmlFor="client"
-                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
-                    >
-                      ASSIGN TO CLIENT *
-                    </label>
-                    <CustomInput
-                      required
-                      type="text"
-                      placeholder="Search client here and select from dropdown"
-                      id="client"
-                      className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-[#C4C4C4]"
-                    />
+                  <div className='relative'>
+                    <div className='flex-row flex items-end gap-x-1'>
+                      <div className="min-w-fit w-[207]">
+                        <label
+                          htmlFor="client"
+                          className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
+                        >
+                          ASSIGN TO CLIENT *
+                        </label>
+                        <CustomInput
+                          required
+                          type="text"
+                          placeholder={selectedEvent ? selectedEvent.clientDetails.fullName : client ? client.fullname : "Search client here and select from dropdown"}
+                          id="client"
+                          className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-[#C4C4C4]"
+                          value={searchClientParams}
+                          onChange={e => handleSearch(e.target.value)}
+                        />
+                      </div>
+
+                      {loading_C && <Lottie
+                        animationData={LoadingSpinner}
+                        loop
+                        style={{ width: 35, height: 35, marginLeft: 15 }}
+                      />}
+                    </div>
+
+                    {clientList.length > 0 && (
+                      <div className="absolute top-12 mt-2 w-full border border-grey_1 rounded">
+                        {clientList.map((content, i) => {
+                          return (
+                            <div
+                              onClick={() => [
+                                setClient(content),
+                                setSearchClient(""),
+                                setClientList([])
+                              ]}
+                              className="text-white cursor-pointer bg-black2 p-3 w-full"
+                              key={i}
+                            >
+                              {content.fullname}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-row items-center gap-x-2 mr-20 mt-2">
@@ -783,6 +975,7 @@ function SuperAdminComp() {
                           placeholder="0"
                           id="name"
                           className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
+
                           onChange={(e) => handleGetEstimatedPrice(e)}
                         />
 
@@ -792,18 +985,18 @@ function SuperAdminComp() {
                           Extend Hours
                         </button>
                       </div>
-                      {/* <div
-                    className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
-                  >
-                    ₦{formatAmount(eventEstimatedPrice.toString())}.00
-                    {isEstimatedLoading && (
-                      <Lottie
-                        animationData={LoadingSpinner}
-                        loop
-                        style={{ width: 35, height: 35, marginRight: 5 }}
-                      />
-                    )}
-                  </div> */}
+                      <div
+                        className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
+                      >
+                        ₦{formatAmount(eventEstimatedPrice.toString())}.00
+                        {isEstimatedLoading && (
+                          <Lottie
+                            animationData={LoadingSpinner}
+                            loop
+                            style={{ width: 35, height: 35, marginRight: 5 }}
+                          />
+                        )}
+                      </div>
                     </div>
 
                   }
@@ -951,6 +1144,7 @@ function SuperAdminComp() {
                       placeholder="0"
                       id="name"
                       className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
+                      value={eventHours}
                       onChange={(e) => handleGetEstimatedPrice(e)}
                     />
 
@@ -960,7 +1154,7 @@ function SuperAdminComp() {
                       Extend Hours
                     </button>
                   </div>
-                  {/* <div
+                  <div
                     className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
                   >
                     ₦{formatAmount(eventEstimatedPrice.toString())}.00
@@ -971,7 +1165,7 @@ function SuperAdminComp() {
                         style={{ width: 35, height: 35, marginRight: 5 }}
                       />
                     )}
-                  </div> */}
+                  </div>
                 </div>
               </div>}
               {/* RIGHT END */}
@@ -979,9 +1173,11 @@ function SuperAdminComp() {
 
             <div className="w-[170px] mt-10">
               <AppButton
-                onClick={() => setIsPaymentActive(true)}
+                onClick={handleCreateLive}
                 title="SAVE"
                 className="w-full"
+                isLoading={loading_B}
+                disabled={location === '' || title === '' || pg_M === '' || _class === '' || !client || loading_B || !coverImage || (tab.toLowerCase() === 'channel' ? !image : !videoTrailer)}
               />
             </div>
           </div>

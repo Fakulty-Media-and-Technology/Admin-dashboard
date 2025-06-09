@@ -26,6 +26,7 @@ export interface IMediaData {
     viewsCount: number;
     vidClass: string;
     pg: string;
+    primaryColor: string;
     genre: ICategory[];
     category: ICategory[];
     cast: ICast[];

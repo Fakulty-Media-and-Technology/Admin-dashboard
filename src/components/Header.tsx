@@ -60,7 +60,7 @@ function Header() {
               <Image src="/notification.svg" alt="" width={24} height={24} />
             </button>
             <button>
-              <Image src="/user.png" alt="" width={27} height={27} />
+              <Image src={(user && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"} alt="" width={27} height={27} className="w-[27px] h-[27px] rounded-full" />
             </button>
 
             <div className="flex items-center">

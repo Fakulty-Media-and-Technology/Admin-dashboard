@@ -63,14 +63,14 @@ export const ModalComponent = ({
             name: names,
             title,
           }
-          : tab === 'genre' ?
-            {
-              name: title,
-              position: Number(position)
-            }
-            : {
-              name: title,
-            };
+          :
+          {
+            name: title,
+            position: Number(position)
+          }
+      // : {
+      //   name: title,
+      // };
       const res = await addCategoryEnums(data, tab);
       if (res.ok && res.data) {
         toast(`Successfully added ${tab}`, {
@@ -87,7 +87,7 @@ export const ModalComponent = ({
           handleReset(resCAT.data);
         }
       } else {
-        toast(`Opps! couldn't add ${tab}`, {
+        toast(`${res.data?.message}`, {
           type: "error",
         });
       }

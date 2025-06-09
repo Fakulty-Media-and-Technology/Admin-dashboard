@@ -155,7 +155,7 @@ export default function page() {
               </button>
               <input
                 type="text"
-                placeholder="Search User"
+                placeholder="Search Featured Content"
                 className="font-normal text-[17px] py-3 pl-6 text-grey_700 flex-1 bg-black3 outline-none placeholder:text-grey_700"
                 value={searchParams}
                 onChange={(e) => handleSearchfilter(e.target.value)}

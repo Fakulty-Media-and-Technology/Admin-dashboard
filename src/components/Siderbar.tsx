@@ -217,6 +217,7 @@ function Siderbar() {
   const isTVSHOW = user?.profile.role.toLowerCase() === "tvshows";
   const isChannel = user?.profile.role.toLowerCase() === "channels";
   const isPodcast = user?.profile.role.toLowerCase() === "podcast";
+  const isSport = user?.profile.role.toLowerCase() === "sport";
   const FullSideLinks = [...clientsLinks];
   const WIDTH = Size.getWidth();
   const isActive = pathname === "/cta";
@@ -238,11 +239,11 @@ function Siderbar() {
 
             <div className="relative w-[50px] h-[50px] md:-mt-10 transition-all duration-500 ease-in-out">
               <Image
-                src="/user.png"
+                src={(user && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"}
                 width={50}
                 height={50}
                 alt=""
-              //   className="mr-2"
+                className="h-[50px] w-[50px] rounded-full"
               />
 
               {/* <button className="absolute right-0 bottom-2">
@@ -262,7 +263,7 @@ function Siderbar() {
                 {user?.profile.first_name} {user?.profile.last_name}
               </h4>
               <p className="text-grey_600 text-sm text-center uppercase mt-1">
-                ADMIN PANEL
+                {(user && user.profile) ? user.profile.role : 'ADMIN'} PANEL
               </p>
             </div>
 

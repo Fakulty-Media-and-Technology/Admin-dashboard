@@ -76,8 +76,8 @@ export default function page() {
         return {
           ...CAT,
           title: CAT.name,
-          position: "0",
-          location: "Not set",
+          position: "position" in CAT ? CAT.position : '0',
+          location: CAT.name.toLowerCase().includes('live') ? 'Live' : 'Homepage',
         };
       }
     });

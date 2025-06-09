@@ -50,4 +50,7 @@ export const createCLientAcc = async (data: FormData) =>
         baseApi.post<IGeneric>(`/superadmin/create-clients`, data)
     );
 
+export const searchClient = async (data: { value: string }) =>
+    await apiCall<IClientsResponse>(baseApi => baseApi.get<IClientsResponse>(`/superadmin/lives/search-clients?search=${data.value}&page=1&limit=9999999999`))
+
 

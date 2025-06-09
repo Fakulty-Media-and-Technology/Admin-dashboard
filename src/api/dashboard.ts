@@ -5,9 +5,11 @@ import { SuperUserResponse, UserResponse } from "@/types/api/profile.types";
 import {
   IDashboardTOTAL_Contents,
   IDashboardTOTAL_Users,
+  ILivestreamDetailsResponse,
 } from "@/types/api/dashboard.types";
 
 const SUPERADMIN_URL = "superadmin";
+const CLIENT_URL = "clients";
 
 export const dashboardApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -36,10 +38,25 @@ export const dashboardApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+
+
+    getLivestreamDetails: builder.query<ILivestreamDetailsResponse, void>({
+      query: () => {
+        const authToken = localStorage.getItem("auth_token");
+        return {
+          url: `${CLIENT_URL}/livestream/streamkey`,
+          method: "GET",
+          headers: {
+            "clients-auth": `${authToken}`,
+          },
+        };
+      },
+    }),
   }),
 });
 
 export const {
   useGetDashboardContentListQuery,
   useGetDashboardTotalUserQuery,
+  useGetLivestreamDetailsQuery
 } = dashboardApiSlice;

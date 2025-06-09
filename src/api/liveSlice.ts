@@ -12,7 +12,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/lives/all/events?limit=${data.limit}&page=${data.page}`,
+                    url: `/superadmin/lives/all/event?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -25,7 +25,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/lives/all/channels?limit=${data.limit}&page=${data.page}`,
+                    url: `/superadmin/lives/all/channel?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -39,7 +39,33 @@ export const liveApiSlice = apiSlice.injectEndpoints({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `/superadmin/lives/all/tvshows?limit=${data.limit}&page=${data.page}`,
+                    url: `/superadmin/lives/all/tvshow?limit=${data.limit}&page=${data.page}`,
+                    method: "GET",
+                    headers: {
+                        "superadmin-auth": `${authToken}`,
+                    },
+                };
+            },
+        }),
+
+        getPodcast: builder.query<IEventResponse, IPagination>({
+            query: (data) => {
+                const authToken = localStorage.getItem("auth_token");
+                return {
+                    url: `/superadmin/lives/all/podcast?limit=${data.limit}&page=${data.page}`,
+                    method: "GET",
+                    headers: {
+                        "superadmin-auth": `${authToken}`,
+                    },
+                };
+            },
+        }),
+
+        getSport: builder.query<IEventResponse, IPagination>({
+            query: (data) => {
+                const authToken = localStorage.getItem("auth_token");
+                return {
+                    url: `/superadmin/lives/all/sport?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -50,32 +76,53 @@ export const liveApiSlice = apiSlice.injectEndpoints({
     }),
 });
 
-export const { useGetChannelsQuery, useGetEventsQuery, useGetTVShowsQuery } = liveApiSlice;
+export const { useGetChannelsQuery, useGetEventsQuery, useGetTVShowsQuery, useGetPodcastQuery, useGetSportQuery } = liveApiSlice;
 
 export const getFetchTVShows = async (data: IPagination) =>
     await apiCall<IEventResponse>((baseApi) =>
         baseApi.get<IEventResponse>(
-            `/superadmin/lives/all/tvshows?limit=${data.limit}&page=${data.page}`
+            `/superadmin/lives/all/tvshow?limit=${data.limit}&page=${data.page}`
         )
     );
 
 export const getFetchEvents = async (data: IPagination) =>
     await apiCall<IEventResponse>((baseApi) =>
         baseApi.get<IEventResponse>(
-            `/superadmin/lives/all/events?limit=${data.limit}&page=${data.page}`
+            `/superadmin/lives/all/event?limit=${data.limit}&page=${data.page}`
         )
     );
 
 export const getFetchChannels = async (data: IPagination) =>
     await apiCall<IEventResponse>((baseApi) =>
         baseApi.get<IEventResponse>(
-            `/superadmin/lives/all/channels?limit=${data.limit}&page=${data.page}`
+            `/superadmin/lives/all/channel?limit=${data.limit}&page=${data.page}`
+        )
+    );
+export const getFetchPodcast = async (data: IPagination) =>
+    await apiCall<IEventResponse>((baseApi) =>
+        baseApi.get<IEventResponse>(
+            `/superadmin/lives/all/podcast?limit=${data.limit}&page=${data.page}`
+        )
+    );
+export const getFetchSport = async (data: IPagination) =>
+    await apiCall<IEventResponse>((baseApi) =>
+        baseApi.get<IEventResponse>(
+            `/superadmin/lives/all/sport?limit=${data.limit}&page=${data.page}`
         )
     );
 
-// export const addCategoryEnums = async (data: IAddCategory, path: string) =>
-//   await apiCall<IGeneric>((baseApi) =>
-//     baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data)
-//   );
+export const createLive = async (data: FormData) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.post<IGeneric>(`/superadmin/lives/create`, data, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        })
+    );
+
+export const deleteLive = async (data: { _id: string }) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.delete<IGeneric>(`/superadmin/lives/delete/${data._id}`, data)
+    );
 
 

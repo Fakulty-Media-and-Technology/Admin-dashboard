@@ -95,8 +95,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-radius: 4px;
 }
 
-input~.checkbox-container{
-  background-color: 'transparent';
+input ~ .checkbox-container {
+  background-color: "transparent";
 }
 .feature {
   height: 762px;
@@ -151,4 +151,35 @@ input~.checkbox-container{
   width: 500px;
   margin: 20px auto;
   padding-top: 10px;
+}
+
+.color .react-colorful {
+  width: 380px;
+  height: 450px;
+  background: #33333a;
+}
+
+.color .react-colorful__hue,
+.color .react-colorful__alpha {
+  width: 85%;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: 30px;
+  border-radius: 100px;
+}
+
+.color .react-colorful__hue {
+  margin-top: 25px;
+}
+
+.color .react-colorful__alpha {
+  margin-bottom: 25px;
+}
+
+.color .react-colorful__hue-pointer,
+.color .react-colorful__alpha-pointer {
+  width: 23px;
+  height: 23px;
+  border-width: 5px;
+  box-shadow: 0 2px 12px #333;
 }

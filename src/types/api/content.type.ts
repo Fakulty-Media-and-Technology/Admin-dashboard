@@ -4,6 +4,7 @@ import { IGeneric } from "./auth.types";
 export interface ContentData {
   title: string;
   pg: string;
+  primaryColor: string;
   releasedDate: string;
   category: string[];
   genre: string[];

@@ -31,6 +31,7 @@ import Loading from "@/config/lottie/dots.json";
 import {
   useGetDashboardContentListQuery,
   useGetDashboardTotalUserQuery,
+  useGetLivestreamDetailsQuery,
 } from "@/api/dashboard";
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
@@ -69,6 +70,7 @@ function page() {
   const isTVSHOW = user?.profile?.role === "tvshow";
   const isChannel = user?.profile?.role === "channel";
   const isPodcast = user?.profile?.role === "podcast";
+  const [liveUrl, setLiveUrl] = useState<string>('')
   const [clientOverview, setClientOverview] = useState<OverviewProps[]>([
     ...overviewPOints,
   ]);
@@ -80,6 +82,10 @@ function page() {
     isSuccess,
     isLoading,
   } = useGetDashboardContentListQuery(undefined, {});
+  const {
+    data: livesteamDetails,
+    isSuccess: isSuccess_L,
+  } = useGetLivestreamDetailsQuery(undefined, {});
 
   const { data: dashboardTotUsers, refetch: dashboardTotUserRefresh } =
     useGetDashboardTotalUserQuery(undefined, {});
@@ -92,6 +98,11 @@ function page() {
   useEffect(() => {
     console.log("isPlaying:", isPlaying);
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (!livesteamDetails || isSuperAdmin) return
+    setLiveUrl(livesteamDetails.data[0].stream_url)
+  }, [isSuccess_L])
 
   useEffect(() => {
     refetch();
@@ -301,7 +312,7 @@ function page() {
                 muted={mute}
                 controls={false}
                 // onProgress={e => }
-                url="https://dun8iiyns9vdz.cloudfront.net/Most%20beautiful%20girl%20in%20Turkey%20event%20preview/Most%20beautiful%20girl%20in%20Turkey%20event%20preview_720p.mp4?Expires=1726752358&Key-Pair-Id=K2PD9X1HYUOEDS&Signature=S3ycijr0mbVRnHrguslkHD7G9qXboq7dbdy~I80ELECJnO3JK7eI9f6gT~9DqSar1oV7IROXzWZcZTmAMDENs766LBof6FNJaXcMEg8cHJrdmT~jGRrUJTX21~fUuPaiD-In-jEhoixFLDwq2qiFSaMZ17s2zrKDglF7KZAlbXTRXAt9ViC5p0-zEA9sNhQozfHEHlWxm5BVjGrnMRM5lYyYx9HTVnUGfTuWnvxrhMtGmQYG6pLG3EarM0qbvvteJyJeS9AyCpmh4gEZEAQdjxoLovGmGzhiSm-Bo2j2WatIDZyn8kDtGh8K~AZeQAAEmrwlGN~rRg2Y-jolxQ5pmg__"
+                url={liveUrl}
                 width="100%" // Set to 100%
                 height="100%"
                 volume={1}

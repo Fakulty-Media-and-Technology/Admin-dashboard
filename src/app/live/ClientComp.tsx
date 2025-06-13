@@ -11,11 +11,16 @@ import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { ILivestreamDetails } from "@/types/api/dashboard.types";
 import copy from 'copy-to-clipboard';
 import { toast } from "react-toastify";
-
-
+import { selectUserProfile } from "@/store/slices/usersSlice";
+import { useAppSelector } from "@/hooks/reduxHook";
+import dynamic from "next/dynamic";
+const LiveStreamPlayer = dynamic(() => import('@/components/LiveStreamPlayer'), {
+  ssr: false,
+});
 
 
 export const ClientsComponent = () => {
+      const user = useAppSelector(selectUserProfile);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [mute, setMute] = useState<boolean>(false);
     const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false);
@@ -27,7 +32,7 @@ export const ClientsComponent = () => {
 
     function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.preventDefault();
-        setIsPlaying(true);
+        setIsPlaying(!isPlaying);
     }
 
     function handleCopy(value: string) {
@@ -40,7 +45,7 @@ export const ClientsComponent = () => {
         setLive(livesteamDetails.data[0])
     }, [isSuccess_L]);
 
-    console.log(live ? live.stream_url : '')
+    // console.log(live ? live.stream_url : '')
 
     return (
         <div className="lg:px-10 px-4 bg-black3 min-h-fit h-full py-5 pt-14 pb-6 mt-12 items-center flex flex-col">
@@ -59,7 +64,7 @@ export const ClientsComponent = () => {
                         alt=""
                         width={24}
                         height={24}
-                        className="w-4 md:w-5 lg:w-6 h-4 md:h-5 lg:h-6  object-contain rounded-full items-start"
+                        className="w-4 md:w-5 lg:w-6 h-4 md:h-5 lg:h-6 object-contain items-start"
                     />
                 </button>
             </div>
@@ -79,7 +84,7 @@ export const ClientsComponent = () => {
                         alt=""
                         width={24}
                         height={24}
-                        className="w-4 md:w-5 lg:w-6 h-4 md:h-5 lg:h-6  object-contain rounded-full items-start"
+                        className="w-4 md:w-5 lg:w-6 h-4 md:h-5 lg:h-6 object-contain items-start"
                     />
                 </button>
             </div>
@@ -91,12 +96,12 @@ export const ClientsComponent = () => {
                 stream software
             </p>
 
-            <div className="h-[60%] min-h-[370px] mt-10 w-full lg:w-[65.5%] relative mx-auto">
+            <div className="h-[73%] min-h-[370px] mt-10 w-full lg:w-[65.5%] relative overflow-hidden mx-auto">
                 <div
                     style={{ zIndex: isPlaying ? 20 : 0 }}
                     className="absolute w-full h-full"
                 >
-                    <ReactPlayer
+                    <LiveStreamPlayer
                         playing={isPlaying}
                         muted={mute}
                         controls={false}
@@ -112,7 +117,7 @@ export const ClientsComponent = () => {
 
                 {/* {isPlayerReady && ( */}
                 <Image
-                    src="/coverphoto.png"
+              src={livesteamDetails?.data[0].coverPhoto ?? "/coverphoto.png"}
                     alt=""
                     width={Size.calcWidth(100)}
                     height={Size.calcHeight(100)}
@@ -149,7 +154,7 @@ export const ClientsComponent = () => {
                             className="flex flex-row items-center"
                         >
                             <Image
-                                src="/channels.png"
+                                src={user ? user.photo_url : '/channels.png'}
                                 alt=""
                                 width={28}
                                 height={28}
@@ -158,7 +163,7 @@ export const ClientsComponent = () => {
                             <span
                                 className={`${outfit_500.className} font-medium text-[13px] text-white ml-2`}
                             >
-                                Channels News
+                                {user?.profile.first_name} {user?.profile.last_name}
                             </span>
                         </div>
 
@@ -183,25 +188,28 @@ export const ClientsComponent = () => {
                         >
                             <div className="w-[10px] h-[10px] animate-pulse rounded-full bg-red_500 " />
                             <span
-                                className={`${outfit_500.className} font-medium text-[13px] text-white`}
-                            >
-                                LIVE
-                            </span>
-                            <div style={{}}>
-                                <Image
-                                    src="/unmute.svg"
-                                    alt=""
-                                    width={24}
-                                    height={24}
-                                    className="object-contain rounded-full"
-                                />
-                            </div>
+                                               className={`${outfit_500.className} font-medium text-[13px] text-white`}
+                                             >
+                                               LIVE
+                                             </span>
+                                             <div style={{}} onClick={() => setMute(!mute)} className="relative">
+                                               {mute && <div className="h-[2px] w-[22px] -rotate-[45deg] bg-white absolute top-2.5" />}
+                                               <Image
+                                                 src="/unmute.svg"
+                                                 alt=""
+                                                 width={24}
+                                                 height={24}
+                                                 className="object-contain rounded-full"
+                                               />
+                                             </div>
+                                             {isPlaying && <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
+                                               <div className="w-1 h-3.5 bg-white" />
+                                               <div className="w-1 h-3.5 bg-white" />
+                                             </button>}
                         </div>
                     </div>
                 )}
             </div>
-            {/* <div className="px-10 h-[65%] overflow-hidden bg-black3 py-12 pb-9 ">
-        </div> */}
         </div>
     );
 };

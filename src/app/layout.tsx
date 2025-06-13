@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import ProviderContainer from "@/components/Provider";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import 'video.js/dist/video-js.css';
+
 
 const inter = Roboto({
   subsets: ["latin"],

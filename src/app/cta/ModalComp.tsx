@@ -31,23 +31,14 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
                 <div className="flex flex-col items-center">
                     <div className="mb-4 mt-1 relative">
                         {/* Here */}
-                        {userPic ? (
                             <Image
-                                src={URL.createObjectURL(userPic)}
+                                src={userPic ? URL.createObjectURL(userPic) : "/accDummy.svg"}
                                 width={111}
-                                height={108}
+                                height={111}
                                 alt=""
-                                className="w-[111px] h-[108px] rounded-full"
+                                className="w-[111px] h-[111px] rounded-full object-cover"
                             />
-                        ) : (
-                            <Image
-                                src="/accDummy.svg"
-                                width={111}
-                                height={108}
-                                alt=""
-                                className="w-[111px] h-[108px] rounded-full"
-                            />
-                        )}
+                       
 
                         <div className="absolute bottom-2 right-0 z-10">
                             <div className="w-fit relative">

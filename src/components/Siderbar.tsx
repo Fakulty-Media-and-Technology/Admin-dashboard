@@ -213,9 +213,9 @@ function Siderbar() {
   const user = useAppSelector(selectUserProfile);
   const { data, isSuccess } = useGetUserProfileQuery(undefined, {});
   // const isChannel = user?.profile.role === "channel";
-  const isEVENT = user?.profile.role.toLowerCase() === "events";
-  const isTVSHOW = user?.profile.role.toLowerCase() === "tvshows";
-  const isChannel = user?.profile.role.toLowerCase() === "channels";
+  const isEVENT = user?.profile.role.toLowerCase() === "event";
+  const isTVSHOW = user?.profile.role.toLowerCase() === "tvshow";
+  const isChannel = user?.profile.role.toLowerCase().includes("channel");
   const isPodcast = user?.profile.role.toLowerCase() === "podcast";
   const isSport = user?.profile.role.toLowerCase() === "sport";
   const FullSideLinks = [...clientsLinks];

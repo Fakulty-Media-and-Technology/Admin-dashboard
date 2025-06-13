@@ -128,7 +128,7 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                 width={105}
                                 height={106}
                                 alt=""
-                                className="rounded w-[105px] h-[106px]"
+                                className="rounded w-[105px] h-[106px] object-cover"
                             />
                         ) : (
                             <Image
@@ -136,7 +136,7 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                 width={105}
                                 height={106}
                                 alt=""
-                                className="rounded w-[105px] h-[106px]"
+                                className="rounded w-[105px] h-[106px] object-cover"
                             />
                         )}
 

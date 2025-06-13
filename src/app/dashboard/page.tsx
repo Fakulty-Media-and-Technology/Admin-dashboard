@@ -33,8 +33,9 @@ import {
   useGetDashboardTotalUserQuery,
   useGetLivestreamDetailsQuery,
 } from "@/api/dashboard";
-const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
-
+const LiveStreamPlayer = dynamic(() => import('@/components/LiveStreamPlayer'), {
+  ssr: false,
+});
 export interface OverviewProps {
   name: string;
   value: string;
@@ -90,9 +91,9 @@ function page() {
   const { data: dashboardTotUsers, refetch: dashboardTotUserRefresh } =
     useGetDashboardTotalUserQuery(undefined, {});
 
-  function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function  handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
-    setIsPlaying(true);
+    setIsPlaying(!isPlaying);
   }
 
   useEffect(() => {
@@ -107,7 +108,7 @@ function page() {
   useEffect(() => {
     refetch();
     dashboardTotUserRefresh();
-  }, [error]);
+  }, []);
 
   return (
     <section className={`${roboto_400.className} h-full pl-5`}>
@@ -301,19 +302,20 @@ function page() {
 
       {(isEVENT || isPodcast || isChannel || isTVSHOW) &&
 
-        <div className="px-10 h-[65%] min-h-[370px] overflow-hidden bg-black3 py-12 pb-9 ">
-          <div className="h-full max-w-full lg:w-[65.5%] relative mx-auto">
+        <div className="px-10 h-[73%] min-h-[370px] overflow-hidden bg-black3 py-12 pb-9 ">
+          <div className="h-full max-w-full lg:w-[65.5%] relative overflow-hidden mx-auto">
             <div
               style={{ zIndex: isPlaying ? 20 : 0 }}
               className="absolute w-full h-full"
             >
-              <ReactPlayer
+              <LiveStreamPlayer
                 playing={isPlaying}
                 muted={mute}
                 controls={false}
-                // onProgress={e => }
-                url={liveUrl}
-                width="100%" // Set to 100%
+                url={livesteamDetails?.data[0].previewVideo ?? liveUrl}
+                // url={'//vjs.zencdn.net/v/oceans.mp4'}
+                // url={'https://www.youtube.com/watch?v=ZVEGWQVb1pE'}
+                width="100%"
                 height="100%"
                 volume={1}
                 onEnded={() => setIsPlaying(false)}
@@ -323,7 +325,7 @@ function page() {
 
             {/* {isPlayerReady && ( */}
             <Image
-              src="/coverphoto.png"
+              src={livesteamDetails?.data[0].coverPhoto ?? "/coverphoto.png"}
               alt=""
               width={Size.calcWidth(100)}
               height={Size.calcHeight(100)}
@@ -360,7 +362,7 @@ function page() {
                   className="flex flex-row items-center"
                 >
                   <Image
-                    src="/channels.png"
+                    src={user.photo_url}
                     alt=""
                     width={28}
                     height={28}
@@ -369,7 +371,7 @@ function page() {
                   <span
                     className={`${outfit_500.className} font-medium text-[13px] text-white ml-2`}
                   >
-                    Channels News
+                    {user.profile.first_name} {user.profile.last_name}
                   </span>
                 </div>
 
@@ -398,7 +400,8 @@ function page() {
                   >
                     LIVE
                   </span>
-                  <div style={{}}>
+                  <div style={{}} onClick={() => setMute(!mute)} className="relative">
+                    {mute && <div className="h-[2px] w-[22px] -rotate-[45deg] bg-white absolute top-2.5" />}
                     <Image
                       src="/unmute.svg"
                       alt=""
@@ -407,6 +410,10 @@ function page() {
                       className="object-contain rounded-full"
                     />
                   </div>
+                  {isPlaying && <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
+                    <div className="w-1 h-3.5 bg-white" />
+                    <div className="w-1 h-3.5 bg-white" />
+                  </button>}
                 </div>
               </div>
             )}

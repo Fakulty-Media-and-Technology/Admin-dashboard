@@ -7,6 +7,7 @@ import { selectUserProfile } from "@/store/slices/usersSlice";
 import React, { useState } from "react";
 import SuperAdminComp from "./SuperAdminComp";
 import { ClientsComponent } from "./ClientComponent";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 
 export const runtime = "edge";
 
@@ -15,12 +16,17 @@ export default function page() {
   const user = useAppSelector(selectUserProfile);
   const isSuperAdmin = user?.profile?.role === "superadmin";
   const isClient = user?.profile?.role === "channel" || user?.profile?.role === "tvshow" || user?.profile?.role === "event" || user?.profile?.role === "podcast";
+  const {
+            data: livesteamDetails,
+            isSuccess: isSuccess_L,
+        } = useGetLivestreamDetailsQuery(undefined, {});
+
 
   return (
     <section className={`${roboto_400.className} h-full overflow-y-auto pl-5`}>
       <div className="bg-black3 py-3 px-10">
         <p className="font-normal text-lg text-grey_700">
-          Home / {isSuperAdmin ? "Sub" : "create"}
+          Home / {isSuperAdmin ? "Sub" : (isSuccess_L && livesteamDetails.data.length>0) ? "edit" : "create"}
         </p>
       </div>
 

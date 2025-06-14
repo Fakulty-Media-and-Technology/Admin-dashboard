@@ -15,6 +15,7 @@
     "apisauce": "^3.1.0",
     "axios": "^1.7.7",
     "copy-to-clipboard": "^3.3.3",
+    "currency-symbol-map": "^5.1.0",
     "framer-motion": "^11.11.11",
     "link-preview-js": "^3.0.12",
     "lottie-react": "^2.4.0",

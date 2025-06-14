@@ -530,9 +530,9 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                     setType={setClass}
                     selectData={[
                       "Free",
-                      "Premium",
+                      // "Premium",
                       "Exclusive",
-                      `${slug === "movies" ? "AD" : ""}`,
+                      // `${slug === "movies" ? "AD" : ""}`,
                     ].filter((x) => x !== "")}
                     className="border-border_grey text-grey_500 rounded-sm flex-1"
                   />

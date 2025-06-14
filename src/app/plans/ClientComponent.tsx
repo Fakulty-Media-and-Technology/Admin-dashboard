@@ -50,9 +50,9 @@ export const ClientsComponent = () => {
     const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
     const [cat_List, setCat_List] = useState<ICategory[]>([]);
     const maxLength = 200;
-    const isEVENT = user?.profile?.role === "channel";
+    const isEVENT = user?.profile?.role === "event";
     const isTVSHOW = user?.profile?.role === "tvshow";
-    const isChannel = user?.profile?.role === "event";
+    const isChannel = user?.profile?.role === "channel";
     const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
         undefined,
         {}

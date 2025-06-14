@@ -24,7 +24,7 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
         const isChannel = user?.profile?.role === "channel";
 
   return (
-     <div className={`flex-1 lg:mr-2 ${isChannel ? 'flex lg:flex-row flex-col' : ''}`}>
+     <div className={`flex-1 lg:mr-2 ${!isChannel ? 'flex lg:flex-row flex-col' : ''}`}>
                         <div className="w-full md:w-[320px] mx-auto lg:ml-auto mt-10">
                             <p
                                 className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}

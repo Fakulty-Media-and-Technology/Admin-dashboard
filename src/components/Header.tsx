@@ -20,7 +20,7 @@ function Header() {
   const [showOptions, setShowOptions] = useToggle();
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const isChannel = user?.profile.role === "channel" ?? false;
+  const isChannel = user ? user?.profile.role === "channel" : false;
 
 
   function handleOption(query: string) {
@@ -59,7 +59,7 @@ function Header() {
             <button>
               <Image src="/notification.svg" alt="" width={24} height={24} />
             </button>
-            <button>
+            <button onClick={() =>  router.push("/account")}>
               <Image src={(user && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"} alt="" width={27} height={27} className="w-[27px] h-[27px] rounded-full" />
             </button>
 

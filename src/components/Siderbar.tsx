@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { useGetUserProfileQuery } from "@/api/userSlice.api";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
@@ -21,7 +22,7 @@ const navLinks = [
   "categories",
 ];
 
-const clientsLinks = ["dashboard", "live", "plans", "currency", "support"];
+const clientsLinks = ["dashboard", "live", "plans", "withdrawal", "currency", "support"];
 
 const otherNavs = [
   "ad",
@@ -37,15 +38,17 @@ const optionsNav = ["movies", "series", "skits", "music videos"];
 interface NavOptions {
   nav: string;
   className?: string;
+  hasLive?:boolean
 }
 
-const NavLink = ({ nav, className }: NavOptions) => {
+const NavLink = ({ nav, className,hasLive }: NavOptions) => {
   const user = useAppSelector(selectUserProfile);
   const [options, setOptions] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const active = pathname.split("/")[1] === encodeURI(nav);
-  const isChannel = user?.profile.role === "channel";
+  const isSuperAdmin = user?.profile.role === "superadmin";
+  
 
   useEffect(() => {
     if (pathname.split("/")[1] !== "uploads") setOptions(false);
@@ -123,7 +126,7 @@ const NavLink = ({ nav, className }: NavOptions) => {
               }`}
           >
             {nav === "plans"
-              ? `${isChannel ? "Create Live" : "plans / subs"}`
+              ? `${!isSuperAdmin ? `${hasLive ? 'Edit' : 'Create'} Live` : "plans / subs"}`
               : nav === "ad"
                 ? "ad manager"
                 : nav === "support"
@@ -212,7 +215,8 @@ function Siderbar() {
   const pathname = usePathname();
   const user = useAppSelector(selectUserProfile);
   const { data, isSuccess } = useGetUserProfileQuery(undefined, {});
-  // const isChannel = user?.profile.role === "channel";
+  const [hasLive, setHasLive] = useState<boolean>(false)
+  const isSuperadmin = user?.profile.role.toLowerCase() === "superadmin";
   const isEVENT = user?.profile.role.toLowerCase() === "event";
   const isTVSHOW = user?.profile.role.toLowerCase() === "tvshow";
   const isChannel = user?.profile.role.toLowerCase().includes("channel");
@@ -221,6 +225,10 @@ function Siderbar() {
   const FullSideLinks = [...clientsLinks];
   const WIDTH = Size.getWidth();
   const isActive = pathname === "/cta";
+  const {
+          data: livesteamDetails,
+          isSuccess: isSuccess_L,
+      } = useGetLivestreamDetailsQuery(undefined, {});
 
   useEffect(() => {
     if (isSuccess) {
@@ -229,6 +237,12 @@ function Siderbar() {
       router.replace("/");
     }
   }, []);
+  
+  useEffect(() =>{
+    if(hasLive || isSuperadmin) return
+    if(isSuccess_L) setHasLive(livesteamDetails.data.length > 0)
+  }, [isSuccess_L])
+
 
   return (
     <>
@@ -277,7 +291,7 @@ function Siderbar() {
                     : clientsLinks
                   : navLinks
                 ).map((link, index) => {
-                  return <NavLink key={index} nav={link} />;
+                  return <NavLink key={index} nav={link} hasLive={hasLive} />;
                 })}
               </ul>
 
@@ -297,7 +311,7 @@ function Siderbar() {
                 className={`${roboto_500.className} ${isActive
                   ? "bg-input_grey text-grey_2"
                   : "bg-red_500 text-white"
-                  } hidden sm:inline rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
+                  } hidden md:inline rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
               >
                 Call To Action
               </button>
@@ -306,7 +320,7 @@ function Siderbar() {
                 className={`${roboto_500.className} ${isActive
                   ? "bg-input_grey text-grey_2"
                   : "bg-red_500 text-white"
-                  } sm:hidden rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
+                  } md:hidden rounded-md mt-5 px-3 py-1.5 mx-auto text-[18px] text-center`}
               >
                 CTA
               </button>

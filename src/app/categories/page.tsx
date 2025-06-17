@@ -26,7 +26,7 @@ import { ModalComponent } from "./ModalComp";
 
 const TABS = ["Category", "Genre", "Cast"];
 
-interface Table {
+export interface Table {
   _id: string;
   title: string;
   position?: string;
@@ -41,6 +41,7 @@ export default function page() {
   const [tab, setTab] = useState<string>("category");
   const [categoryTable, setTable] = useState<Table[]>([]);
   const [categoryTableFiltered, setFilteredTable] = useState<Table[]>([]);
+  const [editValues, setEditValues] = useState<Table|null>(null);
   const [searchParams, setSearchParams] = useState<string>("");
   const {
     data: categories,
@@ -49,8 +50,8 @@ export default function page() {
     isSuccess,
     isLoading,
   } = useGetCategoryQuery(undefined, {});
-  const { data: genries } = useGetGenreQuery(undefined, {});
-  const { data: casts } = useGetCastQuery(undefined, {});
+  const { data: genries, refetch:gRefetch } = useGetGenreQuery(undefined, {});
+  const { data: casts, refetch:cRefetch } = useGetCastQuery(undefined, {});
 
   // console.log(genries, "here...");
 
@@ -132,6 +133,9 @@ export default function page() {
   }
 
   useEffect(() => {
+    refetch();
+    gRefetch();
+    cRefetch();
     if (tab === "cast") handleCategoryList(casts);
     if (tab === "genre") handleCategoryList(genries);
     if (tab === "category") handleCategoryList(categories);
@@ -187,10 +191,11 @@ export default function page() {
       </div>
 
       <div className="bg-black3 min-h-[calc(80%-43px)] pt-12 px-5 md:px-10 lg:px-14">
-        {isAdd && (
+        {(isAdd || editValues) && (
           <ModalComponent
-            handleClose={() => setIsAdd(!isAdd)}
+            handleClose={() => editValues ? setEditValues(null) : setIsAdd(!isAdd)}
             tab={tab}
+            editValue={editValues}
             handleReset={(value) => handleCategoryList(value)}
           />
         )}
@@ -244,7 +249,7 @@ export default function page() {
 
                       <td className="w-[50%]">
                         <div className="flex items-center justify-end gap-x-10">
-                          <button>
+                          <button onClick={() => setEditValues(tx)}>
                             <Image
                               src="/edit.svg"
                               width={14}

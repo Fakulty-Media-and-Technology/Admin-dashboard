@@ -76,5 +76,10 @@ export const addCategoryEnums = async (data: IAddCategory, path: string) =>
     baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data)
   );
 
+export const editCategoryEnums = async (data: IAddCategory, path: string, catID:string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(`/superadmin/enums/update-${path}/${catID}`, data)
+  );
+
 
 export const deleteCategoryEnums = async (_id: string, path: string) => await apiCall<IGeneric>(baseApi => baseApi.delete(`/superadmin/enums/rem-${path}/${_id}`))

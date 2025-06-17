@@ -2,6 +2,7 @@
 
 import {
   addCategoryEnums,
+  editCategoryEnums,
   geetFetchCast,
   geetFetchCategories,
   geetFetchGenres,
@@ -16,22 +17,25 @@ import { ICastResponse, ICategoryResponse } from "@/types/api/category.types";
 import Image from "next/image";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { Table } from "./page";
 
 interface ModalProps {
   handleClose: () => void;
   tab: string;
   handleReset: (value: ICastResponse | ICategoryResponse | undefined) => void;
+  editValue: Table | null
 }
 
 export const ModalComponent = ({
   handleClose,
   handleReset,
   tab,
+  editValue
 }: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>(tab === "cast" ? "Select" : "");
+  const [title, setTitle] = useState<string>(editValue ? editValue.title: tab === "cast" ? "Select" : "");
   const [names, setNames] = useState<string>("");
-  const [location, setLocation] = useState<string>("Select");
+  const [location, setLocation] = useState<string>(editValue ? editValue.location??'' :"Select");
   const [position, setPosition] = useState<string>("Select");
   const [link, setLink] = useState("");
   const [details, setDetails] = useState("");
@@ -71,7 +75,7 @@ export const ModalComponent = ({
       // : {
       //   name: title,
       // };
-      const res = await addCategoryEnums(data, tab);
+      const res = editValue ? await editCategoryEnums(data, tab, editValue._id) : await addCategoryEnums(data, tab);
       if (res.ok && res.data) {
         toast(`Successfully added ${tab}`, {
           type: "success",
@@ -123,6 +127,10 @@ export const ModalComponent = ({
           }}
           className="flex flex-col items-center"
         >
+
+          
+          {/* ADD IMAGE FROM CTA MODAL ONLY WHEN TAB === CAST */}
+
           <div className="mt-5 space-y-5 w-[70%]">
             <div>
               <label

@@ -199,7 +199,7 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
                                                     />
                                                 </div>
 
-                                                <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
+                                                <div className="flex items-center justify-center absolute w-full h-full border border-white bg-black/50 z-[9999px]">
                                                     <button
                                                         style={{ display: isPlaying ? "none" : "inline" }}
                                                         onClick={(e) => handleVideo(e)}

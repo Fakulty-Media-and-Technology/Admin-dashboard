@@ -101,7 +101,7 @@ function page() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (!livesteamDetails || isSuperAdmin) return
+    if (!livesteamDetails || livesteamDetails.data.length===0 || isSuperAdmin) return
     setLiveUrl(livesteamDetails.data[0].stream_url)
   }, [isSuccess_L])
 
@@ -312,7 +312,7 @@ function page() {
                 playing={isPlaying}
                 muted={mute}
                 controls={false}
-                url={livesteamDetails?.data[0].previewVideo ?? liveUrl}
+                url={(livesteamDetails && livesteamDetails.data.length>0) ? livesteamDetails?.data[0].previewVideo : liveUrl}
                 // url={'//vjs.zencdn.net/v/oceans.mp4'}
                 // url={'https://www.youtube.com/watch?v=ZVEGWQVb1pE'}
                 width="100%"
@@ -325,7 +325,7 @@ function page() {
 
             {/* {isPlayerReady && ( */}
             <Image
-              src={livesteamDetails?.data[0].coverPhoto ?? "/coverphoto.png"}
+              src={(livesteamDetails && livesteamDetails.data.length>0)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
               alt=""
               width={Size.calcWidth(100)}
               height={Size.calcHeight(100)}

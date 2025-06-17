@@ -41,7 +41,7 @@ export const ClientsComponent = () => {
     }
 
     useEffect(() => {
-        if (!livesteamDetails) return
+        if (!livesteamDetails || livesteamDetails.data.length===0) return
         setLive(livesteamDetails.data[0])
     }, [isSuccess_L]);
 
@@ -117,7 +117,7 @@ export const ClientsComponent = () => {
 
                 {/* {isPlayerReady && ( */}
                 <Image
-              src={livesteamDetails?.data[0].coverPhoto ?? "/coverphoto.png"}
+              src={(livesteamDetails && livesteamDetails.data.length>0)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
                     alt=""
                     width={Size.calcWidth(100)}
                     height={Size.calcHeight(100)}

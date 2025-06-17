@@ -110,6 +110,7 @@ export const ClientsComponent = () => {
     }
 
     useEffect(()=>{
+        console.log(categories)
         if(categories && isSuccess_C) setCat_List(categories.data)
     }, [isSuccess_C])
 
@@ -125,9 +126,9 @@ export const ClientsComponent = () => {
                     {/* LEFT START */}
                     <div className="flex-1 space-y-5">
                         <div className="flex flex-1 justify-between flex-col-reverse xl:flex-row flex-wrap-reverse">
-                            <div className={`${!isChannel ? 'mt-10' :''} flex-1 space-y-5 xl:max-w-[400px]`}>
+                            <div className={`${isChannel ? 'mt-10' :''} flex-1 space-y-5 xl:max-w-[400px]`}>
                         {isChannel ? (
-                            <div className={!isChannel ? "w-[100%]" : "w-[75%]"}>
+                            <div className={"w-[100%]"}>
                                 <label
                                     htmlFor="name"
                                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -144,7 +145,7 @@ export const ClientsComponent = () => {
                             </div>
                         ) : (
                             <>
-                            <div className={!isChannel ? "w-[100%]" : "w-[75%]"}>
+                            <div className={"w-[75%]"}>
                                     <label
                                         htmlFor="name"
                                         className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -160,7 +161,7 @@ export const ClientsComponent = () => {
                                     />
                                 </div>
 
-                            <div className={!isChannel ? "w-[100%]" : "w-[75%]"}>
+                            <div className={"w-[75%]"}>
                                     <label
                                         htmlFor="subtitle"
                                         className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
@@ -178,7 +179,7 @@ export const ClientsComponent = () => {
                             </>
                         )}
 
-                        <div className={`flex flex-row items-start ${!isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
+                        <div className={`flex flex-row items-start ${isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
                             <div className="flex-1">
                                 <label
                                     htmlFor="name"

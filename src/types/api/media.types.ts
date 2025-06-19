@@ -1,4 +1,5 @@
 import { IGeneric } from "./auth.types";
+import { ICast } from "./category.types";
 
 export interface IMediaResponse extends IGeneric {
     data: IMediaData[]
@@ -8,11 +9,6 @@ interface ICategory {
     _id: string;
     name: string;
     position: number
-}
-interface ICast {
-    _id: string;
-    name: string;
-    title: number
 }
 
 

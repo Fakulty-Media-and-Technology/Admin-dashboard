@@ -17,7 +17,7 @@ import { useGetCategoryQuery } from "@/api/categorySlice";
 import { ICategory } from "@/types/api/category.types";
 import MediaComp from "./components/MediaComp";
 import getSymbolFromCurrency from 'currency-symbol-map';
-
+  import { usePaystackPayment } from 'react-paystack';
 
 const paymentMethods = ["Visa/mastercard", "Paypal", "Crypto", "Bank Transfer"];
 
@@ -57,6 +57,15 @@ export const ClientsComponent = () => {
         undefined,
         {}
     );
+
+     const config = {
+      reference: (new Date()).getTime().toString(),
+      email: user.email,
+      amount: currency === 'NGN' ? 100 * eventEstimatedPrice : eventEstimatedPrice, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+  };
+        const initializePayment = usePaystackPayment(config);
+
 
     const [handleEstimate, { isLoading: isEstimatedLoading }] =
         useEventEstimateMutation();
@@ -98,7 +107,7 @@ export const ClientsComponent = () => {
         setEventHours(e.target.value);
 
         const res = await handleEstimate({ end, start }).unwrap();
-        console.log(res);
+        // console.log(res);
         if (res.data) {
             setEventEstimatedPrice(res.data.estimated_cost);
         }
@@ -108,6 +117,20 @@ export const ClientsComponent = () => {
         e.preventDefault();
         setIsPlaying(true);
     }
+
+
+  
+
+  const onSuccess = (reference) => {
+    // Implementation for whatever you want to do with reference and after success call.
+    console.log(reference);
+  };
+
+
+  const onClose = () => {
+    // implementation for  whatever you want to do when the Paystack dialog closed.
+    console.log('closed')
+  }
 
     useEffect(()=>{
         console.log(categories)
@@ -312,7 +335,7 @@ export const ClientsComponent = () => {
                                  <div
                                     className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
                                 >
-                                    {getSymbolFromCurrency(currency === 'Select' ?'NGN' : currency)}{formatAmount(eventEstimatedPrice.toString())}.00
+                                    {getSymbolFromCurrency(currency === 'Select' ? 'NGN' : currency)}{formatAmount(eventEstimatedPrice.toString())}.00
                                     {isEstimatedLoading && (
                                         <Lottie
                                             animationData={LoadingSpinner}

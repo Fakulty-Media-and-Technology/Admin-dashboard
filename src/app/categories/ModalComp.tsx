@@ -110,7 +110,7 @@ export const ModalComponent = ({
         style={{
           marginTop: tab === "cast" ? 20 : 40,
         }}
-        className="w-[90%] sm:w-[60%] lg:w-[40%] p-5 rounded-[10px] overflow-y-auto bg-black4"
+        className="w-[90%] sm:w-[60%] lg:w-[40%] p-3 rounded-[10px] overflow-y-auto bg-black4"
       >
         <div className="ml-auto w-fit" onClick={handleClose}>
           <Image
@@ -233,17 +233,25 @@ export const ModalComponent = ({
                     htmlFor="link"
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
                   >
-                    FAN LINK *
+                    CAST LINK (Optional)
                   </label>
-                  <CustomInput
-                    required
-                    type="text"
-                    placeholder="https://"
-                    id="names"
-                    className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                  />
+                  <div className="flex gap-2 mt-2">
+                    <CustomInput
+                      type="text"
+                      placeholder="https://"
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      id="link"
+                      className="font-normal text-sm py-2 border border-border_grey rounded-sm flex-1"
+                    />
+                    <SelectInputForm
+                      placeholder="Select button"
+                      setType={() => {}} // You can implement button type selection logic here
+                      selectData={["Button 1", "Button 2", "Button 3"]}
+                      className="border-border_grey w-40 text-grey_500 rounded-sm"
+                    />
+                  </div>
                 </div>
-
                 <div className="">
                   <label
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}

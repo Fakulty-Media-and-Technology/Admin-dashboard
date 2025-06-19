@@ -5,8 +5,8 @@ import {
   CustomInput,
   SelectInputForm,
 } from "@/components/AppLayout";
-import { useGetCategoryQuery, useGetGenreQuery } from "@/api/categorySlice";
-import { ICategory } from "@/types/api/category.types";
+import { searchFetchCast, useGetCategoryQuery, useGetGenreQuery } from "@/api/categorySlice";
+import { ICast, ICategory } from "@/types/api/category.types";
 import { formatAmount } from "@/utilities/formatAmount";
 import ReactPlayer from "react-player";
 import { truncateText } from "@/utilities/textUtils";
@@ -52,6 +52,7 @@ export interface IFile extends ImageProps {
 
 export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
+  const [loading_C, setLoading_C] = useState<boolean>(false);
   const [isGenre, setIsGenre] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(selectedMedia ? ((slug.includes('videos') && selectedMedia.artistName) ? selectedMedia.artistName : selectedMedia.title) : "");
   const [subtitle, setSubTitle] = useState<string>("");
@@ -80,7 +81,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(selectedMedia ? selectedMedia.category.map(x => x.name) : []);
   const [selectedGenries, setSelectedGenries] = useState<string[]>(selectedMedia ? selectedMedia.genre.map(x => x.name) : []);
-  const [selectedCasts, setSelectedCasts] = useState<string[]>(selectedMedia ? selectedMedia.cast.map(x => x.name) : []);
+  const [selectedCasts, setSelectedCasts] = useState<ICast[]>(selectedMedia ? selectedMedia.cast : []);
   const [castTxt, setCastTxt] = useState<string>("");
   const [genriesPlaceholder, setGenriesPlaceholder] = useState<string>("");
   const [cat_List, setCat_List] = useState<ICategory[]>([]);
@@ -97,6 +98,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
   const [isDisabled_Seasons, setDisabled] = useState<boolean>(true);
   const [showPicker, setColorPicker] = useState<boolean>(false);
+  const [castContentList, setCastContentList] = useState<ICast[]>([]);
   const [color, setColor] = useState<string>(selectedMedia ? selectedMedia.primaryColor : '');
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
@@ -248,24 +250,26 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     }
   }
 
+  async function handleSearchCast(value:string){
+    setCastTxt(value);
+        if (value === "") setCastContentList([]);
+        try {
+          setLoading_C(true);
+          const res = await searchFetchCast(value);
+          if (res.ok && res.data) {
+            setCastContentList(res.data.data);
+          }
+        } catch (error) {
+          toast("Opps! couldn't search for content!", { type: "error" });
+        } finally {
+          setLoading_C(false);
+        }
+  }
+
   const handleInputChange = (value: string, type?: string) => {
     if (value === "") return;
-    if (type === "cast") setCastTxt(value);
+    // if (type === "cast") 
     if (value.includes(",")) {
-      const newItem = value.split(",")[0].trim();
-      if (type === "cast") {
-        if (!selectedCasts.includes(newItem)) {
-          setSelectedCasts([newItem, ...selectedCasts]);
-          setCastTxt("");
-        }
-      } else if (type === "categories") {
-        setSelectedCategories([newItem, ...selectedCategories]);
-      } else {
-        setSelectedGenries([newItem, ...selectedGenries]);
-      }
-
-      setGenriesPlaceholder("");
-      setCat_Placeholder("");
     } else if (!selectedGenries.includes(value)) {
       if (type === "cast") {
         return;
@@ -411,7 +415,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
         trailer: videoTrailer,
         video: videoTrailer_2,
         data: {
-          cast: selectedCasts,
+          cast: selectedCasts.map(x => x._id),
           category,
           defaultRating: rating,
           expiryDate: new Date(expiryDate).toISOString(),
@@ -685,6 +689,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
 
               {/* CAST */}
               {class_ !== "AD" && !decodeURI(slug).includes("videos") && (
+                <div className="relative">
                 <div className="flex-1">
                   <p
                     className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
@@ -702,7 +707,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                       className={`${roboto_500.className} pl-2 w-full outline-none bg-transparent text-sm text-white placeholder:text-grey_600/50`}
                       value={castTxt}
                       onChange={(e) =>
-                        handleInputChange(e.target.value, "cast")
+                        handleSearchCast(e.target.value)
                       }
                     />
 
@@ -710,13 +715,13 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                       {selectedCasts.map((item, i) => {
                         return (
                           <div
-                            key={i + item}
+                            key={item._id}
                             className="flex flex-row items-center gap-x-[2px]"
                           >
                             <span
                               className={`${roboto_500.className} text-sm text-white`}
                             >
-                              {item}
+                              {item.name}
                             </span>
                             <button
                               onClick={() =>
@@ -737,6 +742,27 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                       })}
                     </div>
                   </div>
+                </div>
+
+                {castContentList.length > 0 && (
+                <div className="absolute top-14 mt-2 w-full border border-grey_1 rounded">
+                  {castContentList.map((content, i) => {
+                    return (
+                      <div
+                        onClick={() => [
+                          setSelectedCasts(prev => ([content,...prev])),
+                          setCastTxt(""),
+                          setCastContentList([])
+                        ]}
+                        className="text-white cursor-pointer bg-black2 p-3 w-full"
+                        key={i}
+                      >
+                        {content.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
                 </div>
               )}
             </div>

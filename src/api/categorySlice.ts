@@ -3,6 +3,7 @@ import { ICategoryResponse, ICastResponse, IAddCategory } from "@/types/api/cate
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IGeneric } from "@/types/api/auth.types";
+import { IPagination } from "@/types/api/suggestion.types";
 
 export const categoryApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -50,35 +51,49 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
 
 export const { useGetCategoryQuery, useGetGenreQuery, useGetCastQuery } = categoryApiSlice;
 
-export const geetFetchCategories = async () =>
-  await apiCall<ICategoryResponse>((baseApi) =>
-    baseApi.get<ICategoryResponse>(
-      `superadmin/enums/get-categories`
-    )
-  );
-
-export const geetFetchGenres = async () =>
-  await apiCall<ICategoryResponse>((baseApi) =>
-    baseApi.get<ICategoryResponse>(
-      `superadmin/enums/get-genres`
-    )
-  );
-
-export const geetFetchCast = async () =>
+export const searchFetchCast = async (searchTerm:string) =>
   await apiCall<ICastResponse>((baseApi) =>
     baseApi.get<ICastResponse>(
-      `superadmin/enums/get-cast`
+      `superadmin/enums/search-casts/${searchTerm}?limit=100&page=1`
+    )
+  );
+export const geetFetchCategories = async (data?:IPagination) =>
+  await apiCall<ICategoryResponse>((baseApi) =>
+    baseApi.get<ICategoryResponse>(
+      `superadmin/enums/get-categories?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
     )
   );
 
-export const addCategoryEnums = async (data: IAddCategory, path: string) =>
-  await apiCall<IGeneric>((baseApi) =>
-    baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data)
+export const geetFetchGenres = async (data?:IPagination) =>
+  await apiCall<ICategoryResponse>((baseApi) =>
+    baseApi.get<ICategoryResponse>(
+      `superadmin/enums/get-genres?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
+    )
   );
 
-export const editCategoryEnums = async (data: IAddCategory, path: string, catID:string) =>
+export const geetFetchCast = async (data?:IPagination) =>
+  await apiCall<ICastResponse>((baseApi) =>
+    baseApi.get<ICastResponse>(
+      `superadmin/enums/get-cast?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
+    )
+  );
+
+export const addCategoryEnums = async (data: IAddCategory|FormData, path: string) =>
   await apiCall<IGeneric>((baseApi) =>
-    baseApi.put<IGeneric>(`/superadmin/enums/update-${path}/${catID}`, data)
+    baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data , {...(path === 'cast' && {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })})
+  );
+
+export const editCategoryEnums = async (data: IAddCategory|FormData, path: string, catID:string) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(`/superadmin/enums/${path === 'cast' ? 'edit-cast' : `update-${path}`}/${catID}`, data, {...(path === 'cast' && {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })})
   );
 
 

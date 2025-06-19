@@ -23,6 +23,8 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ModalComponent } from "./ModalComp";
+import Lottie from "lottie-react";
+import LoadingSpinner from "@/config/lottie/loading.json";
 
 const TABS = ["Category", "Genre", "Cast"];
 
@@ -32,6 +34,10 @@ export interface Table {
   position?: string;
   names?: string;
   location?: string;
+  link?: string;
+  selectButtonType?:string;
+    description?:string;
+    photoUrl?:string
 }
 
 export const runtime = "edge";
@@ -43,6 +49,14 @@ export default function page() {
   const [categoryTableFiltered, setFilteredTable] = useState<Table[]>([]);
   const [editValues, setEditValues] = useState<Table|null>(null);
   const [searchParams, setSearchParams] = useState<string>("");
+    const [pg_c, setPg_c] = useState<number>(1);
+    const [pg_g, setPg_g] = useState<number>(1);
+    const [pg_C, setPg_C] = useState<number>(1);
+      const [loading, setLoading] = useState<boolean>(false);
+   const [paginationList, setPaginationList] = useState(
+      [...Array(8)].map((_, i) => i + 1)
+    );
+    const paginationStep = 8;
   const {
     data: categories,
     refetch,
@@ -53,7 +67,18 @@ export default function page() {
   const { data: genries, refetch:gRefetch } = useGetGenreQuery(undefined, {});
   const { data: casts, refetch:cRefetch } = useGetCastQuery(undefined, {});
 
-  // console.log(genries, "here...");
+  const handleNext = () => {
+    setPaginationList((prevList) =>
+      prevList.map((num) => num + paginationStep)
+    );
+  };
+
+  const handlePrevious = () => {
+    if (paginationList[0] === 1) return;
+    setPaginationList((prevList) =>
+      prevList.map((num) => Math.max(1, num - paginationStep))
+    );
+  };
 
   const transformEventData = (data: ICategory[] | ICast[]) => {
     const sortedData = [...(data as (ICategory | ICast)[])].sort((a, b) => {
@@ -132,6 +157,27 @@ export default function page() {
     setFilteredTable(categoryList);
   }
 
+  async function handleRefreshMedia(query?: number) {
+      try {
+        setLoading(true);
+      const resCAT =
+        tab === "category"
+          ? await geetFetchCategories({ limit: 4, page: query ?? pg_c })
+          : tab === "genre"
+            ? await geetFetchGenres({ limit: 4, page: query ?? pg_g })
+            : await geetFetchCast({ limit: 4, page: query ?? pg_C });
+      if (resCAT.ok && resCAT.data) {
+          handleCategoryList(resCAT.data);
+        } else {
+          toast(`Opps! couldn't get data list`, { type: "error" });
+        }
+      } catch (error) {
+        toast(`Opps! couldn't get data list`, { type: "error" });
+      } finally {
+        setLoading(false);
+      }
+    }
+
   useEffect(() => {
     refetch();
     gRefetch();
@@ -143,7 +189,7 @@ export default function page() {
 
   return (
     <section
-      className={`${roboto_400.className} relative h-full overflow-y-auto pl-5`}
+      className={`${roboto_400.className} relative z-0 h-full overflow-y-auto pl-5`}
     >
       <div className="bg-black3 py-3 px-10">
         <p className="font-normal text-lg text-grey_700">Home / Categories</p>
@@ -190,7 +236,6 @@ export default function page() {
         })}
       </div>
 
-      <div className="bg-black3 min-h-[calc(80%-43px)] pt-12 px-5 md:px-10 lg:px-14">
         {(isAdd || editValues) && (
           <ModalComponent
             handleClose={() => editValues ? setEditValues(null) : setIsAdd(!isAdd)}
@@ -199,8 +244,10 @@ export default function page() {
             handleReset={(value) => handleCategoryList(value)}
           />
         )}
-        <div className="relative w-full md:h-[80%] h-[100%] pb-10 pr-5">
-          <div className="absolute w-full py-5 pb-6 pl-0 sm:ml-0 sm:pl-3 overflow-x-auto">
+      <div className="bg-black3 min-h-[calc(80%-43px)] pt-12 px-5 md:px-10 lg:px-14">
+        <div className="relative -z-1 w-full md:h-[80%] h-[100%] pb-10 pr-5">
+          <div className="absolute h-[450px] w-full py-5 pb-6 pl-0 sm:ml-0 sm:pl-3 overflow-x-auto">
+              <div className="h-full relative z-0">
             <table className={`${roboto_400.className} w-full min-w-[810px]`}>
               <thead className="">
                 <tr>
@@ -272,6 +319,57 @@ export default function page() {
                 })}
               </tbody>
             </table>
+
+{(!isAdd || !editValues) && <div className="absolute ml-5 md:ml-10 lg:ml-16 bg-black2  -bottom-3 z-50 flex flex-row items-center">
+                  <div
+                    className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
+                  >
+                    <button
+                      onClick={handlePrevious}
+                      className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
+                    >
+                      <span className="text-white mr-2">{`<<`}</span>
+                      Previous
+                    </button>
+                    <div className="text-grey_800 text-[17px] flex flex-row mr-1 font-medium space-x-1.5">
+                      {paginationList.map((num, index) => {
+                        const active = (tab ==='genre' ? pg_g : tab === 'cast' ? pg_C : pg_c) === num;
+
+                        return (
+                          <p
+                            key={index}
+                            onClick={() => [
+                              tab === 'cast' && setPg_C(num),
+                              tab === 'genre' && setPg_g(num),
+                              tab === 'category' && setPg_c(num),
+                              handleRefreshMedia(num),
+                            ]}
+                            className={`${active ? "text-red" : "text-[#C4C4C4]"
+                              } cursor-pointer`}
+                          >
+                            {num}
+                          </p>
+                        );
+                      })}
+                      {"   "} ...
+                    </div>
+                    <button
+                      onClick={() => handleNext()}
+                      className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
+                    >
+                      Next <span className="text-white ml-2">{`>>`}</span>
+                    </button>
+                  </div>
+
+                  {loading && (
+                    <Lottie
+                      animationData={LoadingSpinner}
+                      loop
+                      style={{ width: 35, height: 35, marginLeft: 15 }}
+                    />
+                  )}
+                </div>}
+            </div>
           </div>
         </div>
       </div>

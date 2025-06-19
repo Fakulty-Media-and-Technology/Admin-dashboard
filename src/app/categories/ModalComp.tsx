@@ -36,11 +36,13 @@ export const ModalComponent = ({
   const [title, setTitle] = useState<string>(editValue ? editValue.title: tab === "cast" ? "Select" : "");
   const [names, setNames] = useState<string>("");
   const [location, setLocation] = useState<string>(editValue ? editValue.location??'' :"Select");
-  const [position, setPosition] = useState<string>("Select");
-  const [link, setLink] = useState("");
-  const [details, setDetails] = useState("");
+  const [position, setPosition] = useState<string>((editValue && editValue.position) ? editValue.position : "Select");
+  const [userPic, setUserPic] = useState<File | null>(null);
+  const [link, setLink] = useState((editValue && editValue.link) ?editValue.link : "");
+  const [buttonType, setButtonType] = useState((editValue && editValue.selectButtonType) ? editValue.selectButtonType.replace('-', ' ').toUpperCase() : "Select button");
+  const [details, setDetails] = useState((editValue && editValue.description) ? editValue.description : "");
   const maxLength = 200;
-  const isDisable = link === "" || names === "" || details === "";
+  const isDisable = link === "" || names === "" || details === "" || !userPic || buttonType === 'Select button';
 
   function reset() {
     setPosition("Select");
@@ -48,8 +50,15 @@ export const ModalComponent = ({
     setTitle(tab === "cast" ? "Select" : "");
     setNames("");
     setLink("");
+    setUserPic(null);
+    setButtonType('Select button');
     handleClose();
   }
+
+   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+        const files = e.target.files;
+        if (files) setUserPic(files[0]);
+    }
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
@@ -61,21 +70,22 @@ export const ModalComponent = ({
   async function submitHandler() {
     try {
       setLoading(true);
+      const formdata = new FormData();
+      if(tab === 'cast'){
+        if(userPic) formdata.append('photo', userPic);
+          formdata.append('name', names);
+          formdata.append('title', title);
+          formdata.append('link', link);
+          formdata.append('description', details);
+          formdata.append('selectButtonType', buttonType.toLowerCase().replace(' ', '-'));
+      }
       const data =
-        tab === "cast"
-          ? {
-            name: names,
-            title,
-          }
-          :
           {
             name: title,
             position: Number(position)
           }
-      // : {
-      //   name: title,
-      // };
-      const res = editValue ? await editCategoryEnums(data, tab, editValue._id) : await addCategoryEnums(data, tab);
+  
+      const res = editValue ? await editCategoryEnums(tab === 'cast' ? formdata : data, tab, editValue._id) : await addCategoryEnums(tab === 'cast' ? formdata : data, tab);
       if (res.ok && res.data) {
         toast(`Successfully added ${tab}`, {
           type: "success",
@@ -105,12 +115,12 @@ export const ModalComponent = ({
   }
 
   return (
-    <div className="z-[9999] w-[calc(100%-20px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] absolute top-20 overflow-hidden flex justify-center">
+    <div className={`absolute z-[999] w-[calc(100%-20px)] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] ${tab === 'cast' ? 'top-5':'top-20'} overflow-hidden flex justify-center`}>
       <div
         style={{
-          marginTop: tab === "cast" ? 20 : 40,
+          marginTop: tab === "cast" ? 0 : 40,
         }}
-        className="w-[90%] sm:w-[60%] lg:w-[40%] p-3 rounded-[10px] overflow-y-auto bg-black4"
+        className={`w-[90%] sm:w-[60%] ${tab === 'cast' ? 'lg:w-[55%]' :'lg:w-[40%]'} p-3 rounded-[10px] overflow-y-auto bg-black4`}
       >
         <div className="ml-auto w-fit" onClick={handleClose}>
           <Image
@@ -130,6 +140,29 @@ export const ModalComponent = ({
 
           
           {/* ADD IMAGE FROM CTA MODAL ONLY WHEN TAB === CAST */}
+          {tab === 'cast' && <div className="mb-4 mt-1 relative">
+                                  {/* Here */}
+                                      <Image
+                                          src={userPic ? URL.createObjectURL(userPic) : (editValue && editValue.photoUrl) ?editValue.photoUrl : "/accDummy.svg"}
+                                          width={111}
+                                          height={111}
+                                          alt=""
+                                          className="w-[111px] h-[111px] rounded-full object-cover"
+                                      />
+                                 
+          
+                                  <div className="absolute bottom-2 right-0 z-10">
+                                      <div className="w-fit relative">
+                                          <Image src="/editProfile.svg" alt="" width={20} height={20} />
+                                          <input
+                                              type="file"
+                                              accept=".png, .jpeg, .jpg"
+                                              className="absolute top-0 -left-3 opacity-0"
+                                              onChange={(e) => handleInput(e)}
+                                          />
+                                      </div>
+                                  </div>
+                              </div>}
 
           <div className="mt-5 space-y-5 w-[70%]">
             <div>
@@ -224,6 +257,8 @@ export const ModalComponent = ({
                     required
                     type="text"
                     placeholder=""
+                    value={names}
+                    onChange={e => setNames(e.target.value)}
                     id="names"
                     className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                   />
@@ -245,9 +280,9 @@ export const ModalComponent = ({
                       className="font-normal text-sm py-2 border border-border_grey rounded-sm flex-1"
                     />
                     <SelectInputForm
-                      placeholder="Select button"
-                      setType={() => {}} // You can implement button type selection logic here
-                      selectData={["Button 1", "Button 2", "Button 3"]}
+                      placeholder={buttonType}
+                      setType={setButtonType}
+                      selectData={["BOOK NOW", "FAN PAGE"]}
                       className="border-border_grey w-40 text-grey_500 rounded-sm"
                     />
                   </div>

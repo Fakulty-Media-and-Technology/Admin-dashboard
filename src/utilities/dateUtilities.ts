@@ -1,10 +1,10 @@
-export function getDates(hours: number) {
+export function getDates(hours: number, _startDate:string) {
   if (hours < 0) {
     throw new Error("Hours should be greater than 0");
   }
 
   // Get current date
-  const startDate = new Date();
+  const startDate = _startDate === '' ? new Date() : new Date(_startDate);
 
   // Clone the date and add hours to it
   const endDate = new Date(startDate);

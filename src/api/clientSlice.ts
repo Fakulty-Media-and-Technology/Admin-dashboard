@@ -47,7 +47,11 @@ export const getAllClients = async (data: IPagination) =>
 
 export const createCLientAcc = async (data: FormData) =>
     await apiCall<IGeneric>((baseApi) =>
-        baseApi.post<IGeneric>(`/superadmin/create-clients`, data)
+        baseApi.post<IGeneric>(`/superadmin/create-clients`, data, {
+            headers:{
+                "Content-Type": "multipart/form-data",
+            }
+        })
     );
 
 export const searchClient = async (data: { value: string }) =>

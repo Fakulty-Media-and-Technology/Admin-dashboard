@@ -7,20 +7,21 @@ export const createAuth = create({
   timeoutErrorMessage: "Request timed out",
 });
 
-export const createSuperAdminAuthWrapper = async () => {
+export const createAdminAuthWrapper = async (isClient?:boolean) => {
   const token = localStorage.getItem("auth_token");
   return create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,
     headers: {
-      "superadmin-auth": token,
+      [isClient ? "clients-auth" :"superadmin-auth"]: token,
     },
   });
 };
 
 export const apiCall = async <T>(
-  apiFunction: (baseApi: ReturnType<typeof create>) => Promise<ApiResponse<T>>
+  apiFunction: (baseApi: ReturnType<typeof create>) => Promise<ApiResponse<T>>,
+  isClient?:boolean
 ): Promise<ApiResponse<T>> => {
-  const baseApi = await createSuperAdminAuthWrapper();
+  const baseApi = await createAdminAuthWrapper(isClient);
   return apiFunction(baseApi);
 };
 

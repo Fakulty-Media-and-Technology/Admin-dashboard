@@ -84,7 +84,7 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
                             </div>
                         </div>
 
-                        {!isChannel ? (
+                        {isChannel ? (
                             <div className="w-full md:w-[320px] mx-auto lg:ml-auto mt-16">
                                 <p
                                     className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}

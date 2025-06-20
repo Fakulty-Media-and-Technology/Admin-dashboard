@@ -13,10 +13,15 @@ import { useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/reduxHook";
 import { selectUserProfile } from "@/store/slices/usersSlice";
 import LoadingSpinner from "@/config/lottie/loading.json";
-import { useGetCategoryQuery } from "@/api/categorySlice";
+import { useGetCategoryQuery, useGetClientCategoryQuery } from "@/api/categorySlice";
 import { ICategory } from "@/types/api/category.types";
 import MediaComp from "./components/MediaComp";
 import getSymbolFromCurrency from 'currency-symbol-map';
+  import { usePaystackPayment } from 'react-paystack';
+  import { toast } from "react-toastify";
+import { clientCreateLive } from "@/api/liveSlice";
+import { ICreateLiveData } from "@/types/api/live.types";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 
 
 const paymentMethods = ["Visa/mastercard", "Paypal", "Crypto", "Bank Transfer"];
@@ -27,15 +32,21 @@ export interface ImageProps {
     url: string;
 }
 
+interface IFile extends ImageProps {
+  file?: File
+}
+
 export const ClientsComponent = () => {
     const user = useAppSelector(selectUserProfile);
     const [_class, setClass] = useState<string>("Select");
     const [currency, setCurrency] = useState<string>("Select");
+    const [title, setTitle] = useState<string>("");
+    const [location, setLocation] = useState<string>("");
     const [pg, setPG] = useState<string>("Select");
     const [isActive, setActive] = useState<boolean>(false);
-    const [coverImage, setCoverImage] = useState<ImageProps | null>(null);
-    const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
-    const [image, setImage] = useState<ImageProps | null>(null);
+    const [coverImage, setCoverImage] = useState<IFile | null>(null);
+    const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
+    const [image, setImage] = useState<IFile | null>(null);
     const [selectPaymentMethod, setPaymentMethod] = useState<string>(
         "Select payment method"
     );
@@ -43,20 +54,37 @@ export const ClientsComponent = () => {
     const [items, setItems] = useState<string[]>([]);
     const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
     const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
     const [eventHours, setEventHours] = useState<string>("0");
     const [details, setDetails] = useState(""); // State to store the textarea content
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
+    const [startDate, setStartDate] = useState<string>("");
     const [cat_List, setCat_List] = useState<ICategory[]>([]);
+      const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
     const maxLength = 200;
     const isEVENT = user?.profile?.role === "event";
     const isTVSHOW = user?.profile?.role === "tvshow";
     const isChannel = user?.profile?.role === "channel";
-    const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
+    const { data: categories, isSuccess: isSuccess_C } = useGetClientCategoryQuery(
         undefined,
         {}
     );
+     const {
+            data: livesteamDetails,
+            isSuccess: isSuccess_L,
+            refetch
+        } = useGetLivestreamDetailsQuery(undefined, {});
+
+     const config = {
+      reference: (new Date()).getTime().toString(),
+      email: user?.profile?.email??'',
+      amount: currency === 'NGN' ? 100 * eventEstimatedPrice : 100 * eventEstimatedPrice, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
+    //   publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_TEST_PUBLIC_KEY ?? '',
+  };
+        const initializePayment = usePaystackPayment(config);
+
 
     const [handleEstimate, { isLoading: isEstimatedLoading }] =
         useEventEstimateMutation();
@@ -76,16 +104,19 @@ export const ClientsComponent = () => {
                 setCoverImage({
                     name: files[0].name,
                     url: URL.createObjectURL(files[0]),
+                    file: files[0],
                 });
             } else if (type === "video") {
                 setVideoTrailer({
                     name: files[0].name,
                     url: URL.createObjectURL(files[0]),
+                    file: files[0],
                 });
             } else {
                 setImage({
                     name: files[0].name,
                     url: URL.createObjectURL(files[0]),
+                    file: files[0],
                 });
             }
         }
@@ -94,11 +125,15 @@ export const ClientsComponent = () => {
     const handleGetEstimatedPrice = async (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
-        const { end, start } = getDates(Number(e.target.value));
+        if(startDate === ''){
+            toast('Please set startDate first', {type:'error'});
+            return;
+        }
+        const { end, start } = getDates(Number(e.target.value), startDate);
         setEventHours(e.target.value);
 
         const res = await handleEstimate({ end, start }).unwrap();
-        console.log(res);
+        // console.log(res);
         if (res.data) {
             setEventEstimatedPrice(res.data.estimated_cost);
         }
@@ -109,10 +144,79 @@ export const ClientsComponent = () => {
         setIsPlaying(true);
     }
 
+
+     async function handleCreateLive() {
+        try {
+          setLoading(true);
+          const { end, start } = getDates(Number(eventHours), startDate);
+          const formdata = new FormData();
+          const data: Omit<ICreateLiveData, 'clientId'> = {
+            title,
+            location,
+            description: details,
+            expiry: end,
+            pg: pg,
+            vidClass: _class.toLowerCase(),
+            type: user?.profile?.role??'',
+            start,
+            subTitle: 'subtitle'
+          }
+    
+          if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
+          if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
+          if (image && image.file) formdata.append('channelLogo', image.file);
+          formdata.append('data', JSON.stringify(data));
+    
+          const res = await clientCreateLive(formdata);
+          // console.log(res.data)
+          if (res.ok && res.data) {
+            toast(`${res.data.message}`, { type: "success" });
+            // RESET 
+          } else {
+            toast(`${res.data?.message}`, { type: "error" });
+          }
+        } catch (error) {
+          toast(`${error}`, { type: "error" });
+        } finally {
+          setLoading(false);
+          refetch();
+        }
+      }
+  
+
+  const onSuccess = (reference:any) => {
+    // Implementation for whatever you want to do with reference and after success call.
+    console.log(reference, 'here....');
+    handleCreateLive();
+  };
+
+
+  const onClose = () => {
+    // implementation for  whatever you want to do when the Paystack dialog closed.
+    console.log('closed')
+  }
+
+  async function handlePayment(){
+    try {
+        initializePayment({onSuccess, onClose});
+    } catch (error:any) {
+         toast(`${error.message}`, {
+          type: "error",
+        });
+    }
+  }
+
     useEffect(()=>{
-        console.log(categories)
-        if(categories && isSuccess_C) setCat_List(categories.data)
-    }, [isSuccess_C])
+        if(categories && isSuccess_C) setCat_List(categories.data.filter(x => x.name.toLowerCase().includes('live')))
+    }, [isSuccess_C]);
+
+    useEffect(() =>{
+        setSelectedCategories(prev =>{
+            const exId = new Set(prev.map(x => x));
+            const merged = [cat_Placeholder, ...prev].filter(x => !exId.has(x))
+            return merged
+        });
+    }, [cat_Placeholder])
 
     return (
         <div className="relative">
@@ -141,6 +245,8 @@ export const ClientsComponent = () => {
                                     placeholder=""
                                     id="name"
                                     className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
                                 />
                             </div>
                         ) : (
@@ -158,26 +264,29 @@ export const ClientsComponent = () => {
                                         placeholder=""
                                         id="name"
                                         className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                                        value={title}
+                                        onChange={e => setTitle(e.target.value)}
                                     />
                                 </div>
-
-                            <div className={"w-[75%]"}>
+                            </>
+                        )}
+                            <div className={isChannel ? "w-[100%]" : "w-[75%]"}>
                                     <label
                                         htmlFor="subtitle"
                                         className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
                                     >
-                                        SUB TITLE*
+                                        LOCATION*
                                     </label>
                                     <CustomInput
                                         required
                                         type="text"
                                         placeholder=""
                                         id="name"
-                                        className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                                        className={`font-normal text-sm ${isChannel ?'py-1' :'py-2'} mt-2 border border-border_grey rounded-sm`}
+                                         value={location}
+                                        onChange={e => setLocation(e.target.value)}
                                     />
                                 </div>
-                            </>
-                        )}
 
                         <div className={`flex flex-row items-start ${isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
                             <div className="flex-1">
@@ -312,7 +421,7 @@ export const ClientsComponent = () => {
                                  <div
                                     className={`${roboto_500.className} flex flex-row items-center gap-x-2 text-[#909090] text-[32px] mt-2.5`}
                                 >
-                                    {getSymbolFromCurrency(currency === 'Select' ?'NGN' : currency)}{formatAmount(eventEstimatedPrice.toString())}.00
+                                    {getSymbolFromCurrency(currency === 'Select' ? 'NGN' : currency)}{formatAmount(eventEstimatedPrice.toString())}.00
                                     {isEstimatedLoading && (
                                         <Lottie
                                             animationData={LoadingSpinner}
@@ -365,7 +474,7 @@ export const ClientsComponent = () => {
                                         }`}
                                 >
                                     <div
-                                        onClick={() => setActive(!isActive)}
+                                        onClick={() => (livesteamDetails && livesteamDetails.data.length>0) ? setActive(!isActive) : toast('Create live content first', {type:'error'})}
                                         className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isActive
                                             ? "translate-x-5 bg-green_400"
                                             : "-translate-x-0 bg-[#BCBDBD]"
@@ -375,12 +484,33 @@ export const ClientsComponent = () => {
                             </div>
 
                             </div>
+
+                          {!isChannel &&  <div className="flex-1">
+                                <div className="w-[250px] mx-auto">
+                                       <p
+                                         className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
+                                       >
+                                         START DATE *
+                                       </p>
+                                       <div>
+                                       <CustomInput
+                                         placeholder="DD/MM/YYYY"
+                                         type="datetime-local"
+                                         className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
+                                         value={startDate.replaceAll("/", "-")}
+                                         onChange={(e) => setStartDate(e.target.value)}
+                                         />
+                                         </div>
+                                     </div>
+                            </div>}
                         </div>
                     </div>
                     {/* LEFT END */}
 
                     {/* RIGHT START */}
-                   {isChannel && <MediaComp 
+                   {isChannel &&
+                   <div className="flex-1">
+                   <MediaComp 
                    coverImage={coverImage}
                    handleInput={handleInput}
                    setCoverImage={setCoverImage}
@@ -391,15 +521,35 @@ export const ClientsComponent = () => {
                    setIsPlaying={setIsPlaying}
                    setVideoTrailer={setVideoTrailer}
                    handleVideo={handleVideo}
-                   />}
+                   />
+                    <div className="w-[250px] mx-auto mt-10">
+                                       <p
+                                         className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
+                                       >
+                                         START DATE *
+                                       </p>
+                                       <div>
+                                       <CustomInput
+                                         placeholder="DD/MM/YYYY"
+                                         type="datetime-local"
+                                         className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
+                                         value={startDate.replaceAll("/", "-")}
+                                         onChange={(e) => setStartDate(e.target.value)}
+                                         />
+                                         </div>
+                                     </div>
+                   </div>
+                   }
                     {/* RIGHT END */}
                 </div>
 
                 <div className="w-[30%] min-w-[240px] mt-10">
                     <AppButton
-                        onClick={() => setIsPaymentActive(true)}
+                        onClick={() => handlePayment()}
                         title="CONTINUE TO PAYMENT"
                         className="w-full"
+                        isLoading={loading}
+                        disabled={location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || (user?.profile.role === 'channel' ? !image : !videoTrailer)}
                     />
                 </div>
             </div>

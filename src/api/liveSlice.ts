@@ -120,6 +120,16 @@ export const createLive = async (data: FormData) =>
         })
     );
 
+export const clientCreateLive = async (data: FormData) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.post<IGeneric>(`/clients/lives/create`, data, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        }),
+        true
+    );
+
 export const deleteLive = async (data: { _id: string }) =>
     await apiCall<IGeneric>((baseApi) =>
         baseApi.delete<IGeneric>(`/superadmin/lives/delete/${data._id}`, data)

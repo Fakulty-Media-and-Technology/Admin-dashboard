@@ -11,10 +11,23 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-categories`,
+          url: `/superadmin/enums/get-categories?limit=100&page=1`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+    }),
+
+    getClientCategory: builder.query<ICategoryResponse, void>({
+      query: (data) => {
+        const authToken = localStorage.getItem("auth_token");
+        return {
+          url: `/clients/get-categories?limit=100&page=1`,
+          method: "GET",
+          headers: {
+            "clients-auth": `${authToken}`,
           },
         };
       },
@@ -24,7 +37,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-genres`,
+          url: `/superadmin/enums/get-genres?limit=100&page=1`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -38,7 +51,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-cast`,
+          url: `/superadmin/enums/get-cast?limit=100&page=1`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -49,7 +62,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useGetCategoryQuery, useGetGenreQuery, useGetCastQuery } = categoryApiSlice;
+export const { useGetCategoryQuery, useGetClientCategoryQuery, useGetGenreQuery, useGetCastQuery } = categoryApiSlice;
 
 export const searchFetchCast = async (searchTerm:string) =>
   await apiCall<ICastResponse>((baseApi) =>

@@ -16,6 +16,27 @@ export function getDates(hours: number, _startDate:string) {
   };
 }
 
+export const getTimeDifferenceInHours = (iso1: string, iso2: string): number => {
+  const date1 = new Date(iso1);
+  const date2 = new Date(iso2);
+
+  const diffInMs = Math.abs(date2.getTime() - date1.getTime());
+  const diffInHours = diffInMs / (1000 * 60 * 60);
+
+  return diffInHours;
+};
+
+export const trimIsoToMinutes = (iso: string): string => {
+  const date = new Date(iso);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export function getFutureDateInISO(hours: number) {
   if (hours <= 0) {
     throw new Error("Hours must be greater than 0");

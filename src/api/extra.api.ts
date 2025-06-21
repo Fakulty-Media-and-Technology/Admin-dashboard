@@ -16,7 +16,7 @@ export const extraxApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/clients/event/payment/estimate?start=${data.start}&expiry=${data.end}`,
+          url: `/clients/event/payment/estimate?start=${data.start}&expiry=${data.end}&currency=${data.currency}`,
           method: "GET",
           headers: {
             "clients-auth": `${authToken}`,

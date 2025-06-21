@@ -32,7 +32,7 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetGiftCardsQuery({ limit: 5, page: pg }, {});
+  } = useGetGiftCardsQuery({ limit: 4, page: pg }, {});
 
 
   const transformEventData = (data: IGiftCardData[]) => {
@@ -181,7 +181,7 @@ export default function page() {
       </div>
 
 
-      <div className="mt-auto ml-5 md:ml-10 lg:ml-16 bg-black2 absolute bottom-10 z-50 flex flex-row items-center">
+      <div className="mt-auto ml-5 md:ml-10 lg:ml-16 bg-black2 absolute bottom-4 z-50 flex flex-row items-center">
         <div
           className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
         >

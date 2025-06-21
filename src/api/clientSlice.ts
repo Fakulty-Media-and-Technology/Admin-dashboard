@@ -54,6 +54,15 @@ export const createCLientAcc = async (data: FormData) =>
         })
     );
 
+export const editCLientAcc = async (data: FormData, uId:string) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.put<IGeneric>(`/clients/user-profile/shared/update/${uId}`, data, {
+            headers:{
+                "Content-Type": "multipart/form-data",
+            }
+        })
+    );
+
 export const searchClient = async (data: { value: string }) =>
     await apiCall<IClientsResponse>(baseApi => baseApi.get<IClientsResponse>(`/superadmin/lives/search-clients?search=${data.value}&page=1&limit=9999999999`))
 

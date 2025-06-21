@@ -1,6 +1,6 @@
 'use client'
 
-import { createCLientAcc } from "@/api/clientSlice";
+import { createCLientAcc, editCLientAcc } from "@/api/clientSlice";
 import { uploadImage } from "@/api/upload";
 import useToggle from "@/hooks/useToggle";
 import { IClientsData, IPhoto } from "@/types/api/clients.types";
@@ -39,7 +39,6 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
     const [mobile, setMobile] = useState<string>(selectedUser ? selectedUser.mobile : "");
     const [password, setPassword] = useState<string>("");
     const [email, setEmail] = useState<string>(selectedUser ? selectedUser.email : "");
-    const [location, setLocation] = useState<string>("");
     const [verifyUser, setVerifyUser] = useToggle();
     const [gender, setGender] = useState<string>("Select your gender");
     const [photo, setPhoto] = useState<IPhoto>({ Bucket: '', Key: '' })
@@ -47,7 +46,7 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
     const [firstName, setFirstName] = useState<string>(selectedUser ? selectedUser.fullname.split(' ')[0] : '');
     const [lastName, setLastName] = useState<string>(selectedUser ? selectedUser.fullname.split(' ')[1] : '');
     const [DOB, setDOB] = useState<string>("");
-    const isDisable = firstName === '' || lastName === '' || DOB === '' || (selectedUser?.photo === null || selectedUser?.photo === '' || userPic === null) || gender.includes('Select') || location === '' || email === '' || password === '' || mobile === '' || phoneNo === ''
+    const isDisable = firstName === '' || lastName === '' || DOB === '' || (selectedUser?.photo === null || selectedUser?.photo === '' || userPic === null) || gender.includes('Select') || email === '' || password === '' || mobile === '' || phoneNo === ''
 
     function reset() {
         setFirstName('');
@@ -60,7 +59,6 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
         setVerifyUser();
         setClientType(ClientType[0]);
         setDOB('');
-        setLocation('');
         setUserPic(null)
     }
 
@@ -81,22 +79,25 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
         try {
             setLoading(true);
             const formdata = new FormData();
-            formdata.append('client_type', clientType.toLowerCase().replace(' ', ''));
-            formdata.append('last_name', lastName);
-            formdata.append('first_name', firstName);
+            if(!selectedUser) formdata.append('client_type', clientType.toLowerCase().replace(' ', ''));
+            formdata.append(selectedUser ? 'lastName' : 'last_name', lastName);
+            formdata.append(selectedUser ? 'firstName' :'first_name', firstName);
             formdata.append('email', email);
-            formdata.append('cpassword', password);
+            formdata.append(selectedUser ? 'prevPassword' :'cpassword', password);
             formdata.append('password', password);
             formdata.append('mobile', mobile);
-            formdata.append('verified', `${verifyUser}`);
-            formdata.append('country_code', `${selectedUser?.country_code}`);
+           if(!selectedUser) formdata.append('verified', `${verifyUser}`);
+            formdata.append('gender', gender);
+            formdata.append('dob', new Date(DOB).toISOString());
+            formdata.append(selectedUser ? 'countryCode' :'country_code', `${phoneNo}`);
             if (userPic) formdata.append('photo', userPic);
 
-            const res = await createCLientAcc(formdata);
+            const res = selectedUser ? await editCLientAcc(formdata, selectedUser._id) : await createCLientAcc(formdata);
             if (res.ok && res.data) {
                 toast(`Client created successfully`, { type: "success" });
                 handleReset();
                 reset();
+                handleClose();
             } else {
                 toast(`${res.data?.message.replace('Invalid Request:', '')}`, { type: "error" });
             }
@@ -336,23 +337,6 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
                                     />
                                 )}
                             </div>
-                            {!isView && <div>
-                                <label
-                                    htmlFor="location"
-                                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                                >
-                                    LOCATION *
-                                </label>
-                                <CustomInput
-                                    type="text"
-                                    id="location"
-                                    className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                                    value={location}
-                                    onChange={(e) =>
-                                        setLocation(e.target.value)
-                                    }
-                                />
-                            </div>}
                             <div>
                                 <label
                                     htmlFor="gender"

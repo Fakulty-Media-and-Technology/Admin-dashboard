@@ -96,13 +96,10 @@ function page() {
     setIsPlaying(!isPlaying);
   }
 
-  useEffect(() => {
-    console.log("isPlaying:", isPlaying);
-  }, [isPlaying]);
 
   useEffect(() => {
     if (!livesteamDetails || livesteamDetails.data.length===0 || isSuperAdmin) return
-    setLiveUrl(livesteamDetails.data[0].stream_url)
+    setLiveUrl(livesteamDetails.data[0].previewVideo)
   }, [isSuccess_L])
 
   useEffect(() => {
@@ -312,13 +309,13 @@ function page() {
                 playing={isPlaying}
                 muted={mute}
                 controls={false}
-                url={(livesteamDetails && livesteamDetails.data.length>0) ? livesteamDetails?.data[0].previewVideo : liveUrl}
+                url={liveUrl}
                 // url={'//vjs.zencdn.net/v/oceans.mp4'}
                 // url={'https://www.youtube.com/watch?v=ZVEGWQVb1pE'}
                 width="100%"
                 height="100%"
                 volume={1}
-                onEnded={() => setIsPlaying(false)}
+                onEnded={() => [setIsPlaying(false), setLiveUrl(livesteamDetails ? livesteamDetails.data[0].stream_url:'')]}
                 onReady={() => setIsPlayerReady(true)}
               />
             </div>
@@ -366,7 +363,7 @@ function page() {
                     alt=""
                     width={28}
                     height={28}
-                    className="object-contain rounded-full"
+                    className="object-cover h-[28px] rounded-full"
                   />
                   <span
                     className={`${outfit_500.className} font-medium text-[13px] text-white ml-2`}
@@ -396,7 +393,8 @@ function page() {
                 >
                   <div className="w-[10px] h-[10px] animate-pulse rounded-full bg-red_500 " />
                   <span
-                    className={`${outfit_500.className} font-medium text-[13px] text-white`}
+                    className={`${outfit_500.className} cursor-pointer font-medium text-[13px] text-white`}
+                    onClick={() => setLiveUrl(livesteamDetails ? livesteamDetails.data[0].stream_url:'')}
                   >
                     LIVE
                   </span>
@@ -410,10 +408,20 @@ function page() {
                       className="object-contain rounded-full"
                     />
                   </div>
-                  {isPlaying && <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
+                  {isPlaying ? <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
                     <div className="w-1 h-3.5 bg-white" />
                     <div className="w-1 h-3.5 bg-white" />
-                  </button>}
+                  </button> : 
+                  <div onClick={() => setLiveUrl(livesteamDetails ? livesteamDetails.data[0].previewVideo:'')} className="cursor-pointer ml-2">
+                    <Image
+                      src="/refreshIcon.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="object-contain h-[18px] rounded-full"
+                    />
+                  </div>
+                  }
                 </div>
               </div>
             )}

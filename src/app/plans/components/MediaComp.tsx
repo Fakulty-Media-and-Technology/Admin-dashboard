@@ -64,9 +64,9 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
                                             id="upload"
                                             src={coverImage.url}
                                             width={238}
-                                            height={149}
+                                            height={139}
                                             alt="uploaded"
-                                            className="rounded-[10px] object-cover"
+                                            className="rounded-[10px] h-[139px] object-cover"
                                         />
                                         <button
                                             className="hover:scale-110 transition-all duration-200"
@@ -84,66 +84,6 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
                             </div>
                         </div>
 
-                        {isChannel ? (
-                            <div className="w-full md:w-[320px] mx-auto lg:ml-auto mt-16">
-                                <p
-                                    className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
-                                >
-                                    Upload Channel logo *
-                                </p>
-                                <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
-                                    <div className="flex items-center ml-5 py-1 relative">
-                                        <div
-                                            className={`${roboto_500.className} min-w-fit mr-3 bg-grey_500 rounded-[4px] border border-white py-[3px] px-2 text-xs text-black`}
-                                        >
-                                            Choose File
-                                        </div>
-                                        <span
-                                            className={`${roboto_400.className} truncate text-xs text-grey_500`}
-                                        >
-                                            {image ? image.name : "No File selected"}
-                                        </span>
-                                        <input
-                                            type="file"
-                                            id="file"
-                                            onChange={handleInput}
-                                            className="absolute z-20 opacity-0"
-                                        />
-                                    </div>
-                                    <div
-                                        className={`${roboto_500.className} text-white text-[15px] bg-[#EE2726] h-[40px] px-4 flex items-center justify-center`}
-                                    >
-                                        UPLOAD
-                                    </div>
-                                </div>
-
-                                <div className="h-[133px] flex flex-row items-end mt-1 justify-center gap-x-3">
-                                    {image && (
-                                        <>
-                                            <Image
-                                                // id="upload"
-                                                src={image.url}
-                                                width={110}
-                                                height={153}
-                                                alt="uploaded"
-                                                className="h-[80px] rounded-[10px]"
-                                            />
-                                            <button
-                                                className="hover:scale-110 transition-all duration-200"
-                                                onClick={() => setImage(null)}
-                                            >
-                                                <Image
-                                                    src="/delete.svg"
-                                                    width={16}
-                                                    height={16}
-                                                    alt="delete icon"
-                                                />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
                             <div className="w-full md:w-[320px] mx-auto lg:ml-auto mt-10">
                                 <p
                                     className={`${roboto_500.className} font-medium text-sm text-[#909090] mb-2`}
@@ -230,7 +170,6 @@ function MediaComp({coverImage, handleInput, setCoverImage, image, videoTrailer,
                                     )}
                                 </div>
                             </div>
-                        )}
                     </div>
   )
 }

@@ -158,7 +158,7 @@ export const ClientsComponent = () => {
                                 alt=""
                                 width={28}
                                 height={28}
-                                className="object-contain rounded-full"
+                                className="object-cover h-[28px] rounded-full"
                             />
                             <span
                                 className={`${outfit_500.className} font-medium text-[13px] text-white ml-2`}

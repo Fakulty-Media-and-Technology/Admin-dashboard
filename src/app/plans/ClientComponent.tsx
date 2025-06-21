@@ -7,7 +7,7 @@ import ReactPlayer from "react-player";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Lottie from "lottie-react";
 import { formatAmount } from "@/utilities/formatAmount";
-import { getDates } from "@/utilities/dateUtilities";
+import { getDates, getTimeDifferenceInHours, trimIsoToMinutes } from "@/utilities/dateUtilities";
 import { useEventEstimateMutation } from "@/api/extra.api";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/hooks/reduxHook";
@@ -22,6 +22,8 @@ import getSymbolFromCurrency from 'currency-symbol-map';
 import { clientCreateLive } from "@/api/liveSlice";
 import { ICreateLiveData } from "@/types/api/live.types";
 import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
+import { initiatePayment } from "@/api/paymentSlice";
+import { IPaymentData } from "@/types/api/payment.types";
 
 
 const paymentMethods = ["Visa/mastercard", "Paypal", "Crypto", "Bank Transfer"];
@@ -38,31 +40,29 @@ interface IFile extends ImageProps {
 
 export const ClientsComponent = () => {
     const user = useAppSelector(selectUserProfile);
-    const [_class, setClass] = useState<string>("Select");
+       const {data: livesteamDetails,isSuccess: isSuccess_L,refetch
+        } = useGetLivestreamDetailsQuery(undefined, {});
+        const live = (livesteamDetails && livesteamDetails.data.length>0) ? livesteamDetails.data[0] :null
+    const [_class, setClass] = useState<string>(live ? live.vidClass : "Select");
     const [currency, setCurrency] = useState<string>("Select");
-    const [title, setTitle] = useState<string>("");
-    const [location, setLocation] = useState<string>("");
-    const [pg, setPG] = useState<string>("Select");
-    const [isActive, setActive] = useState<boolean>(false);
-    const [coverImage, setCoverImage] = useState<IFile | null>(null);
-    const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
-    const [image, setImage] = useState<IFile | null>(null);
-    const [selectPaymentMethod, setPaymentMethod] = useState<string>(
-        "Select payment method"
-    );
-    const [catText, setCatText] = useState("");
-    const [items, setItems] = useState<string[]>([]);
+    const [title, setTitle] = useState<string>(live ? live.title : "");
+    const [location, setLocation] = useState<string>(live ? live.location :"");
+    const [pg, setPG] = useState<string>(live ? live.pg :"Select");
+    const [isActive, setActive] = useState<boolean>(live ? live.active : false);
+    const [coverImage, setCoverImage] = useState<IFile | null>(live ? {name:'',url:live.coverPhoto} : null);
+    const [videoTrailer, setVideoTrailer] = useState<IFile | null>(live ? {name:'',url:live.previewVideo}:null);
+    const [image, setImage] = useState<IFile | null>(live ? {name:'',url:live.channelLogo??''}:null);
     const [isPaymentActive, setIsPaymentActive] = useState<boolean>(false);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
-    const [eventHours, setEventHours] = useState<string>("0");
-    const [details, setDetails] = useState(""); // State to store the textarea content
+    const [eventHours, setEventHours] = useState<string>(live ? getTimeDifferenceInHours(live.start, live.expiry).toString() : "0");
+    const [details, setDetails] = useState(live? live.description:""); // State to store the textarea content
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [startDate, setStartDate] = useState<string>("");
+    const [startDate, setStartDate] = useState<string>(live ? trimIsoToMinutes(live.start): "");
     const [cat_List, setCat_List] = useState<ICategory[]>([]);
       const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
-    const maxLength = 200;
+    const maxLength = 200; 
     const isEVENT = user?.profile?.role === "event";
     const isTVSHOW = user?.profile?.role === "tvshow";
     const isChannel = user?.profile?.role === "channel";
@@ -70,11 +70,7 @@ export const ClientsComponent = () => {
         undefined,
         {}
     );
-     const {
-            data: livesteamDetails,
-            isSuccess: isSuccess_L,
-            refetch
-        } = useGetLivestreamDetailsQuery(undefined, {});
+    const isDisable = eventEstimatedPrice === 0 || currency ==='Select' || location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || !videoTrailer
 
      const config = {
       reference: (new Date()).getTime().toString(),
@@ -123,17 +119,21 @@ export const ClientsComponent = () => {
     }
 
     const handleGetEstimatedPrice = async (
-        e: React.ChangeEvent<HTMLInputElement>
+        e: string
     ) => {
         if(startDate === ''){
             toast('Please set startDate first', {type:'error'});
             return;
         }
-        const { end, start } = getDates(Number(e.target.value), startDate);
-        setEventHours(e.target.value);
+        if(currency === 'Select'){
+            toast('Please select a currency ', {type:'error'});
+            return;
+        }
 
-        const res = await handleEstimate({ end, start }).unwrap();
-        // console.log(res);
+        const { end, start } = getDates(Number(e), live ? live.expiry : startDate);
+        setEventHours(e);
+
+        const res = await handleEstimate({ end, start, currency }).unwrap();
         if (res.data) {
             setEventEstimatedPrice(res.data.estimated_cost);
         }
@@ -164,7 +164,7 @@ export const ClientsComponent = () => {
     
           if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
           if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
-          if (image && image.file) formdata.append('channelLogo', image.file);
+        //   if (image && image.file) formdata.append('channelLogo', image.file);
           formdata.append('data', JSON.stringify(data));
     
           const res = await clientCreateLive(formdata);
@@ -187,7 +187,11 @@ export const ClientsComponent = () => {
   const onSuccess = (reference:any) => {
     // Implementation for whatever you want to do with reference and after success call.
     console.log(reference, 'here....');
-    handleCreateLive();
+    if(live){
+        refetch();
+    }else{
+        handleCreateLive();
+    }
   };
 
 
@@ -198,7 +202,21 @@ export const ClientsComponent = () => {
 
   async function handlePayment(){
     try {
-        initializePayment({onSuccess, onClose});
+        const data:IPaymentData = {
+            amount:eventEstimatedPrice,
+            currency:currency.toUpperCase(),
+            email: user?.profile.email ?? '',
+            fullName: user?.profile.first_name??'',
+            useCase:live ?'live schedule ext' :'live schedule'
+        }
+        const res = await initiatePayment(data);
+        if(res.ok && res.data){
+            initializePayment({onSuccess, onClose});
+        }else{
+              toast(`${res.data?.message}`, {
+             type: "error",
+           });
+        }
     } catch (error:any) {
          toast(`${error.message}`, {
           type: "error",
@@ -216,7 +234,7 @@ export const ClientsComponent = () => {
             const merged = [cat_Placeholder, ...prev].filter(x => !exId.has(x))
             return merged
         });
-    }, [cat_Placeholder])
+    }, [cat_Placeholder]);
 
     return (
         <div className="relative">
@@ -247,6 +265,7 @@ export const ClientsComponent = () => {
                                     className="font-normal text-sm py-1 mt-2 border border-border_grey rounded-sm"
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
+                                    readOnly={live !== null}
                                 />
                             </div>
                         ) : (
@@ -266,6 +285,7 @@ export const ClientsComponent = () => {
                                         className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
+                                        readOnly={live !== null}
                                     />
                                 </div>
                             </>
@@ -285,6 +305,7 @@ export const ClientsComponent = () => {
                                         className={`font-normal text-sm ${isChannel ?'py-1' :'py-2'} mt-2 border border-border_grey rounded-sm`}
                                          value={location}
                                         onChange={e => setLocation(e.target.value)}
+                                        readOnly={live !== null}
                                     />
                                 </div>
 
@@ -299,7 +320,7 @@ export const ClientsComponent = () => {
                                 <SelectInputForm
                                     placeholder={_class}
                                     setType={setClass}
-                                    selectData={["Free", "Exclusive"]}
+                                    selectData={live ? [] : ["Free", "Exclusive"]}
                                     className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                                     textStyles="text-grey_500 text-sm"
                                 />
@@ -313,7 +334,7 @@ export const ClientsComponent = () => {
                                 <SelectInputForm
                                     placeholder={pg}
                                     setType={setPG}
-                                    selectData={["13+", "18+"]}
+                                    selectData={live ? [] :["13+", "18+"]}
                                     className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                                     textStyles="text-grey_500 text-sm"
                                 />
@@ -377,7 +398,7 @@ export const ClientsComponent = () => {
                                         </div>
                                       }
                                       setType={setCat_Placeholder}
-                                      selectData={cat_List.map((x) => x.name)}
+                                      selectData={live ? [] : cat_List.map((x) => x.name)}
                                       className="border-border_grey min-h-[90px] items-start text-grey_500 rounded-sm flex-1"
                                     />
                                   </div>
@@ -392,8 +413,10 @@ export const ClientsComponent = () => {
                                 <textarea
                                     name="details"
                                     maxLength={maxLength}
+                                    value={details}
                                     onChange={handleTextChange}
                                     className={`${roboto_400.className} textarea w-full h-[80px] p-1 pl-2 outline-none bg-transparent text-sm text-white`}
+                                    readOnly={live !== null}
                                 />
                                 <p
                                     className={`${roboto_400.className} absolute bottom-0 right-1 text-sm text-[#C4C4C4]`}
@@ -448,15 +471,18 @@ export const ClientsComponent = () => {
                                 <div className="flex flex-row gap-x-2 items-center mt-2.5">
                                     <CustomInput
                                         required
-                                        type="text"
+                                        type="number"
                                         placeholder="0"
                                         id="name"
+                                        value={eventHours === '0' ? '' : eventHours}
                                         className="w-[83px] font-normal text-sm text-center py-1 border border-border_grey rounded-sm"
-                                        onChange={(e) => handleGetEstimatedPrice(e)}
+                                        onChange={(e) => handleGetEstimatedPrice(e.target.value)}
+                                        readOnly={live !== null}
                                     />
 
                                     <button
-                                        className={`${roboto_400.className} min-w-fit py-1 px-2 text-[#747474] text-sm bg-[#333333]`}
+                                        className={`${roboto_400.className} min-w-fit py-1 px-2 text-sm ${live ? 'bg-[#29A87C] text-white' : 'bg-[#333333] text-[#747474]'}`}
+                                        onClick={() => setIsPaymentActive(true)}
                                     >
                                         Extend Hours
                                     </button>
@@ -474,7 +500,7 @@ export const ClientsComponent = () => {
                                         }`}
                                 >
                                     <div
-                                        onClick={() => (livesteamDetails && livesteamDetails.data.length>0) ? setActive(!isActive) : toast('Create live content first', {type:'error'})}
+                                        onClick={() => (live && live.active) ? setActive(!isActive) : toast('No active live content', {type:'error'})}
                                         className={`w-[26px] h-[26px] rounded-full transition-all ease-in-out duration-500 ${isActive
                                             ? "translate-x-5 bg-green_400"
                                             : "-translate-x-0 bg-[#BCBDBD]"
@@ -499,6 +525,7 @@ export const ClientsComponent = () => {
                                          className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
                                          value={startDate.replaceAll("/", "-")}
                                          onChange={(e) => setStartDate(e.target.value)}
+                                         readOnly={live !== null}
                                          />
                                          </div>
                                      </div>
@@ -523,21 +550,22 @@ export const ClientsComponent = () => {
                    handleVideo={handleVideo}
                    />
                     <div className="w-[250px] mx-auto mt-10">
-                                       <p
-                                         className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
-                                       >
-                                         START DATE *
-                                       </p>
-                                       <div>
-                                       <CustomInput
-                                         placeholder="DD/MM/YYYY"
-                                         type="datetime-local"
-                                         className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
-                                         value={startDate.replaceAll("/", "-")}
-                                         onChange={(e) => setStartDate(e.target.value)}
-                                         />
-                                         </div>
-                                     </div>
+                        <p
+                            className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
+                        >
+                        START DATE *
+                        </p>
+                            <div>
+                                <CustomInput
+                                    placeholder="DD/MM/YYYY"
+                                    type="datetime-local"
+                                    className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    readOnly={live !== null}
+                                />
+                            </div>
+                        </div>
                    </div>
                    }
                     {/* RIGHT END */}
@@ -546,10 +574,10 @@ export const ClientsComponent = () => {
                 <div className="w-[30%] min-w-[240px] mt-10">
                     <AppButton
                         onClick={() => handlePayment()}
-                        title="CONTINUE TO PAYMENT"
+                        title={live ? "EDIT LIVE" :"CONTINUE TO PAYMENT"}
                         className="w-full"
                         isLoading={loading}
-                        disabled={location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || (user?.profile.role === 'channel' ? !image : !videoTrailer)}
+                        disabled={live ? videoTrailer === null|| coverImage === null|| (videoTrailer?.url === live.previewVideo && coverImage?.url === live.coverPhoto) : isDisable}
                     />
                 </div>
             </div>
@@ -558,7 +586,11 @@ export const ClientsComponent = () => {
                 <ModalComponent
                     eventHours={eventHours}
                     handleClose={() => setIsPaymentActive(false)}
+                    handleEstFunc={value => handleGetEstimatedPrice(Number(value) <= Number(eventHours) ? '' : (Number(value) - Number(eventHours)).toString())}
+                    currency={currency}
                     price={eventEstimatedPrice}
+                    paymentFunc={handlePayment}
+                    disabled={live ? Number(eventHours) <= getTimeDifferenceInHours(live.start, live.expiry) : true}
                 />
             )}
         </div>

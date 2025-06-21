@@ -179,7 +179,7 @@ export default function page() {
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-contain h-[42px] rounded-full"
+                              className="object-cover h-[42px] rounded-full"
                             />
                             <div className="ml-2.5">
                               <p

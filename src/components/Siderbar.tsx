@@ -237,6 +237,8 @@ function Siderbar() {
       router.replace("/");
     }
   }, []);
+
+  console.log(user?.profile)
   
   useEffect(() =>{
     if(hasLive || isSuperadmin) return
@@ -287,7 +289,8 @@ function Siderbar() {
               <ul className="w-full mt-6 ">
                 {(user?.profile.role !== "superadmin"
                   ? user?.profile.role !== "channel"
-                    ? FullSideLinks.splice(4, 0, "withdrawal")
+                    // ? FullSideLinks.splice(4, 0, "withdrawal")
+                    ? FullSideLinks
                     : clientsLinks
                   : navLinks
                 ).map((link, index) => {

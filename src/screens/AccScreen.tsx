@@ -154,9 +154,9 @@ const AccScreen = () => {
 
       <div className="my-6 ml-14 relative w-fit">
         {/* Here */}
-        {userPic ? (
+        {(userPic || (!isSuperAdmin && user && user.photo_url && user.photo_url !=='')) ? (
           <Image
-            src={URL.createObjectURL(userPic)}
+            src={!isSuperAdmin ? user?.photo_url ?? '' : userPic ? URL.createObjectURL(userPic):''}
             width={105}
             height={106}
             alt=""

@@ -5,6 +5,8 @@ import { roboto_400, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
 import { ModalProps } from "./ModalComp";
+import ViewVote from "./ViewVotes";
+import { AnimatePresence, motion } from "framer-motion";
 
 
 
@@ -12,9 +14,20 @@ import { ModalProps } from "./ModalComp";
 export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [selectCountry, setCountry] = useState<string>("Select currency");
+    const [mode, setMode] = useState ("default")
+
 
     return (
-        <div className="px-10 bg-black3 py-5 pb-6 mt-12">
+        <>
+        <AnimatePresence mode="wait">
+        { mode === "default" && (
+            <motion.div 
+            key="default"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.4 }}
+            className="px-10 bg-black3 py-5 pb-6 mt-12">
             <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
                 <div className="w-full sm:w-[326px] lg:w-[606px] md:pl-10 flex items-center">
                     <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[73px]">
@@ -29,7 +42,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
 
                 {/* add butn */}
                 <div
-                    // onClick={handleClose}
+                    onClick={() => setMode("ViewVote")}
                     className={`${roboto_500.className} flex items-center gap-x-4 md:mr-20 ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-[17px] text-yellow  text-center cursor-pointer`}
                 >
                     View votes
@@ -144,6 +157,13 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
+        )}
+        
+        {mode === "ViewVote" && (
+            <ViewVote onBack={() => setMode("default")}/>
+        )}
+        </AnimatePresence>
+        </>
     );
 };

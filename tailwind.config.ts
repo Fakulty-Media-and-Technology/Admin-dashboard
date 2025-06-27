@@ -38,7 +38,8 @@ const config: Config = {
         green_400: "#29A87C",
         grey_3: '#D9D9D9',
         white1 : "#FCFCFB",
-        grey4 :  "#333333"
+        grey4 :  "#333333",
+        textdim : "#BAB5A9"
       },
       fontFamily: {
         // manrope_400: [inter2.className],

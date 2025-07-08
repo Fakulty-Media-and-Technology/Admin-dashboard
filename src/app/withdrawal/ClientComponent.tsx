@@ -8,9 +8,9 @@ import { useState } from "react";
 const paymentMethods = ["Visa/mastercard", "Paypal", "Crypto", "Bank Transfer"];
 
 export const ClientsComponent = () => {
-    const [isOnline, setIsOnline] = useState<boolean>(true);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [sub, setSub] = useState<string>("Month");
+    const [wallet, setWallet] = useState<string>("NGN WALLET");
+    const [bank, setBank] = useState<string>("Select Bank")
     const [image, setImage] = useState<string | null>(null);
     const [name, setName] = useState<string | null>(null);
     const [selectPaymentMethod, setPaymentMethod] = useState<string>(
@@ -28,59 +28,41 @@ export const ClientsComponent = () => {
 
     return (
         <div
-            className={`${isOnline ? "w-full sm:w-[300px]" : "w-full sm:w-[350px]"
-                } mx-auto flex flex-col items-center pr-4 sm:pr-0 justify-center mt-20 mb-10`}
+            className={`w-full sm:w-[300px] mx-auto flex flex-col items-center pr-4 sm:pr-0 justify-center mt-20 mb-10`}
         >
-            <div className="flex items-center justify-center">
-                <div
-                    onClick={() => setIsOnline(!isOnline)}
-                    style={{ backgroundColor: isOnline ? "#0096D6C9" : "#212121" }}
-                    className="py-3 px-4 cursor-pointer"
-                >
-                    <span
-                        className={`${roboto_500.className} text-[17px] text-white text-center`}
-                    >
-                        Bank
-                    </span>
-                </div>
-                <div
-                    onClick={() => setIsOnline(!isOnline)}
-                    style={{ backgroundColor: !isOnline ? "#0096D6C9" : "#212121" }}
-                    className="py-3 px-4 cursor-pointer"
-                >
-                    <span
-                        className={`${roboto_500.className} text-[17px] text-white text-center`}
-                    >
-                        Offline
-                    </span>
+            <div className="block items-center justify-center">
+                <p className="text-white1 font-[600] text-center mb-4 text-[20px]">SELECT WALLET FOR BALANCE</p>
+
+                <div className="w-full">
+                    <SelectInputForm
+                        placeholder={wallet}
+                        setType={setWallet}
+                        selectData={["NGN WALLET", "USD WALLET"]}
+                        className="font-normal w-[316px] h-[36px] text-sm py-2 border border-border_grey rounded-sm"
+                        textStyles="text-grey_500 text-center"
+                    />
                 </div>
             </div>
 
             <p
-                className={`${roboto_500.className} mt-16 text-lg text-center text-white`}
+                className={`${roboto_700} text-xl md:text-3xl lg:text-5xl text-center text-white mt-6`}
             >
-                WALLET BALANCE
-            </p>
-            <p
-                className={`${roboto_700} text-xl md:text-3xl lg:text-5xl text-center text-white mt-2`}
-            >
-                ₦0.00
+                {wallet === "NGN WALLET" ? "₦190,203.00" : "$190,203.00"}
             </p>
 
             <div className="flex items-center flex-col mt-8 w-full">
-                {isOnline ? (
                     <>
-                        <div className="w-full">
+                        <div className="">
                             <SelectInputForm
-                                placeholder={sub}
-                                setType={setSub}
-                                selectData={["Month", "Year"]}
-                                className="font-normal h-[40px] text-sm py-2 border border-border_grey rounded-sm"
+                                placeholder={bank}
+                                setType={setBank}
+                                selectData={[""]}
+                                className="font-normal w-[316px] h-[40px] text-sm py-2 border border-border_grey rounded-sm"
                                 textStyles="text-grey_500 text-center"
                             />
                         </div>
 
-                        <div className="w-full mt-4">
+                        <div className=" mt-4">
                             {name && (
                                 <p
                                     className={`${roboto_400.className} text-sm text-[#F8A72D] text-center mb-1`}
@@ -91,68 +73,19 @@ export const ClientsComponent = () => {
                             <CustomInput
                                 required
                                 type="text"
-                                placeholder="Account Number"
+                                placeholder=" Enter Account Number"
                                 name="accountNumber"
-                                className="font-normal text-center h-[40px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
+                                className="font-normal text-center w-[316px] h-[40px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
                             />
                         </div>
                     </>
-                ) : (
-                    <div className="w-full">
-                        <CustomInput
-                            required
-                            type="text"
-                            placeholder="Full names"
-                            name="fullName"
-                            className="font-normal text-center mt-4 h-[40px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
-                        />
-
-                        <CustomInput
-                            required
-                            type="text"
-                            placeholder="Email Address"
-                            name="email"
-                            className="font-normal text-center mt-4 h-[40px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
-                        />
-
-                        <CustomInput
-                            required
-                            type="text"
-                            placeholder="Phone Number"
-                            name="phoneNumber"
-                            className="font-normal text-center mt-4 h-[40px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
-                        />
-
-                        <p
-                            className={`${roboto_400.className} text-[15px] text-center font-normal text-grey_2 mt-4 mx-auto`}
-                        >
-                            Bank Details
-                        </p>
-                        <div>
-                            <textarea
-                                name="bankDetails"
-                                id="bankDetails"
-                                className="font-normal text-center mt-1.5 h-[186px] outline-none bg-transparent text-sm py-2 pl-4 text-grey_800 flex-1 border border-border_grey rounded-sm"
-                            />
-                        </div>
-                        {/* <CustomInput
-              required
-              type="text"
-              multiple={true}
-              placeholder=""
-              name="bankDetails"
-              className="font-normal text-center mt-1.5 h-[186px] outline-none bg-transparent text-sm py-2 flex-1 border border-border_grey rounded-sm"
-            /> */}
-                    </div>
-                )}
-
                 <p
                     className={`${roboto_400.className} ml-auto text-sm text-right mt-1.5 text-grey_2`}
                 >
                     Minimum: ₦5,000.00{" "}
                 </p>
 
-                <div className="font-normal text-center h-[40px] outline-none bg-transparent mt-4 text-sm py-2 flex justify-between w-full border border-border_grey rounded-sm">
+                <div className="font-normal text-center w-[316px] h-[40px] outline-none bg-transparent mt-4 text-sm py-2 flex justify-between border border-border_grey rounded-sm">
                     <p className={`${roboto_400.className} text-[17px] text-white ml-3`}>
                         Amount <span className={`${roboto_700.className}`}>(₦)</span>
                     </p>
@@ -169,7 +102,7 @@ export const ClientsComponent = () => {
                 isLoading={isLoading}
                 // disabled={}
                 title="WITHDRAW"
-                className="w-full mt-5 text-2xl py-4"
+                className="w-[316px] mt-5 text-2xl py-4"
             // onClick={submitHandler}
             />
         </div>

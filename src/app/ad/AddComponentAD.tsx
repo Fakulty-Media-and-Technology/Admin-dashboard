@@ -17,18 +17,20 @@ const AddComponent = () => {
     const [subtitle, setSubTitle] = useState<string>('')
     const [cta, setCta] = useState<string>('')
     const [link, setLink] = useState<string>('')
-    const [brandNmae, setBrandNmae] = useState<string>('')
+    const [brandName, setBrandName] = useState<string>('')
     const [duration, setDuration] = useState<string>('')
     const [active, setActive] = useToggle()
     const [landscapeImagePreview_W, setLandscapeImagePreview_W] = useState<ImageProps | null>(null);
     const [landscapeImageLive_W, setLandscapeImageLive_W] = useState<ImageProps | null>(null);
     const [portrait_W, setPortrait_W] = useState<ImageProps | null>(null);
     const [landscapeImage_M, setLandscapeImage_M] = useState<ImageProps | null>(null);
-    const [startDate, setStartDate] = useState<string>('Select')
-    const [startTime, setStartTime] = useState<string>('Select');
+    const [startDate, setStartDate] = useState<string>('')
+    const [startTime, setStartTime] = useState<string>('');
     const [details, setDetails] = useState(""); // State to store the textarea content
     const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const isDisable = !title || !brandName || !link || !startDate || !startTime
+
     const maxLength = 200;
 
     function handleValidInput(query: string, type?: string) {
@@ -86,9 +88,13 @@ const AddComponent = () => {
         <div className="flex flex-col min-h-[calc(100%-120px)]">
             <div className="mt-12 flex flex-row w-fit h-[43px]">
                 {TABS.map((x, i) => {
+                    const isDisabled = i == 1 || i == 2
+                    const cursorStyle = isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                    const hoverStyle = isDisabled ? '' : 'hover:text-white hover:text-[18.5px] hover:h-[47.5px]'
                     const active = x.toLowerCase() === tab
+
                     return (
-                        <div key={i} onClick={() => setTab(x.toLowerCase())} className={`${roboto_500.className} text-[17px] hover:text-white hover:text-[18.5px] hover:h-[47.5px] transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 cursor-pointer h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
+                        <div key={i} onClick={() => {if (!isDisabled) setTab(x.toLowerCase())}} className={`${roboto_500.className} ${cursorStyle} ${hoverStyle} text-[17px]  transition-all duration-300 ${active ? 'text-white' : 'text-grey_800'} w-[88px] text-center py-2.5 h-[46px] ${active ? 'bg-[#0096D6C9]' : 'bg-black3'}`}>
                             {x}
                         </div>
                     )
@@ -125,8 +131,8 @@ const AddComponent = () => {
                                 required
                                 type="text"
                                 placeholder=""
-                                value={brandNmae}
-                                onChange={e => setBrandNmae(e.target.value)}
+                                value={brandName}
+                                onChange={e => setBrandName(e.target.value)}
                                 id="brand"
                                 className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                             />
@@ -233,12 +239,12 @@ const AddComponent = () => {
                                     START DATE *
                                 </label>
 
-                                <SelectInputForm
-                                    placeholder={startDate}
-                                    setType={setStartDate}
-                                    selectData={["12-05-2023"]}
-                                    className="font-normal h-[36px] mt-1 w-[157px] text-sm px-3 py-2 border border-border_grey rounded flex items-center gap-x-2"
-                                    textStyles={`${roboto_500.className} font-medium text-sm text-white`}
+                                <input 
+                                    type="date" 
+                                    name="date" 
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white"
                                 />
                             </div>
 
@@ -249,12 +255,12 @@ const AddComponent = () => {
                                     START TIME *
                                 </label>
 
-                                <SelectInputForm
-                                    placeholder={startTime}
-                                    setType={setStartTime}
-                                    selectData={["12-05-2023"]}
-                                    className="font-normal h-[36px] mt-1 w-[157px] text-sm px-3 py-2 border border-border_grey rounded flex items-center gap-x-2"
-                                    textStyles={`${roboto_500.className} font-medium text-sm text-white`}
+                                <input 
+                                    type="time" 
+                                    name="time" 
+                                    value={startTime}
+                                    onChange={e => setStartTime(e.target.value)}
+                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white"
                                 />
                             </div>
 
@@ -756,6 +762,7 @@ const AddComponent = () => {
                         title="SAVE"
                         style={{ alignSelf: "center" }}
                         className="w-[80%] mx-auto"
+                        disabled={isDisable}
                     />
                 </div>
             </div>

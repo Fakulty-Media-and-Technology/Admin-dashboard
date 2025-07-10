@@ -68,10 +68,10 @@ function ViewVote({ onBack }: ViewVotesProps) {
 
               return (
                 <tr key={index}>
-                  <td className="w-[496px]">
+                  <td className="w-[496px] pr-8">
                     {Contestants_Votes[leftIndex] && (
                       <div className="flex justify-between items-center pr-6">
-                        <div className="flex items-center gap-x-4 py-4">
+                        <div className="flex items-center gap-x-2 py-4">
                           <p className="text-textdim">{Contestants_Votes[leftIndex].id}</p>
                           <Image
                             src={Contestants_Votes[leftIndex].image}
@@ -80,10 +80,10 @@ function ViewVote({ onBack }: ViewVotesProps) {
                             height={53.2}
                             className="rounded-full"
                           />
-                          <p className="text-white">{Contestants_Votes[leftIndex].name}</p>
+                          <p className="text-white text-sm">{Contestants_Votes[leftIndex].name}</p>
                         </div>
-                        <div className="flex items-center gap-x-4 relative">
-                          <p className={`${roboto_500.className} bg-blue_300 py-4 px-6 rounded-full font-semibold text-sm text-white`}>
+                        <div className="flex items-center relative pl-6">
+                          <p className={`${roboto_500.className} bg-blue_300 py-4 px-4 rounded-full font-semibold text-sm text-white`}>
                             {Contestants_Votes[leftIndex].votes} votes
                           </p>
                           <div>
@@ -110,10 +110,10 @@ function ViewVote({ onBack }: ViewVotesProps) {
                     )}
                   </td>
 
-                  <td className="w-[496px]">
+                  <td className="w-[496px] pl-10">
                     {Contestants_Votes[rightIndex] && (
                       <div className="flex justify-between items-center pl-6">
-                        <div className="flex items-center gap-x-4">
+                        <div className="flex items-center gap-x-2">
                           <p className="text-textdim">{Contestants_Votes[rightIndex].id}</p>
                           <Image
                             src={Contestants_Votes[rightIndex].image}
@@ -122,10 +122,10 @@ function ViewVote({ onBack }: ViewVotesProps) {
                             height={53.2}
                             className="rounded-full"
                           />
-                          <p className="text-white">{Contestants_Votes[rightIndex].name}</p>
+                          <p className="text-white text-sm">{Contestants_Votes[rightIndex].name}</p>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <p className={`${roboto_500.className} bg-blue_300 py-4 px-6 rounded-full font-semibold text-sm text-white text-center`}>
+                        <div className="flex items-center pl-6">
+                          <p className={`${roboto_500.className} bg-blue_300 py-4 px-4 rounded-full font-semibold text-sm text-white text-center`}>
                             {Contestants_Votes[rightIndex].votes} votes
                           </p>
                           <div>

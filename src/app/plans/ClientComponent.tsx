@@ -165,7 +165,7 @@ export const ClientsComponent = () => {
           if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
           if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
         //   if (image && image.file) formdata.append('channelLogo', image.file);
-          formdata.append('data', JSON.stringify(data));
+          formdata.append('data', JSON.stringify({...data, paymentId:''}));
     
           const res = await clientCreateLive(formdata);
           // console.log(res.data)

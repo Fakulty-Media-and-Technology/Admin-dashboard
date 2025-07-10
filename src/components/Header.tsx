@@ -1,6 +1,6 @@
 "use client";
 
-import { roboto_400 } from "@/config/fonts";
+import { roboto_400, roboto_500 } from "@/config/fonts";
 import { useAppDispatch, useAppSelector } from "@/hooks/reduxHook";
 import useToggle from "@/hooks/useToggle";
 import { selectUserProfile, setShowAcc } from "@/store/slices/usersSlice";
@@ -9,6 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { destroyCookie } from "nookies";
 import React, { useState } from "react";
 import { motion } from 'framer-motion';
+import ModalNotificationBox from "./ModalNotification";
 
 
 const userOptions = ["account", "reports", "light mode", "log out"];
@@ -18,6 +19,8 @@ function Header() {
   const pathname = usePathname();
   const [activeMode, setActiveMode] = useState<boolean>(false);
   const [showOptions, setShowOptions] = useToggle();
+  const [ModalNotification, setModalNotification] = useState(false);
+  const [title, setTitle] = useState("")
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isChannel = user ? user?.profile.role === "channel" : false;
@@ -52,7 +55,7 @@ function Header() {
         <header className="relative pt-7 pb-4 h-[80px]">
           <div className="flex items-center justify-end gap-x-6 pr-6">
             {!isChannel && (
-              <button>
+              <button onClick={() => setModalNotification(true)}>
                 <Image src="/broadcast.svg" alt="" width={20} height={20} />
               </button>
             )}
@@ -125,6 +128,9 @@ function Header() {
             })}
           </motion.div>
           {/* )} */}
+
+          {/* Create Modal Notification */}
+          {ModalNotification && < ModalNotificationBox onBack={() => setModalNotification(false)}/> }
         </header>
       )}
     </>

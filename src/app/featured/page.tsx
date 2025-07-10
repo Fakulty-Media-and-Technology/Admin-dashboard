@@ -2,6 +2,7 @@
 
 import {
   addFeaturedContent,
+  getFeaturedEvent,
   searchFeaturedContent,
   useGetFeaturesQuery,
   useSearchFeaturedContentMutation,
@@ -100,7 +101,7 @@ export default function page() {
       setLoading(true);
       const res = await searchFeaturedContent(value);
       if ((res.status === 200 || res.status === 201) && res.data) {
-        setContentList([...res.data.data.vods, ...res.data.data.events]);
+        setContentList([...res.data.data.vods.map(x => ({...x, type:'vod'})), ...res.data.data.events.map(x => ({...x, type:'event'}))]);
       }
     } catch (error) {
       toast("Opps! couldn't search for content!", { type: "error" });
@@ -113,12 +114,13 @@ export default function page() {
     try {
       setLoadingX(true);
       const res = await addFeaturedContent(addFeatured);
-      console.log(res);
       if (res.ok && res.data) {
         toast("Featured content added successfully", { type: "success" });
         setAddFeatured(EmptyFeatured);
         setSelectedContent(null);
         setExpiryHours(0);
+        const res_f = await getFeaturedEvent();
+        if(res_f.ok && res_f.data) handleContentList(res_f.data)
       }
     } catch (error) {
       toast("Opps! add featured content", { type: "error" });
@@ -203,7 +205,7 @@ export default function page() {
                               width={42}
                               height={42}
                               alt="profiles"
-                              className="object-contain h-[42px] rounded-full"
+                              className="object-cover h-[42px] rounded-full"
                             />
                             <div className="ml-2">
                               <p
@@ -321,7 +323,7 @@ export default function page() {
                           setAddFeatured((prev) => ({
                             ...prev,
                             id: content._id,
-                            type: content.type === "vod" ? "vod" : "event",
+                            type: content.type
                           })),
                         ]}
                         className="text-white bg-black2 p-3 w-full"
@@ -346,20 +348,20 @@ export default function page() {
           <div className="mt-20 bg-black3 p-6 px-6 lg:px-12">
             <div className="">
               <label
-                htmlFor="firstName"
+                htmlFor="title"
                 className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-8`}
               >
                 TITLE
               </label>
               <CustomInput
                 type="text"
-                id="firstName"
+                id="title"
                 readOnly
                 className="font-normal text-grey_500 text-sm py-2 mt-2 mb-5 border border-border_grey rounded-sm"
                 value={selectedContent?.title ?? ""}
               />
               <label
-                htmlFor="firstName"
+                htmlFor="expire"
                 className={`${roboto_500.className} font-medium text-white text-center ml-2.5 pt-4`}
               >
                 EXPIRES IN{" "}
@@ -371,8 +373,8 @@ export default function page() {
               </label>
               <CustomInput
                 type="text"
-                id="firstName"
-                value={expiryHours}
+                id="expire"
+                value={expiryHours === 0 ?'' :expiryHours}
                 className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                 onChange={(e) => handleExpiryHours(e)}
               />
@@ -385,7 +387,7 @@ export default function page() {
                   alt=""
                   width={347}
                   height={436}
-                  className="w-[347px] h-[436px] mr-2"
+                  className="w-[347px] h-[436px] mr-2 object-cover"
                 />
                 <Image
                   src={"portraitPhoto" in selectedContent ? selectedContent.portraitPhoto : selectedContent.coverPhoto}

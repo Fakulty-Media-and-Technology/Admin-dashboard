@@ -243,7 +243,7 @@ function MainComponent({ slug }: Props) {
                             {new Date(tx.releaseDate).getFullYear()}
                           </td>
                           <td className="text-center font-normal text-xs capitalize">
-                            {isExpired(tx.expiryDate) ? "Active" : "Inactive"}
+                            {!isExpired(tx.expiryDate) ? "Active" : "Inactive"}
                           </td>
 
                           <td className="w-[50px] xl:w-[400px]">

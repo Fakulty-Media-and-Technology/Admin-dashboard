@@ -145,9 +145,13 @@ export const ClientsComponent = () => {
     }
 
 
-     async function handleCreateLive() {
+     async function handleCreateLive(id:string) {
         try {
           setLoading(true);
+          const category = selectedCategories.map(name => {
+        const foundCategory = cat_List.find(cat => cat.name === name);
+        return foundCategory ? foundCategory._id : '';
+      }).filter(id => id !== '');
           const { end, start } = getDates(Number(eventHours), startDate);
           const formdata = new FormData();
           const data: Omit<ICreateLiveData, 'clientId'> = {
@@ -159,13 +163,14 @@ export const ClientsComponent = () => {
             vidClass: _class.toLowerCase(),
             type: user?.profile?.role??'',
             start,
-            subTitle: 'subtitle'
+            subTitle: 'subtitle',
+            category
           }
     
           if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
           if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
         //   if (image && image.file) formdata.append('channelLogo', image.file);
-          formdata.append('data', JSON.stringify({...data, paymentId:''}));
+          formdata.append('data', JSON.stringify({...data, paymentId:id}));
     
           const res = await clientCreateLive(formdata);
           // console.log(res.data)
@@ -184,13 +189,13 @@ export const ClientsComponent = () => {
       }
   
 
-  const onSuccess = (reference:any) => {
+  const onSuccess = (id:string) => {
     // Implementation for whatever you want to do with reference and after success call.
-    console.log(reference, 'here....');
     if(live){
         refetch();
+        setIsPaymentActive(false);
     }else{
-        handleCreateLive();
+        handleCreateLive(id);
     }
   };
 
@@ -207,11 +212,13 @@ export const ClientsComponent = () => {
             currency:currency.toUpperCase(),
             email: user?.profile.email ?? '',
             fullName: user?.profile.first_name??'',
-            useCase:live ?'live schedule ext' :'live schedule'
+            useCase:live ?'live schedule ext' :'live schedule',
+            ...(live && {liveId: live._id})
         }
         const res = await initiatePayment(data);
         if(res.ok && res.data){
-            initializePayment({onSuccess, onClose});
+            const _id = res.data.data.paymentId
+            initializePayment({onSuccess:() => onSuccess(_id), onClose});
         }else{
               toast(`${res.data?.message}`, {
              type: "error",

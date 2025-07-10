@@ -2,7 +2,12 @@ import { IGeneric } from "./auth.types";
 
 
 export interface IPaymentResponse extends IGeneric {
-    data: {}
+    data: {
+        authorization_url: string,
+        access_code: string,
+        reference: string,
+        paymentId: string
+    }
 }
 
 export interface IPaymentData{

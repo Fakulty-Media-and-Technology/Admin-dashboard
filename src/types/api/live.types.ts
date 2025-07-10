@@ -46,4 +46,5 @@ export interface ICreateLiveData {
     type: string;
     location: string;
     subTitle: string;
+    category:string[]
 }

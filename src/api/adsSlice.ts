@@ -32,6 +32,13 @@ export const getAllAds = async (data: IPagination) =>
         )
     );
 
+export const createAds = async (data:FormData) =>
+    await apiCall<IGeneric>(baseApi => baseApi.post<IGeneric>('/superadmin/ads/create', data, {
+        headers:{
+            "Content-Type": "multipart/form-data"
+        }
+    }))
+
 export const deleteAds = async (_id: string) =>
     await apiCall<IGeneric>((baseApi) =>
         baseApi.get<IGeneric>(

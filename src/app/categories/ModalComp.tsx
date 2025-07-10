@@ -22,7 +22,7 @@ import { Table } from "./page";
 interface ModalProps {
   handleClose: () => void;
   tab: string;
-  handleReset: (value: ICastResponse | ICategoryResponse | undefined) => void;
+  handleReset: () => void;
   editValue: Table | null
 }
 
@@ -91,15 +91,7 @@ export const ModalComponent = ({
           type: "success",
         });
         reset();
-        const resCAT =
-          tab === "category"
-            ? await geetFetchCategories()
-            : tab === "genre"
-              ? await geetFetchGenres()
-              : await geetFetchCast();
-        if (resCAT.ok && resCAT.data) {
-          handleReset(resCAT.data);
-        }
+          handleReset();
       } else {
         toast(`${res.data?.message}`, {
           type: "error",

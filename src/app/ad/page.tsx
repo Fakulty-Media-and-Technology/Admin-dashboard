@@ -108,9 +108,9 @@ const page = () => {
     handleGetADSs(ADSs);
   }, [isSuccess]);
 
-
-
-
+  useEffect(() =>{
+    handleRefreshADSs(1)
+  }, [isAdd])
 
 
   return <section
@@ -269,8 +269,7 @@ const page = () => {
       </div>
     </>
       :
-
-      <AddComponent />
+      <AddComponent handleRefech={() => {handleRefreshADSs(1), setShowModal(!isAdd)}} />
     }
 
   </section>

@@ -63,9 +63,9 @@ export default function page() {
     error,
     isSuccess,
     isLoading,
-  } = useGetCategoryQuery(undefined, {});
-  const { data: genries, refetch:gRefetch } = useGetGenreQuery(undefined, {});
-  const { data: casts, refetch:cRefetch } = useGetCastQuery(undefined, {});
+  } = useGetCategoryQuery({limit:4, page:pg_c}, {});
+  const { data: genries, refetch:gRefetch } = useGetGenreQuery({limit:4, page:pg_g}, {});
+  const { data: casts, refetch:cRefetch } = useGetCastQuery({limit:4, page:pg_C}, {});
 
   const handleNext = () => {
     setPaginationList((prevList) =>
@@ -116,10 +116,10 @@ export default function page() {
       toast("Enums deleted successfully", { type: "info" });
       const resCAT =
         tab === "category"
-          ? await geetFetchCategories()
+          ? await geetFetchCategories({ limit: 4, page: pg_c })
           : tab === "genre"
-            ? await geetFetchGenres()
-            : await geetFetchCast();
+            ? await geetFetchGenres({ limit: 4, page:  pg_g })
+            : await geetFetchCast({ limit: 4, page: pg_C });
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -127,10 +127,10 @@ export default function page() {
       toast("Opps! couldn't delete user", { type: "info" });
       const resCAT =
         tab === "category"
-          ? await geetFetchCategories()
+          ? await geetFetchCategories({ limit: 4, page: pg_c })
           : tab === "genre"
-            ? await geetFetchGenres()
-            : await geetFetchCast();
+            ? await geetFetchGenres({ limit: 4, page: pg_g })
+            : await geetFetchCast({ limit: 4, page: pg_C });
       if (resCAT.ok && resCAT.data) {
         handleCategoryList(resCAT.data);
       }
@@ -241,7 +241,7 @@ export default function page() {
             handleClose={() => editValues ? setEditValues(null) : setIsAdd(!isAdd)}
             tab={tab}
             editValue={editValues}
-            handleReset={(value) => handleCategoryList(value)}
+            handleReset={() => [handleRefreshMedia()]}
           />
         )}
       <div className="bg-black3 min-h-[calc(80%-43px)] pt-12 px-5 md:px-10 lg:px-14">
@@ -272,7 +272,7 @@ export default function page() {
               <tbody>
                 {categoryTableFiltered.map((tx, indx) => {
                   return (
-                    <tr key={indx} className="text-white h-[100px]">
+                    <tr key={indx} className="text-white h-[90px]">
                       <td className="text-center font-normal text-[15px] capitalize">
                         {tx.title}
                       </td>

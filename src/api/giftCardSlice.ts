@@ -23,9 +23,18 @@ export const giftCardApiSlice = apiSlice.injectEndpoints({
 
 export const { useGetGiftCardsQuery } = giftCardApiSlice;
 
-export const getGiftCards = async (data: IPagination) =>
-    await apiCall<IGiftCardResponse>((baseApi) =>
-        baseApi.get<IGiftCardResponse>(
-            `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`
-        )
-    );
+export const getGiftCards = async (data: IPagination) => {
+  const authToken = localStorage.getItem("auth_token");
+
+  return await apiCall<IGiftCardResponse>((baseApi) =>
+    baseApi.get<IGiftCardResponse>(
+      `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`,
+      {
+        headers: {
+          "superadmin-auth": `${authToken}`,
+        },
+      }
+    )
+  );
+};
+

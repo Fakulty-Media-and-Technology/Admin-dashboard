@@ -33,13 +33,15 @@ interface Data {
 
 
 export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
-    const [loading, setLoading] = useState<boolean>(false);
-    const [wallet, setWallet] = useState<string>("Select currency") 
+    const [wallet, setWallet] = useState<string>("") 
     const [amount, setAmount] = useState<string>('');
     const [gift_code, setGift_Code] = useState<string>('');
     const [serial_NO, setSerial_NO] = useState<string>('');
     const [pin, setPIN] = useState<string>('');
-    const isDisable = !amount || !gift_code || !serial_NO  || !pin
+    const [isActivated, setIsActivated] = useState<boolean>(false);
+    const [loadingButton, setLoadingButton] = useState<"generate" | "save" | null>(null)
+    const [generateClicked, setGenerateClicked] = useState(false);
+
 
 
     function reset() {
@@ -56,52 +58,91 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
         }
     }
 
-    async function submitHandler() {
+    // Function to handle save button
+        const handleActivateGiftCard = async () => {
         try {
-            setLoading(true);
+            setLoadingButton("save");
 
-        } catch (error) {
+            const giftCodeToSend = gift_code
+            const adminToken = localStorage.getItem("auth_token");
+            if (!adminToken || !giftCodeToSend) throw new Error("Missing giftCode or token");
 
-        } finally {
+            console.log("Sending admin token:", adminToken);
+
+            const response = await fetch(
+            `${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/activate/${giftCodeToSend}/${adminToken}`,
+            {
+                method: "Put", // 🔄 Changed from POST to PUT
+                headers: {
+                "Content-Type": "application/json",
+                "superadmin-auth": adminToken
+                },
+                body: JSON.stringify({
+                giftCode: giftCodeToSend,
+                adminToken: adminToken
+                })
+            }
+            );
+
+            const result = await response.json();
             
-            setLoading(false)
-        }
-    };
 
-    async function generateGiftCard() {
-        try {
-            setLoading(true);
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/generate/new`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                amount,
-                currency: wallet
-            })
-            });
-
-            const result: Response = await response.json();
-
-            if (!response.ok || !result.data) {
-            throw new Error(result.message || "Gift card creation failed");
+            if (!response.ok) {
+            throw new Error(result.message || "Activation failed");
             }
 
-            // Update state with response data
-            setGift_Code(result.data.code);
-            setSerial_NO(result.data.serialNumber.toString());
-            setPIN("••••••"); // Optional: placeholder until user enters real authorization
-            console.log("Gift code received:", result.data.code);
+            setIsActivated(true)
+
+            console.log("Gift card activated:", result);
 
         } catch (error) {
-            console.error("Gift card generation error:", error);
+            console.error("Gift card activation error:", error);
         } finally {
-            setLoading(false);
+            setLoadingButton(null);
         }
-    };
+        };
 
+        // Function to handle generate gift card
+        async function generateGiftCard() {
+            try {
+                setLoadingButton("generate");
+                setIsActivated(false);
+                setGift_Code('');
+                setSerial_NO('');
+                
+                const authToken = localStorage.getItem("auth_token");
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/generate/new`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "superadmin-auth": `${authToken}`
+                },
+                body: JSON.stringify({
+                    amount,
+                    currency: wallet
+                })
+                });
+
+                const result: Response = await response.json();
+
+                if (!response.ok || !result.data) {
+                throw new Error(result.message || "Gift card creation failed");
+                }
+
+                // Update state with response data
+                setGift_Code(result.data.code);
+                setSerial_NO(result.data.serialNumber.toString());
+                setPIN("••••••"); // Optional: placeholder until user enters real authorization
+                console.log("Gift code received:", result.data.code);
+
+            } catch (error) {
+                console.error("Gift card generation error:", error);
+            } finally {
+                setLoadingButton(null);
+                setGenerateClicked(true)
+            }
+        };
 
 
     return (
@@ -201,21 +242,30 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
                         </div>
                     </div>
                     <AppButton
-                        isLoading={loading}
-                        disabled={amount === "" || wallet === "Select currrency"}
+                        isLoading={loadingButton === "generate"}
+                        disabled={loadingButton !== null || !amount || !wallet}
                         title="GENERATE"
-                        className="w-[70%] mt-10 text-xl py-2.5"
+                        className={`w-[70%] mt-10 text-xl py-2.5 ${generateClicked
+                        ? "bg-gray-400 text-white": amount ? "bg-red text-white": "bg-grey_500 text-white"}`}
+                        style={{ transition: "background-color 0.3s ease" }}
                         onClick={generateGiftCard}
                     />
                     <AppButton
-                        isLoading={loading}
-                        disabled={isDisable}
-                        title="SAVE"
-                        className="w-[70%] mt-3 text-xl py-2.5"
-                        onClick={submitHandler}
+                        isLoading={loadingButton === "save"}
+                        disabled={
+                            loadingButton !== null ||
+                            !amount || !wallet || !gift_code || !serial_NO ||
+                            isActivated
+                        }
+                        title={isActivated ? "ACTIVATED" : "SAVE"}
+                        className={`w-[70%] mt-3 text-xl py-2.5 ${isActivated  ? "bg-green-600 text-white"
+                            : amount && wallet && gift_code && serial_NO
+                                ? "bg-red text-white"
+                                : "bg-gray-400 text-white"}`}
+                        onClick={handleActivateGiftCard}
                     />
                 </div>
             </div>
         </div>
     )
-}
+};

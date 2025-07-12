@@ -15,3 +15,21 @@ export interface IGiftCardData {
     createdAt: string;
     updatedAt: string;
 }
+
+
+export interface ICreateGiftCardResponse extends IGeneric {
+  data: ICreateGiftCard;
+};
+
+export interface ICreateGiftCard {
+  admin_id: string;
+  serialNumber: number;
+  amount: number;
+  currency: string;
+  code: string;
+  used: boolean;
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+};

@@ -2,7 +2,8 @@
 import { IPagination } from "@/types/api/suggestion.types";
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
-import { IGiftCardResponse } from "@/types/api/giftCard.types";
+import { ICreateGiftCardResponse, IGiftCardResponse } from "@/types/api/giftCard.types";
+import { IGeneric } from "@/types/api/auth.types";
 
 export const giftCardApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -23,32 +24,25 @@ export const giftCardApiSlice = apiSlice.injectEndpoints({
 
 export const { useGetGiftCardsQuery } = giftCardApiSlice;
 
-export const getGiftCards = async (data: IPagination) => {
-  const authToken = localStorage.getItem("auth_token");
-
-  return await apiCall<IGiftCardResponse>((baseApi) =>
+export const getGiftCards = async (data: IPagination) =>
+  await apiCall<IGiftCardResponse>((baseApi) =>
     baseApi.get<IGiftCardResponse>(
-      `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`,
-      {
-        headers: {
-          "superadmin-auth": `${authToken}`,
-        },
-      }
+      `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`
     )
   );
-};
 
-export const activateGiftCard = async (data: FormData) => {
-    const authToken = localStorage.getItem("auth_token");
-  return await apiCall<IGiftCardResponse>((baseApi) =>
-    baseApi.put<IGiftCardResponse>(
-      `/superadmin/giftcard/activate/${data.get("giftCode")}/${data.get("adminToken")}`, 
+export const createGiftCard = async (data: {amount:string, currency:string}) =>
+  await apiCall<ICreateGiftCardResponse>((baseApi) =>
+    baseApi.post<ICreateGiftCardResponse>(
+      `/superadmin/giftcard/generate/new`, 
       data,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "superadmin-auth": `${authToken}`,
-        }
-      }
     )
-  )};
+  );
+
+export const activateGiftCard = async (data: {code:string, adminToken:string}) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(
+      `/superadmin/giftcard/activate/${data.code}/${data.adminToken}`, 
+      data,
+    )
+  );

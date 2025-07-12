@@ -86,6 +86,15 @@ export default function page() {
     }
   };
 
+  async function handleDelete(id:string){
+      setList(prev => prev.filter(x => x._id !== id));
+      // const res = await 
+      // if(res.ok && res.data && res.data.message.includes('deleted')){
+      //   // show toast message
+      //   handleRefreshGiftCards();
+      // }
+  }
+
 
   useEffect(() => {
     handleGetGiftCards(giftCards);

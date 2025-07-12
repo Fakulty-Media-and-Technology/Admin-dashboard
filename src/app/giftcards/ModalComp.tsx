@@ -1,6 +1,6 @@
 'use client'
 
-import { activateGiftCard } from "@/api/giftCardSlice";
+import { activateGiftCard, createGiftCard } from "@/api/giftCardSlice";
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { roboto_500 } from "@/config/fonts";
 import Image from "next/image";
@@ -14,26 +14,6 @@ interface ModalProps {
     handleReset: () => void;
 };
 
-interface Response {
-  status: number;
-  message: string;
-  data: Data;
-};
-
-interface Data {
-  admin_id: string;
-  serialNumber: number;
-  amount: number;
-  currency: string;
-  code: string;
-  used: boolean;
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-};
-
-
 export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
     const [wallet, setWallet] = useState<string>("") 
     const [amount, setAmount] = useState<string>('');
@@ -43,7 +23,6 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
     const [isActivated, setIsActivated] = useState<boolean>(false);
     const [loadingButton, setLoadingButton] = useState<"generate" | "save" | null>(null)
     const [generateClicked, setGenerateClicked] = useState(false);
-
 
 
     function reset() {
@@ -64,25 +43,15 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
        const handleActivateGiftCard = async () => {
         try {
             setLoadingButton("save");
-            const adminToken = localStorage.getItem("auth_token");
-
-            const payload = {
-            giftCode: gift_code,
-            adminToken : adminToken
-            };
-
-            const formdata = new FormData();
-            formdata.append("giftCode", gift_code);
-            formdata.append('adminToken', adminToken ?? "");
-            formdata.append("data", JSON.stringify(payload));
-
-            const response = await activateGiftCard(formdata);
-
+            const response = await activateGiftCard({code:gift_code, adminToken:pin});
             if (response.ok && response.data) {
             toast(`${response.data.message}`, { type: "success" });
             setIsActivated(true);
+            reset();
+            handleReset();
+            handleClose();
             } else {
-            toast(`${response.data?.message}`, { type: "error" });
+             toast(`${response.data?.message}`, { type: "error" });
             }
 
         } catch (error) {
@@ -97,37 +66,17 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
             try {
                 setLoadingButton("generate");
                 setIsActivated(false);
-                setGift_Code('');
-                setSerial_NO('');
-                
-                const authToken = localStorage.getItem("auth_token");
 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/generate/new`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "superadmin-auth": `${authToken}`
-                },
-                body: JSON.stringify({
-                    amount,
-                    currency: wallet
-                })
-                });
-
-                const result: Response = await response.json();
-
-                if (!response.ok || !result.data) {
-                throw new Error(result.message || "Gift card creation failed");
+                const res = await createGiftCard({amount, currency:wallet});
+                if (res.ok && res.data) {
+                    const data = res.data.data
+                  setGift_Code(data.code);
+                setSerial_NO(data.serialNumber.toString());   
+                }else{
+                    toast(`${res.data?.message}`, {type:'error'})
                 }
-
-                // Update state with response data
-                setGift_Code(result.data.code);
-                setSerial_NO(result.data.serialNumber.toString());
-                setPIN("••••••"); // Optional: placeholder until user enters real authorization
-                console.log("Gift code received:", result.data.code);
-
             } catch (error) {
-                console.error("Gift card generation error:", error);
+                toast(`${error}`, {type:'error'})
             } finally {
                 setLoadingButton(null);
                 setGenerateClicked(true)

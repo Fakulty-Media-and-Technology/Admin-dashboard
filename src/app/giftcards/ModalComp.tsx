@@ -85,7 +85,7 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
 
 
     return (
-        <div className="z-[9999] w-[calc(100%-20px] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] absolute overflow-hidden flex justify-center">
+        <div className="z-[9999] w-[calc(100%-20px] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] absolute -top-[100px] overflow-hidden flex justify-center">
             <div style={{
                 marginTop: 20
             }} className="w-[90%] sm:w-[603px] p-5 rounded-[10px] overflow-y-auto bg-black4">

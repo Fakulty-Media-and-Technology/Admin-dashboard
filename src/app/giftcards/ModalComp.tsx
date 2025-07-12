@@ -70,7 +70,7 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
                 const res = await createGiftCard({amount, currency:wallet});
                 if (res.ok && res.data) {
                     const data = res.data.data
-                  setGift_Code(data.code);
+                setGift_Code(data.code);
                 setSerial_NO(data.serialNumber.toString());   
                 }else{
                     toast(`${res.data?.message}`, {type:'error'})

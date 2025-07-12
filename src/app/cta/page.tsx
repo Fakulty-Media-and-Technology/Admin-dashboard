@@ -12,9 +12,13 @@ import {
 import { useAppSelector } from "@/hooks/reduxHook";
 import { selectUserProfile } from "@/store/slices/usersSlice";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ClientsComponent } from "./ClientComp";
 import { ModalComponent } from "./ModalComp";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
+import { createVotesInfo } from "@/api/voteSlice";
+import { ILivestreamDetails } from "@/types/api/dashboard.types";
+import { toast } from "react-toastify";
 
 export const runtime = "edge";
 
@@ -24,7 +28,41 @@ export default function page() {
   const isSuperAdmin = user?.profile.role === "superadmin";
   const [cta, setCTA] = useState<string>("Vote");
   const [isActive, setActive] = useState<boolean>(false);
+  const [price, setPrice] = useState<string>("")
   const [isShowModal, setShowModal] = useState<boolean>(false);
+  const [live, setLive] = useState<ILivestreamDetails | null>(null)
+  const {
+          data: livesteamDetails,
+          isSuccess: isSuccess_L,
+      } = useGetLivestreamDetailsQuery(undefined, {});
+  
+      async function handleChange(inputPrice: string) {
+        if (cta === "vote") {
+          console.log("You are on vote");
+        }
+        try {
+          if (!live?._id) throw new Error("Live ID is missing");
+          const res = await createVotesInfo({live_id: live._id,price: inputPrice,status: isActive,});
+          console.log(live._id)
+
+          if (res.ok && res.data) {
+            toast(`${res.data.message}`, { type: "success" });
+          } else {
+            toast(`${res.data?.message || "Vote creation failed"}`, { type: "error" });
+          }
+        } catch (error: any) {
+          toast(`${error.message || "Something went wrong"}`, { type: "error" });
+        }
+      }
+
+
+      useEffect(() => {
+              if (!livesteamDetails || livesteamDetails.data.length===0) return
+              setLive(livesteamDetails.data[0])
+          }, [isSuccess_L]);
+
+
+
 
   return (
     <section className={`${roboto_400.className} relative pl-5`}>
@@ -44,7 +82,7 @@ export default function page() {
           <SelectInputForm
             placeholder={cta}
             setType={setCTA}
-            selectData={["Vote"]}
+            selectData={["Vote", "Donations"]}
             className="font-normal text-sm mt-2 py-1 pb-1.5 border border-border_grey rounded-md"
             textStyles="text-grey_500 text-sm"
           />
@@ -58,7 +96,13 @@ export default function page() {
           </span>
           <CustomInput
             type="text"
-            placeholder="500"
+            placeholder="0.00"
+            value={price}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPrice(value);
+              handleChange(value); // 
+            }}
             className="font-normal outline-none bg-transparent text-left mt-2 text-sm py-1 flex-1 border border-border_grey rounded-md"
           />
         </div>

@@ -1,9 +1,11 @@
 'use client'
 
+import { activateGiftCard, createGiftCard } from "@/api/giftCardSlice";
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 
 
@@ -12,34 +14,15 @@ interface ModalProps {
     handleReset: () => void;
 };
 
-interface Response {
-  status: number;
-  message: string;
-  data: Data;
-};
-
-interface Data {
-  admin_id: string;
-  serialNumber: number;
-  amount: number;
-  currency: string;
-  code: string;
-  used: boolean;
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-};
-
-
 export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
-    const [loading, setLoading] = useState<boolean>(false);
-    const [wallet, setWallet] = useState<string>("Select currency") 
+    const [wallet, setWallet] = useState<string>("") 
     const [amount, setAmount] = useState<string>('');
     const [gift_code, setGift_Code] = useState<string>('');
     const [serial_NO, setSerial_NO] = useState<string>('');
     const [pin, setPIN] = useState<string>('');
-    const isDisable = !amount || !gift_code || !serial_NO  || !pin
+    const [isActivated, setIsActivated] = useState<boolean>(false);
+    const [loadingButton, setLoadingButton] = useState<"generate" | "save" | null>(null)
+    const [generateClicked, setGenerateClicked] = useState(false);
 
 
     function reset() {
@@ -56,56 +39,53 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
         }
     }
 
-    async function submitHandler() {
+    // Function to handle save button
+       const handleActivateGiftCard = async () => {
         try {
-            setLoading(true);
-
-        } catch (error) {
-
-        } finally {
-            
-            setLoading(false)
-        }
-    };
-
-    async function generateGiftCard() {
-        try {
-            setLoading(true);
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/generate/new`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                amount,
-                currency: wallet
-            })
-            });
-
-            const result: Response = await response.json();
-
-            if (!response.ok || !result.data) {
-            throw new Error(result.message || "Gift card creation failed");
+            setLoadingButton("save");
+            const response = await activateGiftCard({code:gift_code, adminToken:pin});
+            if (response.ok && response.data) {
+            toast(`${response.data.message}`, { type: "success" });
+            setIsActivated(true);
+            reset();
+            handleReset();
+            handleClose();
+            } else {
+             toast(`${response.data?.message}`, { type: "error" });
             }
 
-            // Update state with response data
-            setGift_Code(result.data.code);
-            setSerial_NO(result.data.serialNumber.toString());
-            setPIN("••••••"); // Optional: placeholder until user enters real authorization
-            console.log("Gift code received:", result.data.code);
-
         } catch (error) {
-            console.error("Gift card generation error:", error);
+            toast(`${error}`, { type: "error" });
         } finally {
-            setLoading(false);
+            setLoadingButton(null);
         }
-    };
+        };
 
+        // Function to handle generate gift card
+        async function generateGiftCard() {
+            try {
+                setLoadingButton("generate");
+                setIsActivated(false);
+
+                const res = await createGiftCard({amount, currency:wallet});
+                if (res.ok && res.data) {
+                    const data = res.data.data
+                  setGift_Code(data.code);
+                setSerial_NO(data.serialNumber.toString());   
+                }else{
+                    toast(`${res.data?.message}`, {type:'error'})
+                }
+            } catch (error) {
+                toast(`${error}`, {type:'error'})
+            } finally {
+                setLoadingButton(null);
+                setGenerateClicked(true)
+            }
+        };
 
 
     return (
-        <div className="z-[9999] w-[calc(100%-20px] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] absolute overflow-hidden flex justify-center">
+        <div className="z-[9999] w-[calc(100%-20px] md:w-[calc(100%-40px)] lg:w-[calc(100%-56px)] absolute -top-[100px] overflow-hidden flex justify-center">
             <div style={{
                 marginTop: 20
             }} className="w-[90%] sm:w-[603px] p-5 rounded-[10px] overflow-y-auto bg-black4">
@@ -201,21 +181,30 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
                         </div>
                     </div>
                     <AppButton
-                        isLoading={loading}
-                        disabled={amount === "" || wallet === "Select currrency"}
+                        isLoading={loadingButton === "generate"}
+                        disabled={loadingButton !== null || !amount || !wallet}
                         title="GENERATE"
-                        className="w-[70%] mt-10 text-xl py-2.5"
+                        className={`w-[70%] mt-10 text-xl py-2.5 ${generateClicked
+                        ? "bg-gray-400 text-white": amount ? "bg-red text-white": "bg-grey_500 text-white"}`}
+                        style={{ transition: "background-color 0.3s ease" }}
                         onClick={generateGiftCard}
                     />
                     <AppButton
-                        isLoading={loading}
-                        disabled={isDisable}
-                        title="SAVE"
-                        className="w-[70%] mt-3 text-xl py-2.5"
-                        onClick={submitHandler}
+                        isLoading={loadingButton === "save"}
+                        disabled={
+                            loadingButton !== null ||
+                            !amount || !wallet || !gift_code || !serial_NO ||
+                            isActivated
+                        }
+                        title={isActivated ? "ACTIVATED" : "SAVE"}
+                        className={`w-[70%] mt-3 text-xl py-2.5 ${isActivated  ? "bg-green-600 text-white"
+                            : amount && wallet && gift_code && serial_NO
+                                ? "bg-red text-white"
+                                : "bg-gray-400 text-white"}`}
+                        onClick={handleActivateGiftCard}
                     />
                 </div>
             </div>
         </div>
     )
-}
+};

@@ -74,7 +74,7 @@ export default function page() {
   async function handleRefreshGiftCards(query?: number) {
     try {
       setLoading(true);
-      const res = await getGiftCards({ limit: 5, page: query ?? pg })
+      const res = await getGiftCards({ limit: 4, page: query ?? pg })
       if (res.ok && res.data) {
         handleGetGiftCards(res.data)
       } else {
@@ -179,7 +179,7 @@ export default function page() {
 
 
                     <td className="text-center font-normal text-[15px] uppercase">
-                      {tx.serial_number}
+                      {tx.serialNumber}
                     </td>
 
                     <td className="text-center font-normal text-xs capitalize">

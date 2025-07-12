@@ -38,3 +38,15 @@ export const getGiftCards = async (data: IPagination) => {
   );
 };
 
+export const activateGiftCard = async (data: FormData) =>
+  await apiCall<IGiftCardResponse>((baseApi) =>
+    baseApi.put<IGiftCardResponse>(
+      `/superadmin/giftcard/activate/${data.get("giftCode")}`, 
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        }
+      }
+    )
+  );

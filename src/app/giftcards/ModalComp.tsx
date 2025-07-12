@@ -1,9 +1,11 @@
 'use client'
 
+import { activateGiftCard } from "@/api/giftCardSlice";
 import { AppButton, CustomInput, SelectInputForm } from "@/components/AppLayout";
 import { roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 
 
@@ -59,44 +61,32 @@ export const ModalComponent = ({ handleClose, handleReset }: ModalProps) => {
     }
 
     // Function to handle save button
-        const handleActivateGiftCard = async () => {
+       const handleActivateGiftCard = async () => {
         try {
             setLoadingButton("save");
-
-            const giftCodeToSend = gift_code
             const adminToken = localStorage.getItem("auth_token");
-            if (!adminToken || !giftCodeToSend) throw new Error("Missing giftCode or token");
 
-            console.log("Sending admin token:", adminToken);
+            const payload = {
+            giftCode: gift_code,
+            adminToken : adminToken
+            };
 
-            const response = await fetch(
-            `${process.env.NEXT_PUBLIC_RP_baseurl}/superadmin/giftcard/activate/${giftCodeToSend}/${adminToken}`,
-            {
-                method: "Put", // 🔄 Changed from POST to PUT
-                headers: {
-                "Content-Type": "application/json",
-                "superadmin-auth": adminToken
-                },
-                body: JSON.stringify({
-                giftCode: giftCodeToSend,
-                adminToken: adminToken
-                })
+            const formdata = new FormData();
+            formdata.append("giftCode", gift_code);
+            formdata.append('adminToken', adminToken ?? "");
+            formdata.append("data", JSON.stringify(payload));
+
+            const response = await activateGiftCard(formdata);
+
+            if (response.ok && response.data) {
+            toast(`${response.data.message}`, { type: "success" });
+            setIsActivated(true);
+            } else {
+            toast(`${response.data?.message}`, { type: "error" });
             }
-            );
-
-            const result = await response.json();
-            
-
-            if (!response.ok) {
-            throw new Error(result.message || "Activation failed");
-            }
-
-            setIsActivated(true)
-
-            console.log("Gift card activated:", result);
 
         } catch (error) {
-            console.error("Gift card activation error:", error);
+            toast(`${error}`, { type: "error" });
         } finally {
             setLoadingButton(null);
         }

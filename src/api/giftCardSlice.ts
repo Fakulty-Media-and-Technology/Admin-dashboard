@@ -38,15 +38,17 @@ export const getGiftCards = async (data: IPagination) => {
   );
 };
 
-export const activateGiftCard = async (data: FormData) =>
-  await apiCall<IGiftCardResponse>((baseApi) =>
+export const activateGiftCard = async (data: FormData) => {
+    const authToken = localStorage.getItem("auth_token");
+  return await apiCall<IGiftCardResponse>((baseApi) =>
     baseApi.put<IGiftCardResponse>(
-      `/superadmin/giftcard/activate/${data.get("giftCode")}`, 
+      `/superadmin/giftcard/activate/${data.get("giftCode")}/${data.get("adminToken")}`, 
       data,
       {
         headers: {
           "Content-Type": "multipart/form-data",
+          "superadmin-auth": `${authToken}`,
         }
       }
     )
-  );
+  )};

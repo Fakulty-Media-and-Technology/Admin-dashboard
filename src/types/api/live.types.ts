@@ -46,4 +46,6 @@ export interface ICreateLiveData {
     type: string;
     location: string;
     subTitle: string;
+    currency?: string;
+    amount?: number;
 }

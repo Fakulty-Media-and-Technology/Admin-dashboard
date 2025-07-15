@@ -24,7 +24,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/clients/get-categories?limit=100&page=1`,
+          url: `/clients/shared/get-categories?limit=100&page=1`,
           method: "GET",
           headers: {
             "clients-auth": `${authToken}`,

@@ -17,6 +17,8 @@ export interface ContentData {
   videoLink?: string;
   trailerLink?: string;
   artistName?: string;
+  currency?: string;
+  amount?:number
 }
 
 export interface ContentFormData {

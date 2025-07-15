@@ -46,3 +46,10 @@ export const activateGiftCard = async (data: {code:string, adminToken:string}) =
       data,
     )
   );
+
+  export const deleteGiftCard = async (_id: string) =>
+    await apiCall<IGeneric>((baseApi) =>
+        baseApi.delete<IGeneric>(
+            `superadmin/giftcard/${_id}`
+        )
+    );

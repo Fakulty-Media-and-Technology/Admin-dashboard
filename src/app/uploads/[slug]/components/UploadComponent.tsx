@@ -61,6 +61,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : "");
   const [class_, setClass] = useState<string>(selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select");
   const [amount, setAmount] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("");
   const [PG, setPG] = useState<string>(selectedMedia ? selectedMedia.pg === '0' ? 'G' : `${selectedMedia.pg}+` : "Select");
   const [portrait, setPortrait] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.portraitPhoto } : null);
   const [portrait_L, setPortrait_L] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.landscapePhoto } : null);
@@ -429,7 +430,8 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
           title: slug.includes('videos') ? subtitle : title,
           vidClass: class_.toLowerCase(),
           primaryColor: color,
-          ...(class_.toLowerCase() === 'exclusive' && {amount: Number(amount.trim())})
+          ...(class_.toLowerCase() === 'exclusive' && {amount: Number(amount.trim()), currency}),
+          ...(slug.includes('videos') && {artistName: title})
         },
       };
 
@@ -537,7 +539,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     setType={setClass}
                     selectData={[
                       "Free",
-                      // "Premium",
+                      "Premium",
                       "Exclusive",
                       // `${slug === "movies" ? "AD" : ""}`,
                     ].filter((x) => x !== "")}
@@ -562,6 +564,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
 
               {/* AMOUNT */}
               {class_ === "Exclusive" && (
+                <div className="flex-row gap-x-10">
                 <div className="flex flex-col">
                   <label
                     htmlFor="amount"
@@ -578,6 +581,23 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                       handleValidInput(e.target.value.replaceAll(",", ""))
                     }
                   />
+                </div>
+
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="currency"
+                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                  >
+                    CURRENCY *
+                  </label>
+                  <SelectInputForm
+                    placeholder={currency}
+                    setType={setCurrency}
+                    selectData={["NGN", "USD"]}
+                    className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
+                    textStyles="text-grey_500 text-center"
+                  />
+                </div>
                 </div>
               )}
 

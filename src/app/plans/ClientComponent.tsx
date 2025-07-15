@@ -56,6 +56,8 @@ export const ClientsComponent = () => {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [eventEstimatedPrice, setEventEstimatedPrice] = useState<number>(0);
+    const [amount, setAmount] = useState<string>('');
+    const [currency_e, setCurrency_e] = useState<string>('');
     const [eventHours, setEventHours] = useState<string>(live ? getTimeDifferenceInHours(live.start, live.expiry).toString() : "0");
     const [details, setDetails] = useState(live? live.description:""); // State to store the textarea content
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -70,7 +72,7 @@ export const ClientsComponent = () => {
         undefined,
         {}
     );
-    const isDisable = eventEstimatedPrice === 0 || currency ==='Select' || location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || !videoTrailer
+    const isDisable = eventEstimatedPrice === 0 || currency ==='Select' || location === '' || startDate === '' || title === '' || pg === '' || _class === '' || loading || !coverImage || !videoTrailer || _class.toLowerCase() === 'exclusive' && amount === '' || _class.toLowerCase() === 'exclusive' && currency === ''
 
      const config = {
       reference: (new Date()).getTime().toString(),
@@ -79,8 +81,8 @@ export const ClientsComponent = () => {
     //   publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_TEST_PUBLIC_KEY ?? '',
   };
-        const initializePayment = usePaystackPayment(config);
-
+        
+  const initializePayment = usePaystackPayment(config);
 
     const [handleEstimate, { isLoading: isEstimatedLoading }] =
         useEventEstimateMutation();
@@ -144,6 +146,13 @@ export const ClientsComponent = () => {
         setIsPlaying(true);
     }
 
+     function handleValidInput(query: string) {
+    const inputValue = query;
+    if (/^\d*$/.test(inputValue)) {
+      setAmount(inputValue);
+    }
+  }
+
 
      async function handleCreateLive(id:string) {
         try {
@@ -164,7 +173,7 @@ export const ClientsComponent = () => {
             type: user?.profile?.role??'',
             start,
             subTitle: 'subtitle',
-            category
+            ...( _class.toLowerCase() === 'exclusive' && {amount:Number(amount), currency:currency_e})
           }
     
           if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
@@ -232,6 +241,7 @@ export const ClientsComponent = () => {
   }
 
     useEffect(()=>{
+        console.log(categories)
         if(categories && isSuccess_C) setCat_List(categories.data.filter(x => x.name.toLowerCase().includes('live')))
     }, [isSuccess_C]);
 
@@ -347,6 +357,44 @@ export const ClientsComponent = () => {
                                 />
                             </div>
                         </div>
+
+                        {_class === "Exclusive" && (
+                        <div className={`flex flex-row items-start ${isChannel ? 'w-[100%]' : 'w-[75%]'} gap-x-5 lg:gap-x-14`}>
+                                            <div className="flex flex-col flex-1">
+                                              <label
+                                                htmlFor="amount"
+                                                className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                                              >
+                                                AMOUNT *
+                                              </label>
+                                              <CustomInput
+                                                type="text"
+                                                id="amount"
+                                                className="font-normal h-[34px] text-grey_500 text-sm py-2 mt-1 border border-border_grey rounded-sm"
+                                                value={formatAmount(amount)}
+                                                onChange={(e) =>
+                                                  handleValidInput(e.target.value.replaceAll(",", ""))
+                                                }
+                                              />
+                                            </div>
+                            
+                                            <div className="flex flex-col flex-1">
+                                              <label
+                                                htmlFor="currency"
+                                                className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                                              >
+                                                CURRENCY *
+                                              </label>
+                                              <SelectInputForm
+                                                placeholder={currency}
+                                                setType={setCurrency}
+                                                selectData={["NGN", "USD"]}
+                                                className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
+                                                textStyles="text-grey_500 text-sm"
+                                              />
+                                            </div>
+                                            </div>
+                                        )}
                         </div>
 
                          {!isChannel && <MediaComp 
@@ -362,7 +410,6 @@ export const ClientsComponent = () => {
                    handleVideo={handleVideo}
                    />}
                         </div>
-
 
                          <div className="">
                                     <p

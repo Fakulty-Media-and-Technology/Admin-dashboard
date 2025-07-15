@@ -12,6 +12,7 @@ import Lottie from "lottie-react";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import { toast } from "react-toastify";
 import { ModalComponent } from "./ModalComp";
+import { deleteGiftCard } from "@/api/giftCardSlice";
 
 export const runtime = "edge";
 
@@ -88,11 +89,14 @@ export default function page() {
 
   async function handleDelete(id:string){
       setList(prev => prev.filter(x => x._id !== id));
-      // const res = await 
-      // if(res.ok && res.data && res.data.message.includes('deleted')){
-      //   // show toast message
-      //   handleRefreshGiftCards();
-      // }
+      const res = await deleteGiftCard(id)
+      if(res.ok && res.data 
+        // && res.data.message.includes('deleted')
+        ){
+        console.log(res)
+        toast("Card deleted successfully", { type: "info" });
+        handleRefreshGiftCards();
+      }
   }
 
 
@@ -180,6 +184,17 @@ export default function page() {
 
                     <td className="text-center font-normal text-xs capitalize">
                       {tx.used ? 'Used' : 'Active'}
+                    </td>
+
+                    <td>
+                      <button onClick={() => handleDelete(tx._id)}>
+                        <Image
+                            src="/delete.svg"
+                            width={15}
+                            height={18}
+                            alt="delete"
+                        />
+                    </button>
                     </td>
                   </tr>
                 );

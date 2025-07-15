@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ModalProps } from "./ModalComp";
 import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
+import { deleteContestant } from "@/api/voteSlice";
 
 
 
@@ -15,6 +16,18 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [selectCountry, setCountry] = useState<string>("Select currency");
     const [mode, setMode] = useState ("default")
+
+    //  async function handleDelete(live_id:string, contestant_id){
+    //       setList(prev => prev.filter(x => x.live_id !== id));
+    //       const res = await deleteContestant(id)
+    //       if(res.ok && res.data 
+    //         // && res.data.message.includes('deleted')
+    //         ){
+    //         console.log(res)
+    //         toast("Card deleted successfully", { type: "info" });
+    //         handleRefreshGiftCards();
+    //       }
+    //   }
 
 
     return (
@@ -120,6 +133,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                                                         width={15}
                                                         height={18}
                                                         alt="delete"
+                                                        // onClick={handleDelete}
                                                     />
                                                 </button>
                                             </div>

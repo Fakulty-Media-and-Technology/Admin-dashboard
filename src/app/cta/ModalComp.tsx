@@ -4,6 +4,9 @@ import { AppButton, CustomInput } from "@/components/AppLayout";
 import { roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
+import { addVoteContestant } from "@/api/voteSlice";
+import { form } from "framer-motion/m";
+import { toast } from "react-toastify";
 
 export interface ModalProps {
     handleClose: () => void;
@@ -11,11 +14,43 @@ export interface ModalProps {
 
 export const ModalComponent = ({ handleClose }: ModalProps) => {
     const [userPic, setUserPic] = useState<File | null>(null);
+    const [names, setNames] = useState<string>('');
+    const [contestant_number, setContestantNumber] = useState<string>('');
+    const [bio, setBio] = useState<string>('');
+    const [occupation, setOccupation] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         const files = e.target.files;
         if (files) setUserPic(files[0]);
-    }
+    };
+
+    async function submitHandler() {
+        try {
+            setIsLoading(true)
+
+            const formData = new FormData()
+            formData.append("names", names)
+            formData.append("bio", bio)
+            formData.append("contact", contestant_number)
+            formData.append("occupation", occupation)
+            if(userPic) formData.append('photo', userPic);
+
+
+            const res = await addVoteContestant(formData)
+            if(res.ok && res.data){
+                toast(`Contestant created successfully`, {type : "success"})
+            }else{
+                toast(`${res.data?.message.replace('Invalid Request:', '')}`, { type: "error" });
+            }
+        } catch (error) {
+             toast(`Opps! couldn't create client`, { type: "error" });
+        }finally{
+            setIsLoading(false)
+        }
+    };
+
+
     return (
         <div className="z-[9999] w-full absolute overflow-hidden flex justify-center inset-0">
             <div className="w-[90%] h-[70%] md:h-[80%] sm:w-[70%] lg:w-[50%] mt-32 p-5 rounded-[10px] bg-black4">
@@ -65,6 +100,8 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
                                 required
                                 type="text"
                                 placeholder=""
+                                value={names}
+                                onChange={e => setNames(e.target.value)}
                                 id="name"
                                 className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                             />
@@ -82,6 +119,8 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
                                     required
                                     type="text"
                                     placeholder=""
+                                    value={occupation}
+                                    onChange={e => setOccupation(e.target.value)}
                                     id="occupation"
                                     className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                                 />
@@ -99,6 +138,8 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
                                     required
                                     type="text"
                                     placeholder=""
+                                    value={contestant_number}
+                                    onChange={e => setContestantNumber(e.target.value)}
                                     id="contestant_number"
                                     className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
                                 />
@@ -122,17 +163,19 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
                                 <textarea
                                     name="bio"
                                     id="bio"
+                                    value={bio}
+                                    onChange={e => setBio(e.target.value)}
                                     className="h-[150px] text-grey_800 resize-none w-full outline-none bg-transparent text-sm p-2 pl-4 mt-2 border border-border_grey rounded-sm"
                                 />
                             </div>
                         </div>
 
                         <AppButton
-                            // isLoading={isLoading}
+                            isLoading={isLoading}
                             // disabled={}
                             title="SAVE"
                             className="w-full mt-2 text-xl py-2.5"
-                        // onClick={submitHandler}
+                            onClick={submitHandler}
                         />
                     </div>
                 </div>

@@ -87,7 +87,7 @@ export const AddCleintComp = ({ handleReset, handleClose, isEditClient, isViewCl
             formdata.append('password', password);
             formdata.append('mobile', mobile);
            if(!selectedUser) formdata.append('verified', `${verifyUser}`);
-            formdata.append('gender', gender);
+            formdata.append('gender', gender.toLowerCase());
             formdata.append('dob', new Date(DOB).toISOString());
             formdata.append(selectedUser ? 'countryCode' :'country_code', `${phoneNo}`);
             if (userPic) formdata.append('photo', userPic);

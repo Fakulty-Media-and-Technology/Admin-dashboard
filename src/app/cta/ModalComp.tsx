@@ -34,6 +34,8 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
             formData.append("bio", bio)
             formData.append("contact", contestant_number)
             formData.append("occupation", occupation)
+            if(userPic) formData.append('photo', userPic);
+
 
             const res = await addVoteContestant(formData)
             if(res.ok && res.data){

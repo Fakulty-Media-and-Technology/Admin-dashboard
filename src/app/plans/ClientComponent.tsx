@@ -173,6 +173,7 @@ export const ClientsComponent = () => {
             type: user?.profile?.role??'',
             start,
             subTitle: 'subtitle',
+            category,
             ...( _class.toLowerCase() === 'exclusive' && {amount:Number(amount), currency:currency_e})
           }
     
@@ -283,6 +284,7 @@ export const ClientsComponent = () => {
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
                                     readOnly={live !== null}
+                                    maxLength={20}
                                 />
                             </div>
                         ) : (
@@ -386,8 +388,8 @@ export const ClientsComponent = () => {
                                                 CURRENCY *
                                               </label>
                                               <SelectInputForm
-                                                placeholder={currency}
-                                                setType={setCurrency}
+                                                placeholder={currency_e}
+                                                setType={setCurrency_e}
                                                 selectData={["NGN", "USD"]}
                                                 className="font-normal h-[34px] mt-1 text-sm py-2 lg:pl-3 border border-border_grey rounded-sm"
                                                 textStyles="text-grey_500 text-sm"

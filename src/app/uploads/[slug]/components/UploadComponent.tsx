@@ -523,6 +523,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                   className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  maxLength={20}
                 />
               </div>
 
@@ -670,6 +671,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                   className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
                   value={subtitle}
                   onChange={(e) => setSubTitle(e.target.value)}
+                  maxLength={20}
                 />
               </div>
 

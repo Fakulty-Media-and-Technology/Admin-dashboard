@@ -7,11 +7,11 @@ import { IPagination } from "@/types/api/suggestion.types";
 
 export const categoryApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getCategory: builder.query<ICategoryResponse, void>({
+    getCategory: builder.query<ICategoryResponse, IPagination|undefined>({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-categories?limit=100&page=1`,
+          url: `/superadmin/shared/get-categories?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -33,11 +33,11 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       },
     }),
 
-    getGenre: builder.query<ICategoryResponse, void>({
+    getGenre: builder.query<ICategoryResponse, IPagination|undefined>({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-genres?limit=100&page=1`,
+          url: `/superadmin/shared/get-genres?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -47,11 +47,11 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
     }),
 
 
-    getCast: builder.query<ICastResponse, void>({
+    getCast: builder.query<ICastResponse, IPagination|undefined>({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/enums/get-cast?limit=100&page=1`,
+          url: `/superadmin/shared/get-cast?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -73,14 +73,14 @@ export const searchFetchCast = async (searchTerm:string) =>
 export const geetFetchCategories = async (data?:IPagination) =>
   await apiCall<ICategoryResponse>((baseApi) =>
     baseApi.get<ICategoryResponse>(
-      `superadmin/enums/get-categories?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
+      `superadmin/shared/get-categories?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
     )
   );
 
 export const geetFetchGenres = async (data?:IPagination) =>
   await apiCall<ICategoryResponse>((baseApi) =>
     baseApi.get<ICategoryResponse>(
-      `superadmin/enums/get-genres?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
+      `superadmin/shared/get-genres?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
     )
   );
 

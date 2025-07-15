@@ -13,6 +13,7 @@ import { truncateText } from "@/utilities/textUtils";
 import {
   isValidUrl,
   normalizeUrl,
+  stripYouTubeUrl,
   transformResponse,
 } from "@/utilities/linkUtils";
 import { getPreview } from "@/app/server";
@@ -288,7 +289,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
       return;
     }
     try {
-      const normalizedUrl = normalizeUrl(url);
+const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
       const res = await getPreview(normalizedUrl);
       if (typeof res === "string") {
         if (type === "2") {
@@ -309,8 +310,9 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
       setUrlLink("");
       setUrlLink_2("");
     } catch (error) {
-      toast("Please enter a valid URL.", { type: "error" });
-    }
+  console.error("Preview error:", error);
+  toast("Failed to fetch link preview.", { type: "error" });
+}
   };
 
   async function handleDisableButton() {
@@ -428,7 +430,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
           title: slug.includes('videos') ? subtitle : title,
           vidClass: class_.toLowerCase(),
           primaryColor: color,
-          ...(class_.toLowerCase() === 'exclusive' && {amount: Number(amount), currency}),
+          ...(class_.toLowerCase() === 'exclusive' && {amount: Number(amount.trim()), currency}),
           ...(slug.includes('videos') && {artistName: title})
         },
       };
@@ -839,7 +841,9 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
           {/* third level */}
           <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
             {/* right */}
-            <div className="flex flex-col flex-1">
+            <div className="flex flex-col flex-1"
+            style={{opacity: videoTrailer ? 0.5:1}}
+            >
               <label
                 htmlFor="trailer"
                 className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
@@ -1168,7 +1172,8 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
             {class_ !== "AD" && slug !== "series" && (
               <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
                 {/* right */}
-                <div className="flex flex-col flex-1">
+                <div className="flex flex-col flex-1"
+                style={{opacity: videoTrailer_2 ?0.5 :1}}>
                   <label
                     htmlFor="movie"
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
@@ -1749,7 +1754,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
                         width={687}
                         height={436}
                         alt="uploaded"
-                        className="rounded-[10px] w-[687px] h-[436px]"
+                        className="rounded-[10px] w-[687px] h-[436px] object-cover"
                       />
                     </>
                   )}

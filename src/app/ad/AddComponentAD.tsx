@@ -8,10 +8,12 @@ import { useState } from "react";
 import ReactPlayer from "react-player";
 import useToggle from "@/hooks/useToggle";
 import { ImageProps } from "../plans/ClientComponent";
+import { toast } from "react-toastify";
+import { createAds } from "@/api/adsSlice";
 
 const TABS = ['General', 'Movie Ad', 'Web', 'Mobile']
 
-const AddComponent = () => {
+const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
     const [tab, setTab] = useState<string>('general');
     const [title, setTitle] = useState<string>('')
     const [subtitle, setSubTitle] = useState<string>('')
@@ -25,11 +27,15 @@ const AddComponent = () => {
     const [portrait_W, setPortrait_W] = useState<ImageProps | null>(null);
     const [landscapeImage_M, setLandscapeImage_M] = useState<ImageProps | null>(null);
     const [startDate, setStartDate] = useState<string>('')
-    const [startTime, setStartTime] = useState<string>('');
+    const [expiryDate, setExpiryDate] = useState<string>('');
     const [details, setDetails] = useState(""); // State to store the textarea content
     const [videoTrailer, setVideoTrailer] = useState<ImageProps | null>(null);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [imageFile_m, setImageFile_m] = useState<File | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
-    const isDisable = !title || !brandName || !link || !startDate || !startTime
+    const [loading, setLoading] = useState<boolean>(false);
+    const isDisable = !title || !brandName || !link || !startDate || !expiryDate
+    const isDisable_Mobile = !videoTrailer || !landscapeImage_M
 
     const maxLength = 200;
 
@@ -55,11 +61,13 @@ const AddComponent = () => {
                     name: files[0].name,
                     url: URL.createObjectURL(files[0]),
                 });
+                setVideoFile(files[0]);
             } else if (type === "landscape_m") {
                 setLandscapeImage_M({
                     name: files[0].name,
                     url: URL.createObjectURL(files[0]),
                 });
+                setImageFile_m(files[0]);
             } else if (type === "landscapePREVIEW_W") {
                 setLandscapeImagePreview_W({
                     name: files[0].name,
@@ -82,6 +90,46 @@ const AddComponent = () => {
     function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         e.preventDefault();
         setIsPlaying(true);
+    }
+
+    async function handlePress(){
+        if(tab === 'general'){
+            setTab('mobile');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const data = {
+                cta,
+                title,
+                type:'mobile',
+                brand: brandName,
+                link,
+                duration: Number(duration),
+                start: new Date(startDate).toISOString(),
+                expiry: new Date(expiryDate).toISOString(),
+                active
+
+            }
+            const formdata = new FormData();
+            formdata.append('data', JSON.stringify(data))
+            if(videoFile) formdata.append('video', videoFile);
+            if(imageFile_m) formdata.append('image', imageFile_m);
+
+            const res = await createAds(formdata);
+            if(res.ok && res.data){
+                handleRefech();
+                toast(`${res.data?.message}`, {type:'success'});
+            }else{
+                toast(`${res.data?.message}`, {type:'error'});
+            }
+            
+        } catch (error) {
+            toast(`${error}`, {type:'error'})
+        }finally{
+            setLoading(false);
+        }
     }
 
     return (
@@ -169,7 +217,7 @@ const AddComponent = () => {
                                     required
                                     type="text"
                                     placeholder=""
-                                    value={title}
+                                    value={cta}
                                     onChange={e => setCta(e.target.value)}
                                     id="cta"
                                     className="font-normal text-sm py-2 mt-2 border border-border_grey rounded-sm"
@@ -240,11 +288,11 @@ const AddComponent = () => {
                                 </label>
 
                                 <input 
-                                    type="date" 
+                                    type="datetime-local" 
                                     name="date" 
                                     value={startDate}
                                     onChange={e => setStartDate(e.target.value)}
-                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white"
+                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white max-w-[160px]"
                                 />
                             </div>
 
@@ -252,15 +300,15 @@ const AddComponent = () => {
                                 <label
                                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5 mb-1`}
                                 >
-                                    START TIME *
+                                    EXPIRY DATE *
                                 </label>
 
                                 <input 
-                                    type="time" 
-                                    name="time" 
-                                    value={startTime}
-                                    onChange={e => setStartTime(e.target.value)}
-                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white"
+                                    type="datetime-local" 
+                                    name="expiry" 
+                                    value={expiryDate}
+                                    onChange={e => setExpiryDate(e.target.value)}
+                                    className="block bg-transparent outline-none border border-border_grey py-1 px-2 rounded-sm text-white max-w-[160px]"
                                 />
                             </div>
 
@@ -620,13 +668,11 @@ const AddComponent = () => {
                                                         playing={isPlaying}
                                                         muted={false}
                                                         controls={false}
-                                                        // onProgress={e => }
                                                         url={videoTrailer.url}
-                                                        width="100%" // Set to 100%
+                                                        width="100%" 
                                                         height="100%"
                                                         volume={1}
                                                         onEnded={() => setIsPlaying(false)}
-                                                    // onReady={() => setIsPlayerReady(true)}
                                                     />
                                                 </div>
 
@@ -667,7 +713,7 @@ const AddComponent = () => {
                                                 height={667}
                                                 width={447}
                                                 alt="uploaded"
-                                                className="w-[447px] h-[667px]"
+                                                className="w-[447px] h-[667px] object-conver"
                                             />
                                             <button
                                                 className="hover:scale-110 transition-all duration-200"
@@ -760,9 +806,11 @@ const AddComponent = () => {
                 <div className="my-16 w-full">
                     <AppButton
                         title="SAVE"
+                        onClick={handlePress}
+                        isLoading={loading}
                         style={{ alignSelf: "center" }}
                         className="w-[80%] mx-auto"
-                        disabled={isDisable}
+                        disabled={tab === 'mobile' ? isDisable_Mobile : isDisable}
                     />
                 </div>
             </div>

@@ -48,4 +48,5 @@ export interface ICreateLiveData {
     subTitle: string;
     currency?: string;
     amount?: number;
+    category:string[]
 }

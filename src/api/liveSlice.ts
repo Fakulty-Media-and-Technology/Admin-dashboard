@@ -122,7 +122,7 @@ export const createLive = async (data: FormData) =>
 
 export const clientCreateLive = async (data: FormData) =>
     await apiCall<IGeneric>((baseApi) =>
-        baseApi.post<IGeneric>(`/clients/lives/create`, data, {
+        baseApi.post<IGeneric>(`/clients/shared/lives/create`, data, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },

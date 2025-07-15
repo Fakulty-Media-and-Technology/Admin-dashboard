@@ -12,13 +12,14 @@ function getLargestFavicon(favicons: string[]): string {
 
 
 export function transformResponse(res: any, url: string): LinkViewProps {
+    const isString = typeof res === 'string'
     return {
-        title: "title" in res ? res.title : null,
-        description: "description" in res ? res.description : null,
-        image: "images" in res && res.images.length > 0 ? res.images[0] : null,
         url: url,
-        siteName: "siteName" in res ? res.siteName : null,
-        favicon: "favicons" in res ? getLargestFavicon(res.favicons) : null,
+        title: (!isString && "title" in res) ? res.title : null,
+        description: (!isString && "description" in res) ? res.description : null,
+        image: (!isString && "images" in res && res.images.length > 0) ? res.images[0] : null,
+        siteName: (!isString &&"siteName" in res )? res.siteName : null,
+        favicon: (!isString && "favicons" in res) ? getLargestFavicon(res.favicons) : null,
     }
 }
 
@@ -32,4 +33,12 @@ export function normalizeUrl(url: string): string {
 export function isValidUrl(url: string): boolean {
     const urlPattern = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
     return urlPattern.test(url);
+}
+
+export function stripYouTubeUrl(url: string): string {
+  const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([\w-]+)/);
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube.com/watch?v=${ytMatch[1]}`;
+  }
+  return url;
 }

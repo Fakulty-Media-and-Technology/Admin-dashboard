@@ -10,7 +10,7 @@ export const featuredApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     searchFeaturedContent: builder.mutation<IFeaturedContentResponse, string>({
       query: (data) => ({
-        url: `/superadmin/featured/contents/search?text=${data}`,
+        url: `/superadmin/shared/featured/contents/search${data}`,
         method: "GET",
       }),
     }),
@@ -19,7 +19,7 @@ export const featuredApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `superadmin/featured/contents/fetch`,
+          url: `/superadmin/featured/contents/fetch`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -35,7 +35,7 @@ export const { useSearchFeaturedContentMutation, useGetFeaturesQuery } = feature
 export const searchFeaturedContent = async (data: string) =>
   await apiCall((baseApi) =>
     baseApi.get<IContentSearchResponse>(
-      `/superadmin/featured/contents/search?text=${data}`
+      `/superadmin/shared/featured/contents/search/${data}`
     )
   );
 
@@ -44,7 +44,7 @@ export const addFeaturedContent = async (data: IAddFeatured) =>
     baseApi.post("/superadmin/featured/contents/add", data)
   );
 
-export const getFeaturedEvent = async (data: IUpcomingQuery) =>
+export const getFeaturedEvent = async () =>
   await apiCall<IFeaturedContentResponse>((baseApi) =>
     baseApi.get<IFeaturedContentResponse>(
       `superadmin/featured/contents/fetch`

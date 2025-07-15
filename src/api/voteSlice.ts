@@ -9,3 +9,17 @@ export const createVotesInfo = async (data: {live_id:string, price:string, statu
       data,
     )
   );
+
+  export const addVoteContestant = async (data:FormData) =>
+    await apiCall<IGeneric>(baseApi => baseApi.post<IGeneric>('/clients/livestream/vote/contestant', data, {
+        headers:{
+            "Content-Type": "multipart/form-data"
+        }
+    }));
+
+    export const deleteContestant = async (live_id: string, contestant_id: string) =>
+        await apiCall<IGeneric>((baseApi) =>
+            baseApi.delete<IGeneric>(
+                `/clients/livestream/vote/contestant/remove/${live_id}/${contestant_id}`
+            )
+        );

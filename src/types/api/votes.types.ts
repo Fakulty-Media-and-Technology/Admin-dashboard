@@ -9,3 +9,4 @@ export interface IVoteData{
     price : number
     status : boolean
 }
+

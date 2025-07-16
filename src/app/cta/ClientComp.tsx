@@ -4,7 +4,7 @@ import { CTA_Table, CTA_TableHeads } from "@/config/data/featured.data";
 import { roboto_400, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { useState } from "react";
-import { ModalProps } from "./ModalComp";
+import { ModalComponent, ModalProps } from "./ModalComp";
 import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
 import { deleteContestant } from "@/api/voteSlice";
@@ -15,7 +15,8 @@ import { deleteContestant } from "@/api/voteSlice";
 export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [selectCountry, setCountry] = useState<string>("Select currency");
-    const [mode, setMode] = useState ("default")
+    const [mode, setMode] = useState ("default");
+     const [isShowModal, setShowModal] = useState<boolean>(false);
 
     //  async function handleDelete(live_id:string, contestant_id){
     //       setList(prev => prev.filter(x => x.live_id !== id));
@@ -54,12 +55,20 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                 </div>
 
                 {/* add butn */}
-                <div
+                <div className="flex">
+                    <button
+                    onClick={() => setShowModal(true)}
+                    className={`${roboto_500.className}  px-6 py-2 ml-auto flex items-end hover:scale-[1.1] transition-all duration-100 ease-in`}
+                    >
+                    <Image src={'/add.svg'} width={25} height={25} alt="add"/>
+                    </button>
+
+                    <div
                     onClick={() => setMode("ViewVote")}
-                    className={`${roboto_500.className} flex items-center gap-x-4 md:mr-20 ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-[17px] text-yellow  text-center cursor-pointer`}
-                >
-                    View votes
+                    className={`${roboto_500.className} flex items-center gap-x-4 md:mr-20 ml-auto md:ml-0 md:mt-0 hover:scale-[1.1] transition-all duration-100 ease-in cursor-pointer`}
+                    >
                     <Image src="/votesIcon.svg" width={20} height={20} alt="votes" />
+                    </div>
                 </div>
             </div>
 
@@ -177,6 +186,10 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
         {mode === "ViewVote" && (
             <ViewVote onBack={() => setMode("default")}/>
         )}
+
+        {isShowModal && (
+                <ModalComponent handleClose={() => setShowModal(false)} />
+              )}
         </AnimatePresence>
         </>
     );

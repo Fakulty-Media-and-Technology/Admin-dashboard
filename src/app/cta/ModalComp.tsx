@@ -3,10 +3,12 @@
 import { AppButton, CustomInput } from "@/components/AppLayout";
 import { roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addVoteContestant } from "@/api/voteSlice";
 import { form } from "framer-motion/m";
 import { toast } from "react-toastify";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
+import { ILivestreamDetails } from "@/types/api/dashboard.types";
 
 export interface ModalProps {
     handleClose: () => void;
@@ -18,12 +20,23 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
     const [contestant_number, setContestantNumber] = useState<string>('');
     const [bio, setBio] = useState<string>('');
     const [occupation, setOccupation] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [live, setLive] = useState<ILivestreamDetails | null>(null);
+      const {
+              data: livesteamDetails,
+              isSuccess: isSuccess_L,
+          } = useGetLivestreamDetailsQuery(undefined, {});
 
     function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         const files = e.target.files;
         if (files) setUserPic(files[0]);
     };
+
+    useEffect(() => {
+        if (!livesteamDetails || livesteamDetails.data.length===0) return
+        setLive(livesteamDetails.data[0])
+        }, [isSuccess_L]);
+        
 
     async function submitHandler() {
         try {
@@ -34,6 +47,7 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
             formData.append("bio", bio)
             formData.append("contact", contestant_number)
             formData.append("occupation", occupation)
+            if(live?._id) formData.append("liveId", live._id)
             if(userPic) formData.append('photo', userPic);
 
 

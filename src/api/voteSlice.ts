@@ -2,24 +2,45 @@ import { apiCall } from "./auth.api";
 import { ICreateVotesResponse } from "@/types/api/votes.types";
 import { IGeneric } from "@/types/api/auth.types";
 
-export const createVotesInfo = async (data: {live_id:string, price:string, status: boolean}) =>
-  await apiCall<ICreateVotesResponse>((baseApi) =>
-    baseApi.post<ICreateVotesResponse>(
-      `/clients/livestream/vote/info`, 
-      data,
-    )
+
+export const createVotesInfo = async (data: { liveId: string; price: string; status: boolean }) =>
+  await apiCall<ICreateVotesResponse>(
+    (baseApi) =>
+      baseApi.post<ICreateVotesResponse>("/clients/livestream/vote/info", data),
+      true
   );
 
-  export const addVoteContestant = async (data:FormData) =>
-    await apiCall<IGeneric>(baseApi => baseApi.post<IGeneric>('/clients/livestream/vote/contestant', data, {
-        headers:{
-            "Content-Type": "multipart/form-data"
-        }
-    }));
+  export const updateVotesInfo = async (data: {voteId: string, liveId: string; price: string; status: boolean }) =>
+  await apiCall<ICreateVotesResponse>(
+    (baseApi) =>
+      baseApi.put<ICreateVotesResponse>("/clients/livestream/vote/info/update/", data),
+      true
+  );
 
-    export const deleteContestant = async (live_id: string, contestant_id: string) =>
+  export const addVoteContestant = async (data: FormData) =>
+  await apiCall<IGeneric>(
+    (baseApi) =>
+      baseApi.post<IGeneric>('/clients/livestream/vote/contestant', data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }),
+    true
+  );
+
+
+  export const getVotePollForLive = async (liveId: string) =>
+  await apiCall<ICreateVotesResponse>(
+    (baseApi) =>
+      baseApi.get(`/clients/livestream/vote/contestant/fetch/${liveId}`),
+    true
+  );
+
+
+
+    export const deleteContestant = async (liveId: string, contestant_id: string) =>
         await apiCall<IGeneric>((baseApi) =>
             baseApi.delete<IGeneric>(
-                `/clients/livestream/vote/contestant/remove/${live_id}/${contestant_id}`
+                `/clients/livestream/vote/contestant/remove/${liveId}/${contestant_id}`
             )
         );

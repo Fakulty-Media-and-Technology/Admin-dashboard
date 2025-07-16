@@ -16,7 +16,7 @@ import React, { useEffect, useState } from "react";
 import { ClientsComponent } from "./ClientComp";
 import { ModalComponent } from "./ModalComp";
 import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
-import { createVotesInfo } from "@/api/voteSlice";
+import { createVotesInfo, updateVotesInfo } from "@/api/voteSlice";
 import { ILivestreamDetails } from "@/types/api/dashboard.types";
 import { toast } from "react-toastify";
 
@@ -28,21 +28,22 @@ export default function page() {
   const isSuperAdmin = user?.profile.role === "superadmin";
   const [cta, setCTA] = useState<string>("Vote");
   const [isActive, setActive] = useState<boolean>(false);
-  const [price, setPrice] = useState<string>("")
-  const [isShowModal, setShowModal] = useState<boolean>(false);
-  const [live, setLive] = useState<ILivestreamDetails | null>(null)
+  const [price, setPrice] = useState<string>("");
+  const [isButtonEnabled, setButtonEnabled] = useState<boolean>(false);
+  // const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [live, setLive] = useState<ILivestreamDetails | null>(null);
   const {
           data: livesteamDetails,
           isSuccess: isSuccess_L,
       } = useGetLivestreamDetailsQuery(undefined, {});
   
-      async function handleChange(inputPrice: string) {
+      async function handleSave() {
         if (cta === "vote") {
           console.log("You are on vote");
         }
         try {
           if (!live?._id) throw new Error("Live ID is missing");
-          const res = await createVotesInfo({live_id: live._id,price: inputPrice,status: isActive,});
+          const res = await createVotesInfo({liveId: live._id, price ,status: isActive,});
           console.log(live._id)
 
           if (res.ok && res.data) {
@@ -57,12 +58,15 @@ export default function page() {
 
 
       useEffect(() => {
-              if (!livesteamDetails || livesteamDetails.data.length===0) return
-              setLive(livesteamDetails.data[0])
-          }, [isSuccess_L]);
+        if (!livesteamDetails || livesteamDetails.data.length===0) return
+        setLive(livesteamDetails.data[0])
+      }, [isSuccess_L]);
 
-
-
+     useEffect(() => {
+      const trimmedPrice = price.trim();
+      const isLiveReady = live?._id !== undefined;
+      setButtonEnabled(trimmedPrice !== "" && isLiveReady);
+    }, [price, live]);
 
   return (
     <section className={`${roboto_400.className} relative pl-5`}>
@@ -98,11 +102,7 @@ export default function page() {
             type="text"
             placeholder="0.00"
             value={price}
-            onChange={(e) => {
-              const value = e.target.value;
-              setPrice(value);
-              handleChange(value); // 
-            }}
+            onChange={(e) => setPrice(e.target.value)}
             className="font-normal outline-none bg-transparent text-left mt-2 text-sm py-1 flex-1 border border-border_grey rounded-md"
           />
         </div>
@@ -128,24 +128,17 @@ export default function page() {
         </div>
 
         <div className="w-[200px]">
-          <button
-            onClick={() => setShowModal(true)}
-            className={`${roboto_500.className} ${isShowModal
-              ? "bg-input_grey text-grey_2"
-              : "bg-red_500 text-white"
-              } rounded-md mt-5 px-6 py-2 ml-auto flex items-end text-[18px] text-center hover:scale-[1.1] transition-all duration-100 ease-in`}
-          >
-            Add Contestants
-          </button>
+          <AppButton
+            onClick={handleSave}
+            title="Save"
+            disabled={!isButtonEnabled}
+            className={`${roboto_500.className} ${isButtonEnabled ? "bg-red" : "bg-gray-500 cursor-not-allowed"} text-white rounded-md mt-5 px-6 py-2 ml-auto flex items-end text-[18px] text-center hover:scale-[1.1] transition-all duration-100 ease-in`}
+          />
         </div>
       </div>
 
       {!isSuperAdmin && (
         <ClientsComponent handleClose={() => console.log("first")} />
-      )}
-
-      {isShowModal && (
-        <ModalComponent handleClose={() => setShowModal(false)} />
       )}
     </section>
   );

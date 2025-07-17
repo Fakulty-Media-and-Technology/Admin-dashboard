@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ModalComponent, ModalProps } from "./ModalComp";
 import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
+import { IContestantData } from "@/types/api/votes.types";
 import { deleteContestant } from "@/api/voteSlice";
 
 
@@ -15,6 +16,8 @@ import { deleteContestant } from "@/api/voteSlice";
 export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [selectCountry, setCountry] = useState<string>("Select currency");
+    const [contestantList, setContestantList] = useState<IContestantData[]>([]);
+    const [contestantsFilteredList, setContestantFilter] = useState<IContestantData[]>([])
     const [mode, setMode] = useState ("default");
      const [isShowModal, setShowModal] = useState<boolean>(false);
 
@@ -41,7 +44,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.4 }}
-            className="px-10 bg-black3 py-5 pb-6 mt-12">
+            className="px-10 bg-black3 h-full py-5 pb-6 mt-12">
             <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
                 <div className="w-full sm:w-[326px] lg:w-[606px] md:pl-10 flex items-center">
                     <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[73px]">

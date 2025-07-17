@@ -19,6 +19,7 @@ import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { createVotesInfo, updateVotesInfo } from "@/api/voteSlice";
 import { ILivestreamDetails } from "@/types/api/dashboard.types";
 import { toast } from "react-toastify";
+import { i } from "framer-motion/m";
 
 export const runtime = "edge";
 
@@ -37,24 +38,31 @@ export default function page() {
           isSuccess: isSuccess_L,
       } = useGetLivestreamDetailsQuery(undefined, {});
   
-      async function handleSave() {
-        if (cta === "vote") {
-          console.log("You are on vote");
+     async function handleSave() {
+        if (!live?._id) {
+          toast("Live stream not found.", { type: "error" });
+          return;
         }
+
         try {
-          if (!live?._id) throw new Error("Live ID is missing");
-          const res = await createVotesInfo({liveId: live._id, price ,status: isActive,});
-          console.log(live._id)
+          let res;
+
+          if (live.voteInfo === null) {
+            res = await createVotesInfo({liveId: live._id, status: isActive, price});
+          } else {
+             res = await updateVotesInfo({liveId: live._id, status: isActive, price});
+          }
 
           if (res.ok && res.data) {
             toast(`${res.data.message}`, { type: "success" });
           } else {
-            toast(`${res.data?.message || "Vote creation failed"}`, { type: "error" });
+            toast(`${res.data?.message || "Vote action failed"}`, { type: "error" });
           }
         } catch (error: any) {
           toast(`${error.message || "Something went wrong"}`, { type: "error" });
         }
       }
+
 
 
       useEffect(() => {

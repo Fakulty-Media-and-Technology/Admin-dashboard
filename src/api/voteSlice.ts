@@ -10,7 +10,7 @@ export const createVotesInfo = async (data: { liveId: string; price: string; sta
       true
   );
 
-  export const updateVotesInfo = async (data: {voteId: string, liveId: string; price: string; status: boolean }) =>
+  export const updateVotesInfo = async (data: {liveId: string; price: string; status: boolean }) =>
   await apiCall<ICreateVotesResponse>(
     (baseApi) =>
       baseApi.put<ICreateVotesResponse>("/clients/livestream/vote/info/update/", data),

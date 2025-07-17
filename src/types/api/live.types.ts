@@ -33,6 +33,13 @@ export interface IEventData {
     previewVideo: string;
     pg: string;
     expiry: string;
+    voteInfo: {
+        _id: string
+        price: string
+        status: boolean
+        createdAt: string
+        updatedAt: string
+    } | null
 }
 
 export interface ICreateLiveData {

@@ -67,7 +67,7 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
 
     return (
         <div className="z-[9999] w-full absolute overflow-hidden flex justify-center inset-0">
-            <div className="w-[90%] h-[70%] md:h-[80%] sm:w-[70%] lg:w-[50%] mt-32 p-5 rounded-[10px] bg-black4">
+            <div className="w-[90%] h-full md:h-[80%] sm:w-[70%] lg:w-[50%] mt-32 p-5 rounded-[10px] bg-black4">
                 <div className="ml-auto w-fit" onClick={handleClose}>
                     <Image
                         src="/closeIcon.svg"

@@ -8,7 +8,7 @@ import { ModalComponent, ModalProps } from "./ModalComp";
 import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
 import { IContestantData } from "@/types/api/votes.types";
-import { deleteContestant } from "@/api/voteSlice";
+import { deleteContestant, getVotePollForLive } from "@/api/voteSlice";
 
 
 
@@ -20,6 +20,22 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [contestantsFilteredList, setContestantFilter] = useState<IContestantData[]>([])
     const [mode, setMode] = useState ("default");
      const [isShowModal, setShowModal] = useState<boolean>(false);
+
+    async function handleSave(newContestant: IContestantData) {
+  try {
+    setShowModal(false);
+
+    const res = await getVotePollForLive(newContestant.liveId);
+
+    if (res.ok && res.data) {
+      setContestantList(res.data);
+      setContestantFilter(res.data);
+    }
+  } catch (error) {
+    console.error("Error fetching updated contestants:", error);
+  }
+}
+
 
     //  async function handleDelete(live_id:string, contestant_id){
     //       setList(prev => prev.filter(x => x.live_id !== id));
@@ -44,7 +60,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.4 }}
-            className="px-10 bg-black3 h-full py-5 pb-6 mt-12">
+            className="px-10 bg-black3 h-[100vh] py-5 pb-6 mt-12">
             <div className="mt-8 flex flex-col md:flex-row items-start md:items-center justify-between pr-5">
                 <div className="w-full sm:w-[326px] lg:w-[606px] md:pl-10 flex items-center">
                     <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[73px]">
@@ -95,7 +111,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {CTA_Table.map((tx, indx) => {
+                            {contestantList.map((tx, indx) => {
                                 return (
                                     <tr key={indx} className="text-white h-[85px]">
                                         <td
@@ -113,7 +129,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                                                 <p
                                                     className={`${roboto_500.className} ml-2 font-medium text-[#fff] text-[15px]`}
                                                 >
-                                                    {tx.name}
+                                                    {tx.names}
                                                 </p>
                                             </div>
                                         </td>
@@ -121,13 +137,13 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
                                             {tx.occupation}
                                         </td>
                                         <td className="text-center font-normal text-xs capitalize">
-                                            {tx.contestant_number}
+                                            {tx.contact}
                                         </td>
                                         <td className="truncate max-w-[100px] text-center font-normal text-xs capitalize">
                                             {tx.bio}
                                         </td>
                                         <td className="text-center font-normal text-xs capitalize">
-                                            {tx.votes}
+                                            {/* {tx.price} */}
                                         </td>
                                         <td>
                                             <div className="flex items-center justify-center gap-x-6">
@@ -191,7 +207,7 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
         )}
 
         {isShowModal && (
-                <ModalComponent handleClose={() => setShowModal(false)} />
+                <ModalComponent handleClose={() => setShowModal(false)}  handleSave={handleSave} />
               )}
         </AnimatePresence>
         </>

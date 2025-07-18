@@ -146,7 +146,7 @@ export default function page() {
       </div>
 
       {!isSuperAdmin && (
-        <ClientsComponent handleClose={() => console.log("first")} />
+        <ClientsComponent handleClose={() => console.log("first")} handleSave={() => console.log("Moved data")}/>
       )}
     </section>
   );

@@ -1,5 +1,5 @@
 import { apiCall } from "./auth.api";
-import { ICreateVotesResponse } from "@/types/api/votes.types";
+import { IContestantData, ICreateVotesResponse } from "@/types/api/votes.types";
 import { IGeneric } from "@/types/api/auth.types";
 
 
@@ -18,9 +18,9 @@ export const createVotesInfo = async (data: { liveId: string; price: string; sta
   );
 
   export const addVoteContestant = async (data: FormData) =>
-  await apiCall<IGeneric>(
+  await apiCall<IContestantData>(
     (baseApi) =>
-      baseApi.post<IGeneric>('/clients/livestream/vote/contestant', data, {
+      baseApi.post<IContestantData>('/clients/livestream/vote/contestant', data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -30,7 +30,7 @@ export const createVotesInfo = async (data: { liveId: string; price: string; sta
 
 
   export const getVotePollForLive = async (liveId: string) =>
-  await apiCall<ICreateVotesResponse>(
+  await apiCall<IContestantData[]>(
     (baseApi) =>
       baseApi.get(`/clients/livestream/vote/contestant/fetch/${liveId}`),
     true

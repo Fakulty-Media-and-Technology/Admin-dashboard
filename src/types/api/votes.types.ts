@@ -1,10 +1,14 @@
 import { IGeneric } from "./auth.types";
 
-export interface IContestantData extends IVoteData{
-    name : string
-    occupation : string
-    contestant_No : string
-    bio : string
+export interface IContestantData extends IGeneric{
+    _id: string;
+    names: string;
+    occupation: string;
+    contact: string;
+    bio: string;
+    photo: File
+    liveId: string;
+
 }
 
 export interface ICreateVotesResponse extends IGeneric {

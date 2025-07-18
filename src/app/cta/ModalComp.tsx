@@ -9,12 +9,14 @@ import { form } from "framer-motion/m";
 import { toast } from "react-toastify";
 import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { ILivestreamDetails } from "@/types/api/dashboard.types";
+import { IContestantData } from "@/types/api/votes.types";
 
 export interface ModalProps {
     handleClose: () => void;
+     handleSave: (newContestant: IContestantData) => void;
 }
 
-export const ModalComponent = ({ handleClose }: ModalProps) => {
+export const ModalComponent = ({ handleClose, handleSave }: ModalProps) => {
     const [userPic, setUserPic] = useState<File | null>(null);
     const [names, setNames] = useState<string>('');
     const [contestant_number, setContestantNumber] = useState<string>('');
@@ -54,6 +56,7 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
             const res = await addVoteContestant(formData)
             if(res.ok && res.data){
                 toast(`Contestant created successfully`, {type : "success"})
+                handleSave(res.data);
             }else{
                 toast(`${res.data?.message.replace('Invalid Request:', '')}`, { type: "error" });
             }

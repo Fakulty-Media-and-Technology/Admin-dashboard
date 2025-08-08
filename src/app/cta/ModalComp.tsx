@@ -3,27 +3,42 @@
 import { AppButton, CustomInput } from "@/components/AppLayout";
 import { roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addVoteContestant } from "@/api/voteSlice";
 import { form } from "framer-motion/m";
 import { toast } from "react-toastify";
+import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
+import { ILivestreamDetails } from "@/types/api/dashboard.types";
+import { IContestantData } from "@/types/api/votes.types";
 
 export interface ModalProps {
     handleClose: () => void;
+     handleSave: (newContestant: IContestantData) => void;
 }
 
-export const ModalComponent = ({ handleClose }: ModalProps) => {
+export const ModalComponent = ({ handleClose, handleSave }: ModalProps) => {
     const [userPic, setUserPic] = useState<File | null>(null);
     const [names, setNames] = useState<string>('');
     const [contestant_number, setContestantNumber] = useState<string>('');
     const [bio, setBio] = useState<string>('');
     const [occupation, setOccupation] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [live, setLive] = useState<ILivestreamDetails | null>(null);
+      const {
+              data: livesteamDetails,
+              isSuccess: isSuccess_L,
+          } = useGetLivestreamDetailsQuery(undefined, {});
 
     function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         const files = e.target.files;
         if (files) setUserPic(files[0]);
     };
+
+    useEffect(() => {
+        if (!livesteamDetails || livesteamDetails.data.length===0) return
+        setLive(livesteamDetails.data[0])
+        }, [isSuccess_L]);
+        
 
     async function submitHandler() {
         try {
@@ -34,12 +49,14 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
             formData.append("bio", bio)
             formData.append("contact", contestant_number)
             formData.append("occupation", occupation)
+            if(live?._id) formData.append("liveId", live._id)
             if(userPic) formData.append('photo', userPic);
 
 
             const res = await addVoteContestant(formData)
             if(res.ok && res.data){
                 toast(`Contestant created successfully`, {type : "success"})
+                handleSave(res.data);
             }else{
                 toast(`${res.data?.message.replace('Invalid Request:', '')}`, { type: "error" });
             }
@@ -53,7 +70,7 @@ export const ModalComponent = ({ handleClose }: ModalProps) => {
 
     return (
         <div className="z-[9999] w-full absolute overflow-hidden flex justify-center inset-0">
-            <div className="w-[90%] h-[70%] md:h-[80%] sm:w-[70%] lg:w-[50%] mt-32 p-5 rounded-[10px] bg-black4">
+            <div className="w-[90%] h-full md:h-[80%] sm:w-[70%] lg:w-[50%] mt-32 p-5 rounded-[10px] bg-black4">
                 <div className="ml-auto w-fit" onClick={handleClose}>
                     <Image
                         src="/closeIcon.svg"

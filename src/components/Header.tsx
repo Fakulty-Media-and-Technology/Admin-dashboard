@@ -63,7 +63,9 @@ function Header() {
               <Image src="/notification.svg" alt="" width={24} height={24} />
             </button>
             <button onClick={() =>  router.push("/account")}>
-              <Image src={(user && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"} alt="" width={27} height={27} className="w-[27px] h-[27px] rounded-full" />
+              <Image 
+              src={(user && user.photo_url && typeof user.photo_url === 'string' && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"} 
+              alt="" width={27} height={27} className="w-[27px] h-[27px] rounded-full" />
             </button>
 
             <div className="flex items-center">

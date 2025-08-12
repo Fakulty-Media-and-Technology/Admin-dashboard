@@ -255,7 +255,7 @@ function Siderbar() {
 
             <div className="relative w-[50px] h-[50px] md:-mt-10 transition-all duration-500 ease-in-out">
               <Image
-                src={(user && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"}
+                src={(user && user.photo_url && typeof user.photo_url === 'string' && user.photo_url.startsWith('https')) ? user.photo_url : "/user.png"}
                 width={50}
                 height={50}
                 alt=""

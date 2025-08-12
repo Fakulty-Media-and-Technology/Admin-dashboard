@@ -30,13 +30,14 @@ export default function page() {
   const [cta, setCTA] = useState<string>("Vote");
   const [isActive, setActive] = useState<boolean>(false);
   const [price, setPrice] = useState<string>("");
-  const [isButtonEnabled, setButtonEnabled] = useState<boolean>(false);
-  // const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [live, setLive] = useState<ILivestreamDetails | null>(null);
   const {
           data: livesteamDetails,
           isSuccess: isSuccess_L,
+          refetch
       } = useGetLivestreamDetailsQuery(undefined, {});
+      const isButtonEnabled = (price === '' || !isActive) && !live
   
      async function handleSave() {
         if (!live?._id) {
@@ -45,21 +46,19 @@ export default function page() {
         }
 
         try {
-          let res;
-
-          if (live.voteInfo === null) {
-            res = await createVotesInfo({liveId: live._id, status: isActive, price});
-          } else {
-             res = await updateVotesInfo({liveId: live._id, status: isActive, price});
-          }
+          setIsLoading(true)
+          const res = live.voteInfo ? await updateVotesInfo({liveId: live._id, status: isActive, price}):await createVotesInfo({liveId: live._id, status: isActive, price})
 
           if (res.ok && res.data) {
             toast(`${res.data.message}`, { type: "success" });
           } else {
-            toast(`${res.data?.message || "Vote action failed"}`, { type: "error" });
+            toast(`${res.data?.message}`, { type: "error" });
           }
-        } catch (error: any) {
-          toast(`${error.message || "Something went wrong"}`, { type: "error" });
+        } catch (error) {
+          toast(`${error}`, { type: "error" });
+        }finally{
+          refetch();
+          setIsLoading(false)
         }
       }
 
@@ -69,12 +68,6 @@ export default function page() {
         if (!livesteamDetails || livesteamDetails.data.length===0) return
         setLive(livesteamDetails.data[0])
       }, [isSuccess_L]);
-
-     useEffect(() => {
-      const trimmedPrice = price.trim();
-      const isLiveReady = live?._id !== undefined;
-      setButtonEnabled(trimmedPrice !== "" && isLiveReady);
-    }, [price, live]);
 
   return (
     <section className={`${roboto_400.className} relative pl-5`}>
@@ -138,9 +131,10 @@ export default function page() {
         <div className="w-[200px]">
           <AppButton
             onClick={handleSave}
+            isLoading={isLoading}
             title="Save"
-            disabled={!isButtonEnabled}
-            className={`${roboto_500.className} ${isButtonEnabled ? "bg-red" : "bg-gray-500 cursor-not-allowed"} text-white rounded-md mt-5 px-6 py-2 ml-auto flex items-end text-[18px] text-center hover:scale-[1.1] transition-all duration-100 ease-in`}
+            disabled={isButtonEnabled}
+            className={`${roboto_500.className} ${!isButtonEnabled ? "bg-red" : "bg-gray-500 cursor-not-allowed"} text-white rounded-md mt-5 px-6 py-2 ml-auto flex items-end text-[18px] text-center hover:scale-[1.1] transition-all duration-100 ease-in`}
           />
         </div>
       </div>

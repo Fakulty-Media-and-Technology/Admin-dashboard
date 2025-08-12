@@ -81,6 +81,8 @@ export const ClientsComponent = () => {
     //   publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? '',
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_TEST_PUBLIC_KEY ?? '',
   };
+
+  console.log(process.env.NEXT_PUBLIC_PAYSTACK_TEST_PUBLIC_KEY)
         
   const initializePayment = usePaystackPayment(config);
 
@@ -183,7 +185,7 @@ export const ClientsComponent = () => {
           formdata.append('data', JSON.stringify({...data, paymentId:id}));
     
           const res = await clientCreateLive(formdata);
-          // console.log(res.data)
+          console.log(res.data, id)
           if (res.ok && res.data) {
             toast(`${res.data.message}`, { type: "success" });
             // RESET 
@@ -305,6 +307,7 @@ export const ClientsComponent = () => {
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
                                         readOnly={live !== null}
+                                        maxLength={20}
                                     />
                                 </div>
                             </>
@@ -646,7 +649,7 @@ export const ClientsComponent = () => {
                     currency={currency}
                     price={eventEstimatedPrice}
                     paymentFunc={handlePayment}
-                    disabled={live ? Number(eventHours) <= getTimeDifferenceInHours(live.start, live.expiry) : true}
+                    disabled={live ? (Number(eventHours)+getTimeDifferenceInHours(live.start, live.expiry)) <= getTimeDifferenceInHours(live.start, live.expiry) : true}
                 />
             )}
         </div>

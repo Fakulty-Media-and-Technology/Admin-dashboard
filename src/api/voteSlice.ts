@@ -1,6 +1,21 @@
 import { apiCall } from "./auth.api";
-import { IContestantData, ICreateVotesResponse } from "@/types/api/votes.types";
+import { IContestantData, ICreateVotesResponse, IContestantResponse } from "@/types/api/votes.types";
 import { IGeneric } from "@/types/api/auth.types";
+import { apiSlice } from "./apiSlice";
+
+
+export const voteApiSlice = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getContestantsByLiveId: builder.query<IContestantData[], string>({
+      query: (liveId) => ({
+        url: `/clients/livestream/vote/contestant/fetch?live_id=${liveId}`,
+        method: "GET",
+      }),
+    }),
+  }),
+});
+
+export const { useGetContestantsByLiveIdQuery } = voteApiSlice;
 
 
 export const createVotesInfo = async (data: { liveId: string; price: string; status: boolean }) =>
@@ -18,9 +33,9 @@ export const createVotesInfo = async (data: { liveId: string; price: string; sta
   );
 
   export const addVoteContestant = async (data: FormData) =>
-  await apiCall<IContestantData>(
+  await apiCall<IContestantResponse>(
     (baseApi) =>
-      baseApi.post<IContestantData>('/clients/livestream/vote/contestant', data, {
+      baseApi.post<IContestantResponse>('/clients/livestream/vote/contestant', data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -29,8 +44,8 @@ export const createVotesInfo = async (data: { liveId: string; price: string; sta
   );
 
 
-  export const getVotePollForLive = async (liveId: string) =>
-  await apiCall<IContestantData[]>(
+  export const getVoteContestant = async (liveId: string) =>
+  await apiCall<IContestantData>(
     (baseApi) =>
       baseApi.get(`/clients/livestream/vote/contestant/fetch/${liveId}`),
     true

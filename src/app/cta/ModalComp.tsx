@@ -9,11 +9,11 @@ import { form } from "framer-motion/m";
 import { toast } from "react-toastify";
 import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { ILivestreamDetails } from "@/types/api/dashboard.types";
-import { IContestantData } from "@/types/api/votes.types";
+import { IContestantResponse } from "@/types/api/votes.types";
 
 export interface ModalProps {
     handleClose: () => void;
-     handleSave: (newContestant: IContestantData) => void;
+     handleSave: (newContestant: IContestantResponse) => void;
 }
 
 export const ModalComponent = ({ handleClose, handleSave }: ModalProps) => {
@@ -57,6 +57,7 @@ export const ModalComponent = ({ handleClose, handleSave }: ModalProps) => {
             if(res.ok && res.data){
                 toast(`Contestant created successfully`, {type : "success"})
                 handleSave(res.data);
+                console.log(res.data);
             }else{
                 toast(`${res.data?.message.replace('Invalid Request:', '')}`, { type: "error" });
             }

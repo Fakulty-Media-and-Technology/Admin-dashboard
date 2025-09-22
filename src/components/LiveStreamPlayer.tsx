@@ -37,6 +37,7 @@ const LiveStreamPlayer: React.FC<LiveStreamPlayerProps> = ({
 
   // Initialize player only once
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (!videoRef.current || playerRef.current) return;
 
     const videoElement = document.createElement('video-js');

@@ -227,49 +227,54 @@ function handleExpiryDateDefault(releaseDateValue: string) {
             file: files[0]
           });
         }
-        const video = document.createElement("video");
-        video.src = videoObjectUrl;
-        video.currentTime = 2;
-        video.onloadeddata = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth / 2;
-          canvas.height = video.videoHeight / 2;
 
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            if (type === 'trailer') {
-              setThumbnailUrl(canvas.toDataURL("image/jpeg"));
-            } else {
-              setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
+        if (typeof window !== "undefined"){
+          if (type === "video" || type === "trailer"){
+            const video = document.createElement("video");
+          video.src = videoObjectUrl;
+          video.currentTime = 2;
+          video.onloadeddata = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth / 2;
+            canvas.height = video.videoHeight / 2;
+  
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              if (type === 'trailer') {
+                setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+              } else {
+                setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
+              }
             }
-          }
-        };
-      } else if (type === "subtitle") {
-        setSubtitleFile({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else if (type === "portrait") {
-        setPortrait({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else if (type === "landscape") {
-        setPortrait_L({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else {
-        // setImage({
-        //   name: files[0].name,
-        //   url: URL.createObjectURL(files[0]),
-        // });
+          };
+        } else if (type === "subtitle") {
+          setSubtitleFile({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else if (type === "portrait") {
+          setPortrait({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else if (type === "landscape") {
+          setPortrait_L({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else {
+          // setImage({
+          //   name: files[0].name,
+          //   url: URL.createObjectURL(files[0]),
+          // });
+        }
       }
-    }
+          }
+        }
   }
 
   async function handleSearchCast(value:string){

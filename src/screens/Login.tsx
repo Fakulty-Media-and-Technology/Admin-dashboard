@@ -22,7 +22,8 @@ import { getClientProfile, getSuperadminProfile } from "@/api/auth.api";
 import { IProfile } from "@/types/api/profile.types";
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-export const SUCESS_CODES = 201 || 200;
+export const SUCESS_CODES = 201
+
 
 function Login() {
   const router = useRouter();
@@ -45,7 +46,7 @@ function Login() {
         }).unwrap();
         console.log(res, "login");
 
-        if (res.status === SUCESS_CODES && res.data) {
+        if ((res.status === SUCESS_CODES && res.data)) {
           const isSuperAdmin = res.data.role === "superadmin";
           localStorage.setItem("role", res.data.role);
           localStorage.setItem("auth_token", res.data.token);

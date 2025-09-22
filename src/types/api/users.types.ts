@@ -36,7 +36,7 @@ export interface IUserExample {
   verified: string;
   country_code: string;
   photo: string | null;
-  walletBal: string
+  walletBal: number
   paymentHistory: IPaymentHistory[]
 }
 

@@ -101,5 +101,6 @@ export const Empty_UserRP: IUserExample = {
   photo: null,
   country_code: '',
   _id: '',
-
+  walletBal: '',
+  paymentHistory: []
 };

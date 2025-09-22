@@ -7,8 +7,8 @@ import { useState } from "react";
 import { ModalComponent, ModalProps } from "./ModalComp";
 import ViewVote from "./ViewVotes";
 import { AnimatePresence, motion } from "framer-motion";
-import { IContestantData } from "@/types/api/votes.types";
-import { deleteContestant, getVotePollForLive } from "@/api/voteSlice";
+import { IContestantResponse, IContestantData } from "@/types/api/votes.types";
+import { deleteContestant, getVoteContestant, } from "@/api/voteSlice";
 
 
 
@@ -21,20 +21,20 @@ export const ClientsComponent = ({ handleClose }: ModalProps) => {
     const [mode, setMode] = useState ("default");
      const [isShowModal, setShowModal] = useState<boolean>(false);
 
-    async function handleSave(newContestant: IContestantData) {
-  try {
-    setShowModal(false);
+    async function handleSave(newContestant: IContestantResponse) {
+        try {
+            setShowModal(false);
 
-    const res = await getVotePollForLive(newContestant.liveId);
+            const res = await getVoteContestant(newContestant.data.liveId);
 
-    if (res.ok && res.data) {
-      setContestantList(res.data);
-      setContestantFilter(res.data);
-    }
-  } catch (error) {
-    console.error("Error fetching updated contestants:", error);
-  }
-}
+            if (res.ok && res.data) {
+            // setContestantList(res.data);
+            // setContestantFilter(res.data);
+            }
+        } catch (error) {
+            console.error("Error fetching updated contestants:", error);
+        }
+    };
 
 
     //  async function handleDelete(live_id:string, contestant_id){

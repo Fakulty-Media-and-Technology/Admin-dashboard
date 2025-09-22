@@ -58,10 +58,11 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [title, setTitle] = useState<string>(selectedMedia ? ((slug.includes('videos') && selectedMedia.artistName) ? selectedMedia.artistName : selectedMedia.title) : "");
   const [subtitle, setSubTitle] = useState<string>("");
   const [releaseDate, setReleaseDate] = useState<string>(selectedMedia ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString()) : "");
-  const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : "");
+  const [expiryDate, setExpiryDate] = useState<string>(
+  selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : "");
   const [class_, setClass] = useState<string>(selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select");
   const [amount, setAmount] = useState<string>("");
-  const [currency, setCurrency] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("NGN");
   const [PG, setPG] = useState<string>(selectedMedia ? selectedMedia.pg === '0' ? 'G' : `${selectedMedia.pg}+` : "Select");
   const [portrait, setPortrait] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.portraitPhoto } : null);
   const [portrait_L, setPortrait_L] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.landscapePhoto } : null);
@@ -75,7 +76,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [urlLink, setUrlLink] = useState<string>("");
   const [urlLink_2, setUrlLink_2] = useState<string>("");
   const [time, setTime] = useState<string>(selectedMedia ? selectedMedia.runtime : "");
-  const [rating, setRating] = useState<string>(selectedMedia ? selectedMedia.averageRating.toString() : "Select");
+  const [rating, setRating] = useState<string>(selectedMedia ? selectedMedia.averageRating.toString() : "4.5");
   const [views, setViews] = useState<string>("Select");
   const [options, setOptions] = useState<string>("Select");
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
@@ -124,12 +125,13 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     portrait_L === null;
 
 
-  function handleValidInput(query: string) {
-    const inputValue = query;
-    if (/^\d*$/.test(inputValue)) {
-      setAmount(inputValue);
-    }
+  function handleValidInput(query: string) { 
+    const inputValue = query; 
+    if (/^\d*$/.test(inputValue)) { 
+      setAmount(inputValue); 
+    } 
   }
+
 
   const handleInputFormatForTime = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value.replace(/[^0-9]/g, "");
@@ -175,6 +177,24 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     }
   };
 
+  function handleReleaseDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+  setReleaseDate(e.target.value);
+  handleExpiryDateDefault(e.target.value);
+};
+
+function handleExpiryDateDefault(releaseDateValue: string) {
+  // Only auto-set expiry if not editing existing media
+  if (!selectedMedia) {
+    const release = new Date(releaseDateValue);
+    if (!isNaN(release.getTime())) {
+      const expiry = new Date(release);
+      expiry.setFullYear(expiry.getFullYear() + 1);
+      setExpiryDate(expiry.toISOString().slice(0, 10)); // YYYY-MM-DD
+    }
+  }
+}
+
+
   function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, type?: string) {
     e.preventDefault();
     if (type === '2') {
@@ -207,49 +227,54 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
             file: files[0]
           });
         }
-        const video = document.createElement("video");
-        video.src = videoObjectUrl;
-        video.currentTime = 2;
-        video.onloadeddata = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth / 2;
-          canvas.height = video.videoHeight / 2;
 
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            if (type === 'trailer') {
-              setThumbnailUrl(canvas.toDataURL("image/jpeg"));
-            } else {
-              setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
+        if (typeof window !== "undefined"){
+          if (type === "video" || type === "trailer"){
+            const video = document.createElement("video");
+          video.src = videoObjectUrl;
+          video.currentTime = 2;
+          video.onloadeddata = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth / 2;
+            canvas.height = video.videoHeight / 2;
+  
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              if (type === 'trailer') {
+                setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+              } else {
+                setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
+              }
             }
-          }
-        };
-      } else if (type === "subtitle") {
-        setSubtitleFile({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else if (type === "portrait") {
-        setPortrait({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else if (type === "landscape") {
-        setPortrait_L({
-          name: files[0].name,
-          url: URL.createObjectURL(files[0]),
-          file: files[0]
-        });
-      } else {
-        // setImage({
-        //   name: files[0].name,
-        //   url: URL.createObjectURL(files[0]),
-        // });
+          };
+        } else if (type === "subtitle") {
+          setSubtitleFile({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else if (type === "portrait") {
+          setPortrait({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else if (type === "landscape") {
+          setPortrait_L({
+            name: files[0].name,
+            url: URL.createObjectURL(files[0]),
+            file: files[0]
+          });
+        } else {
+          // setImage({
+          //   name: files[0].name,
+          //   url: URL.createObjectURL(files[0]),
+          // });
+        }
       }
-    }
+          }
+        }
   }
 
   async function handleSearchCast(value:string){
@@ -587,13 +612,14 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                 <div className="flex flex-col">
                   <label
                     htmlFor="currency"
-                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5 pt-2`}
                   >
                     CURRENCY *
                   </label>
                   <SelectInputForm
                     placeholder={currency}
                     setType={setCurrency}
+                    defaultValue={"NGN"}
                     selectData={["NGN", "USD"]}
                     className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
                     textStyles="text-grey_500 text-center"
@@ -691,7 +717,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                       type="date"
                       className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
                       value={releaseDate.replaceAll("/", "-")}
-                      onChange={(e) => [setReleaseDate(e.target.value), console.log(e.target.value)]}
+                      onChange={handleReleaseDateChange}
                     />
                   </div>
                 )}
@@ -1164,7 +1190,8 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                 <SelectInputForm
                   placeholder={rating}
                   setType={setRating}
-                  selectData={["3.0", "3.5", `4.0`]}
+                  defaultValue={"4.5"}
+                  selectData={["3.0", "3.5", `4.0`, '4.5']}
                   className="border-border_grey text-grey_500 rounded-sm flex-1"
                 />
               </div>
@@ -1779,6 +1806,10 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
               <div className="w-[380px] pl-7 pb-5 bg-[#33333a] pr-[30px] flex-row flex items-center">
                 <div className={`${roboto_500.className} text-lg px-2 pr-4 text-[#c4c4c4] w-fit p-1 rounded-lg border-2 border-[#686666]`}>Hex</div>
                 <div className={`${roboto_500.className} h-[38px] ml-2.5 text-lg px-2 pr-4 text-[#c4c4c4] flex-1 p-1 rounded-lg border-2 border-[#686666]`}>{color}</div>
+                <div
+                className="w-6 h-6 rounded-full border border-[#686666] ml-4"
+                style={{ backgroundColor: color }}
+                ></div>
               </div>
             </div>
           }

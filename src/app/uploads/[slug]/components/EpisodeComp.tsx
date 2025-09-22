@@ -108,34 +108,36 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                         file: files[0]
                     });
                 }
-                const video = document.createElement("video");
-                video.src = videoObjectUrl;
-                video.currentTime = 2;
-                video.onloadeddata = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = video.videoWidth / 2;
-                    canvas.height = video.videoHeight / 2;
-
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) {
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        if (type === 'video_intro') {
-                            setThumbnailUrl_intro(canvas.toDataURL("image/jpeg"));
-                        } else if (type === 'video_recap') {
-                            setThumbnailUrl_recap(canvas.toDataURL("image/jpeg"));
-                        } else {
-                            setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+                if (typeof window !== 'undefined'){
+                    const video = document.createElement("video");
+                    video.src = videoObjectUrl;
+                    video.currentTime = 2;
+                    video.onloadeddata = () => {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = video.videoWidth / 2;
+                        canvas.height = video.videoHeight / 2;
+    
+                        const ctx = canvas.getContext("2d");
+                        if (ctx) {
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            if (type === 'video_intro') {
+                                setThumbnailUrl_intro(canvas.toDataURL("image/jpeg"));
+                            } else if (type === 'video_recap') {
+                                setThumbnailUrl_recap(canvas.toDataURL("image/jpeg"));
+                            } else {
+                                setThumbnailUrl(canvas.toDataURL("image/jpeg"));
+                            }
                         }
-                    }
-                };
-            } else {
-                setSubtitleFile({
-                    name: files[0].name,
-                    url: URL.createObjectURL(files[0]),
-                    file: files[0]
-                });
+                    };
+                } else {
+                    setSubtitleFile({
+                        name: files[0].name,
+                        url: URL.createObjectURL(files[0]),
+                        file: files[0]
+                    });
+                }
             }
-        }
+                }
     }
 
     async function handleAddSubtitle() {

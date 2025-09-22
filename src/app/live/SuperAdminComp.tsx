@@ -64,6 +64,8 @@ function SuperAdminComp() {
   const [searchClientParams, setSearchClient] = useState<string>("");
   const [clientList, setClientList] = useState<IClientsData[]>([]);
   const [client, setClient] = useState<IClientsData | null>(null);
+  const startDate = new Date().toISOString();
+
   const maxLength = 200;
   const {
     data: allEvents,
@@ -165,7 +167,7 @@ function SuperAdminComp() {
     console.log(tab.toLowerCase().slice(0, -1), coverImage?.name)
     try {
       setLoading_B(true);
-      const { end, start } = getDates(Number(eventHours));
+      const { end, start } = getDates(Number(eventHours), startDate);
       const formdata = new FormData();
       const data: ICreateLiveData = {
         clientId: client._id,
@@ -230,7 +232,7 @@ function SuperAdminComp() {
   const handleGetEstimatedPrice = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const { end, start } = getDates(Number(e.target.value));
+    const { end, start } = getDates(Number(e.target.value), startDate);
     setEventHours(e.target.value);
 
     const res = await handleEstimate({ end, start }).unwrap();

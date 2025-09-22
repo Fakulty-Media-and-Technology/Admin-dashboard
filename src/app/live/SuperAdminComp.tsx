@@ -179,7 +179,8 @@ function SuperAdminComp() {
         vidClass: _class.toLowerCase(),
         type: tab.toLowerCase().slice(0, -1).trim().replace(' ', ''),
         start,
-        subTitle: 'subtitle'
+        subTitle: 'subtitle',
+        category : selectedCategories
       }
 
       if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
@@ -235,7 +236,7 @@ function SuperAdminComp() {
     const { end, start } = getDates(Number(e.target.value), startDate);
     setEventHours(e.target.value);
 
-    const res = await handleEstimate({ end, start }).unwrap();
+    const res = await handleEstimate({ end, start, currency:'' }).unwrap();
     console.log(res);
     if (res.data) {
       setEventEstimatedPrice(res.data.estimated_cost);

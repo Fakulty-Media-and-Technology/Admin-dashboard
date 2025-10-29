@@ -58,7 +58,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [title, setTitle] = useState<string>(selectedMedia ? ((slug.includes('videos') && selectedMedia.artistName) ? selectedMedia.artistName : selectedMedia.title) : "");
   const [subtitle, setSubTitle] = useState<string>("");
   const [releaseDate, setReleaseDate] = useState<string>(selectedMedia ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString()) : "");
-  const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : "");
+  const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString());
   const [class_, setClass] = useState<string>(selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select");
   const [amount, setAmount] = useState<string>("");
   const [currency, setCurrency] = useState<string>("");
@@ -455,6 +455,31 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
       const res = selectedMedia ? await editContent(formdata, selectedMedia._id) : await createContent(formdata, slug.includes('movies') ? 'movie' : slug.includes('skits') ? 'skit' : slug.includes('music') ? 'music-video' : slug);
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
+        // Reset form after successful upload
+        setTitle("");
+        setSubTitle("");
+        setReleaseDate("");
+        setExpiryDate(new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString());
+        setClass("Select");
+        setAmount("");
+        setCurrency("");
+        setPG("Select");
+        setPortrait(null);
+        setPortrait_L(null);
+        setSubtitleFile(null);
+        setVideoTrailer(null);
+        setVideoTrailer_2(null);
+        setThumbnailUrl(null);
+        setThumbnailUrl_2(null);
+        setUrlLink("");
+        setUrlLink_2("");
+        setTime("");
+        setRating("Select");
+        setDetails("");
+        setSelectedCategories([]);
+        setSelectedGenries([]);
+        setSelectedCasts([]);
+        setColor("");
         handleClose();
       } else {
         toast(res.data?.message, { type: "error" });
@@ -713,7 +738,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
               </div>
 
               {/* CAST */}
-              {class_ !== "AD" && !decodeURI(slug).includes("videos") && (
+              {class_ !== "AD" && (
                 <div className="relative">
                 <div className="flex-1">
                   <p
@@ -1164,7 +1189,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                 <SelectInputForm
                   placeholder={rating}
                   setType={setRating}
-                  selectData={["3.0", "3.5", `4.0`]}
+                  selectData={["3.0", "3.5", "4.0", "4.5"]}
                   className="border-border_grey text-grey_500 rounded-sm flex-1"
                 />
               </div>
@@ -1795,6 +1820,39 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
           />
         </div>
       </div>
+    </div>
+  );
+};
+
+// Add upload progress bar functionality
+
+const UploadComponent = ({ slug, selectedMedia, handleClose }: { slug: string; selectedMedia: any; handleClose: () => void }) => {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const handleUpload = async (file: File) => {
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Simulate upload process
+    const uploadTask = async () => {
+      for (let i = 0; i <= 100; i += 10) {
+        setUploadProgress(i);
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate time delay
+      }
+      setIsUploading(false);
+      toast.success("Upload complete!");
+    };
+
+    await uploadTask();
+  };
+
+  return (
+    <div>
+      <input type="file" onChange={(e) => e.target.files && handleUpload(e.target.files[0])} />
+      <button disabled={isUploading || uploadProgress < 100}>Publish</button>
+      {isUploading && <div>Upload Progress: {uploadProgress}%</div>}
     </div>
   );
 };

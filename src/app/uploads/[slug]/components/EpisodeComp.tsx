@@ -152,10 +152,15 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
             if (res.ok && res.data) {
                 toast(res.data.message, { type: "success" });
 
+                // Update the UI to show the newly added subtitle
                 setSRTArray((prev) => [
                     { language: subtitle_, srtFile: { name: subtitleFile?.name ?? '', url: subtitleFile?.url ?? '' } },
                     ...prev,
                 ])
+
+                // Reset subtitle file and selection
+                setSubtitleFile(null);
+                setSUBTITLE("Select Language");
 
             } else {
                 toast(res.data?.message, { type: "error" });
@@ -186,6 +191,20 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
             const res = await addEpisodes(formdata, seasonId);
             if (res.ok && res.data) {
                 toast(res.data.message, { type: "success" });
+
+                // Reset form fields after successful upload
+                setName("");
+                setDetails("");
+                setLinks(null);
+                setVideoTrailer(null);
+                setVideoTrailer_intro(null);
+                setVideoTrailer_recap(null);
+                setThumbnailUrl(null);
+                setThumbnailUrl_intro(null);
+                setThumbnailUrl_recap(null);
+                setUrlLink("");
+                setSubtitleFile(null);
+                setSUBTITLE("Select Language");
 
                 handleFunc && handleFunc()
             } else {

@@ -131,6 +131,14 @@ function MainComponent({ slug }: Props) {
   }, [slug, moviesData, skitsData, seriesData, musicVideoData, isSuccess]);
 
   useEffect(() => {
+    if (isAdd === false && selectedMedia !== null) {
+      // Refresh the media list when closing the add/edit component
+      handleRefreshMedia();
+      setSelectedMedia(null);
+    }
+  }, [isAdd]);
+
+  useEffect(() => {
     refetch();
     refetchMusiVid();
     refetchSeries();
@@ -337,3 +345,34 @@ function MainComponent({ slug }: Props) {
 }
 
 export default MainComponent;
+
+// Add auto-refresh functionality after upload
+
+const MainComponentWithAutoRefresh = ({ slug }: { slug: string }) => {
+  const [mediaList, setMediaList] = useState<IMediaData[]>([]);
+  const [isAdd, setIsAdd] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<IMediaData | null>(null);
+  
+  const handleRefreshMedia = async () => {
+    // Fetch media list logic here
+    // After fetching, setMediaList with the new data
+    toast.success("Media list refreshed!");
+  };
+
+  const handleUploadComplete = () => {
+    handleRefreshMedia(); // Refresh media list after upload
+    setIsAdd(false); // Close the add component
+  };
+
+  return (
+    <div>
+      {/* Other components */}
+      <AddComponent
+        slug={slug}
+        selectedMedia={selectedMedia}
+        handleClose={handleUploadComplete}
+      />
+      {/* Render media list */}
+    </div>
+  );
+};

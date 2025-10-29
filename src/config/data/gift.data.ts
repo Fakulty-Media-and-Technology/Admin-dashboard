@@ -62,5 +62,6 @@ export const G_TableHeads = [
     "amount",
     "created",
     "serial number",
-    "status"
+    "status",
+    "currency"
 ]

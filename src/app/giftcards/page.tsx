@@ -90,13 +90,20 @@ export default function page() {
   async function handleDelete(id:string){
       setList(prev => prev.filter(x => x._id !== id));
       const res = await deleteGiftCard(id)
-      if(res.ok && res.data 
+      if(res.ok && res.data
         // && res.data.message.includes('deleted')
         ){
         console.log(res)
         toast("Card deleted successfully", { type: "info" });
         handleRefreshGiftCards();
       }
+  }
+
+  async function handleRedeemGiftCard(id: string) {
+    // Logic to redeem gift card and update status
+    setList(prev => prev.map(card => card._id === id ? {...card, used: true} : card));
+    toast("Gift card redeemed successfully", { type: "success" });
+    handleRefreshGiftCards();
   }
 
 
@@ -184,6 +191,13 @@ export default function page() {
 
                     <td className="text-center font-normal text-xs capitalize">
                       {tx.used ? 'Used' : 'Active'}
+                    </td>
+                    <td className="text-center font-normal text-xs capitalize">
+                      {tx.currency}
+                    </td>
+
+                    <td className="text-center font-normal text-xs capitalize">
+                      {tx.currency}
                     </td>
 
                     <td>

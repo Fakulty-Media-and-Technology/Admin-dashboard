@@ -12,6 +12,7 @@ export interface IGiftCardData {
     amount: number;
     code: string;
     used: boolean;
+    currency: string;
     createdAt: string;
     updatedAt: string;
 }

@@ -33,6 +33,7 @@ import {
   useGetDashboardTotalUserQuery,
   useGetLivestreamDetailsQuery,
 } from "@/api/dashboard";
+
 const LiveStreamPlayer = dynamic(() => import('@/components/LiveStreamPlayer'), {
   ssr: false,
 });
@@ -105,6 +106,14 @@ function page() {
   useEffect(() => {
     refetch();
     dashboardTotUserRefresh();
+  }, []);
+
+  // Test
+    useEffect(() => {
+    console.log(formatAmount("1080.85")); // ✅ "1,080.85"
+    console.log(formatAmount("5000"));    // ✅ "5,000.00"
+    console.log(formatAmount(150000.5));  // ✅ "150,000.50"
+    console.log(formatAmount("₦350.5"));  // ✅ "350.50"
   }, []);
 
   return (
@@ -427,6 +436,7 @@ function page() {
             )}
           </div>
         </div>}
+        
     </section>
   );
 }

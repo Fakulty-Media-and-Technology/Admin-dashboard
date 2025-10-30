@@ -1,3 +1,5 @@
+
+
 import type { Metadata } from "next";
 import { Inter, Manrope, Roboto } from "next/font/google";
 import "./globals.css";
@@ -7,6 +9,7 @@ import ProviderContainer from "@/components/Provider";
 import { Bounce, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import 'video.js/dist/video-js.css';
+
 
 
 const inter = Roboto({

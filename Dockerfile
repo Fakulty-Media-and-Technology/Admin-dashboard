@@ -4,14 +4,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm i
-
-# Copy source and build
+# Copy source files
 COPY . .
 
-RUN npm run build
+# Install dependencies
+RUN npm install cross-env
+
+# RUN npm run build
 
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "dev"]

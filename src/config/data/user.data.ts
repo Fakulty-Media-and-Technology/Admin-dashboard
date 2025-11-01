@@ -102,4 +102,8 @@ export const Empty_UserRP: IUserExample = {
   country_code: '',
   _id: '',
 
+ 
+  walletBal: 0, 
+  paymentHistory: [], 
 };
+

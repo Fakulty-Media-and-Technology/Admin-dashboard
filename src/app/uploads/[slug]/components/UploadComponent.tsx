@@ -5,7 +5,11 @@ import {
   CustomInput,
   SelectInputForm,
 } from "@/components/AppLayout";
-import { searchFetchCast, useGetCategoryQuery, useGetGenreQuery } from "@/api/categorySlice";
+import {
+  searchFetchCast,
+  useGetCategoryQuery,
+  useGetGenreQuery,
+} from "@/api/categorySlice";
 import { ICast, ICategory } from "@/types/api/category.types";
 import { formatAmount } from "@/utilities/formatAmount";
 import ReactPlayer from "react-player";
@@ -20,12 +24,19 @@ import { getPreview } from "@/app/server";
 import { LinkViewProps } from "@/types/packages";
 import SeasonComponent from "../SeasonComponent";
 import { ImageProps } from "@/app/plans/ClientComponent";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
 import Image from "next/image";
 import { ContentFormData, ISeasonData } from "@/types/api/content.type";
-import { addSeason, addSubtitle, createContent, editContent, getSeasons, seriesButtonValidity } from "@/api/contentSlice";
+import {
+  addSeason,
+  addSubtitle,
+  createContent,
+  editContent,
+  getSeasons,
+  seriesButtonValidity,
+} from "@/api/contentSlice";
 import { IMediaData } from "@/types/api/media.types";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
@@ -34,7 +45,7 @@ interface ModalProps {
   handleClose: () => void;
   // handleReset: () => void;
   slug: string;
-  selectedMedia: IMediaData | null
+  selectedMedia: IMediaData | null;
 }
 
 export interface ISeason {
@@ -48,23 +59,55 @@ export interface ISubtitle {
 }
 
 export interface IFile extends ImageProps {
-  file?: File
+  file?: File;
 }
 
-export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) => {
+export const AddComponent = ({
+  slug,
+  selectedMedia,
+  handleClose,
+}: ModalProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_C, setLoading_C] = useState<boolean>(false);
   const [isGenre, setIsGenre] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>(selectedMedia ? ((slug.includes('videos') && selectedMedia.artistName) ? selectedMedia.artistName : selectedMedia.title) : "");
+  const [title, setTitle] = useState<string>(
+    selectedMedia
+      ? slug.includes("videos") && selectedMedia.artistName
+        ? selectedMedia.artistName
+        : selectedMedia.title
+      : ""
+  );
   const [subtitle, setSubTitle] = useState<string>("");
-  const [releaseDate, setReleaseDate] = useState<string>(selectedMedia ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString()) : "");
-  const [expiryDate, setExpiryDate] = useState<string>(selectedMedia ? new Date(selectedMedia.expiryDate).toISOString() : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString());
-  const [class_, setClass] = useState<string>(selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select");
+  const [releaseDate, setReleaseDate] = useState<string>(
+    selectedMedia
+      ? formatDateToDDMMYYYY(new Date(selectedMedia.releaseDate).toISOString())
+      : ""
+  );
+  const [expiryDate, setExpiryDate] = useState<string>(
+    selectedMedia
+      ? new Date(selectedMedia.expiryDate).toISOString()
+      : new Date(
+          new Date().setFullYear(new Date().getFullYear() + 1)
+        ).toISOString()
+  );
+  const [class_, setClass] = useState<string>(
+    selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select"
+  );
   const [amount, setAmount] = useState<string>("");
   const [currency, setCurrency] = useState<string>("");
-  const [PG, setPG] = useState<string>(selectedMedia ? selectedMedia.pg === '0' ? 'G' : `${selectedMedia.pg}+` : "Select");
-  const [portrait, setPortrait] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.portraitPhoto } : null);
-  const [portrait_L, setPortrait_L] = useState<IFile | null>(selectedMedia ? { name: '', url: selectedMedia.landscapePhoto } : null);
+  const [PG, setPG] = useState<string>(
+    selectedMedia
+      ? selectedMedia.pg === "0"
+        ? "G"
+        : `${selectedMedia.pg}+`
+      : "Select"
+  );
+  const [portrait, setPortrait] = useState<IFile | null>(
+    selectedMedia ? { name: "", url: selectedMedia.portraitPhoto } : null
+  );
+  const [portrait_L, setPortrait_L] = useState<IFile | null>(
+    selectedMedia ? { name: "", url: selectedMedia.landscapePhoto } : null
+  );
   const [subtitleFile, setSubtitleFile] = useState<IFile | null>(null);
   const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
   const [videoTrailer_2, setVideoTrailer_2] = useState<IFile | null>(null);
@@ -74,25 +117,41 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [isPlaying_2, setIsPlaying_2] = useState<boolean>(false);
   const [urlLink, setUrlLink] = useState<string>("");
   const [urlLink_2, setUrlLink_2] = useState<string>("");
-  const [time, setTime] = useState<string>(selectedMedia ? selectedMedia.runtime : "");
-  const [rating, setRating] = useState<string>(selectedMedia ? selectedMedia.averageRating.toString() : "Select");
+  const [time, setTime] = useState<string>(
+    selectedMedia ? selectedMedia.runtime : ""
+  );
+  const [rating, setRating] = useState<string>(
+    selectedMedia ? selectedMedia.averageRating.toString() : "Select"
+  );
   const [views, setViews] = useState<string>("Select");
   const [options, setOptions] = useState<string>("Select");
   const [subtitle_, setSUBTITLE] = useState<string>("Select Language");
 
   const [genriesList, setGenriesList] = useState<ICategory[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(selectedMedia ? selectedMedia.category.map(x => x.name) : []);
-  const [selectedGenries, setSelectedGenries] = useState<string[]>(selectedMedia ? selectedMedia.genre.map(x => x.name) : []);
-  const [selectedCasts, setSelectedCasts] = useState<ICast[]>(selectedMedia ? selectedMedia.cast : []);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    selectedMedia ? selectedMedia.category.map((x) => x.name) : []
+  );
+  const [selectedGenries, setSelectedGenries] = useState<string[]>(
+    selectedMedia ? selectedMedia.genre.map((x) => x.name) : []
+  );
+  const [selectedCasts, setSelectedCasts] = useState<ICast[]>(
+    selectedMedia ? selectedMedia.cast : []
+  );
   const [castTxt, setCastTxt] = useState<string>("");
   const [genriesPlaceholder, setGenriesPlaceholder] = useState<string>("");
   const [cat_List, setCat_List] = useState<ICategory[]>([]);
   const [cat_Placeholder, setCat_Placeholder] = useState<string>("");
-  const [links, setLinks] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.trailer } : null);
-  const [links_2, setLinks_2] = useState<LinkViewProps | null>(selectedMedia ? { url: selectedMedia.video } : null);
+  const [links, setLinks] = useState<LinkViewProps | null>(
+    selectedMedia ? { url: selectedMedia.trailer } : null
+  );
+  const [links_2, setLinks_2] = useState<LinkViewProps | null>(
+    selectedMedia ? { url: selectedMedia.video } : null
+  );
   const [isPreview, setIsPreview] = useState<boolean>(false);
   const [isPreview_2, setIsPreview_2] = useState<boolean>(false);
-  const [details, setDetails] = useState(selectedMedia ? selectedMedia.description ?? '' : "");
+  const [details, setDetails] = useState(
+    selectedMedia ? selectedMedia.description ?? "" : ""
+  );
   const [srtLoading, setSrtLoading] = useState<boolean>(false);
   const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
   const maxLength = 200;
@@ -101,12 +160,30 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
   const [isDisabled_Seasons, setDisabled] = useState<boolean>(true);
   const [showPicker, setColorPicker] = useState<boolean>(false);
   const [castContentList, setCastContentList] = useState<ICast[]>([]);
-  const [color, setColor] = useState<string>(selectedMedia ? selectedMedia.primaryColor : '');
+  // const [color, setColor] = useState<string>(selectedMedia ? selectedMedia.primaryColor : '');
+  const [color, setColor] = useState<string>(
+    selectedMedia ? selectedMedia.primaryColor : "#D9D9D9" // ✅ Added fallback default
+  );
   const { data: genries, isSuccess } = useGetGenreQuery(undefined, {});
   const { data: categories, isSuccess: isSuccess_C } = useGetCategoryQuery(
     undefined,
     {}
   );
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  // 🟩 Detect click outside picker to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
+        setColorPicker(false);
+      }
+    };
+    if (showPicker) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPicker]);
 
   const isDisabled =
     title === "" ||
@@ -122,7 +199,6 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     rating === "" ||
     portrait === null ||
     portrait_L === null;
-
 
   function handleValidInput(query: string) {
     const inputValue = query;
@@ -175,9 +251,12 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     }
   };
 
-  function handleVideo(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, type?: string) {
+  function handleVideo(
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    type?: string
+  ) {
     e.preventDefault();
-    if (type === '2') {
+    if (type === "2") {
       setIsPlaying_2(true);
     } else {
       setIsPlaying(true);
@@ -194,17 +273,17 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
         // });
       } else if (type === "video" || type === "trailer") {
         const videoObjectUrl = URL.createObjectURL(files[0]);
-        if (type === 'trailer') {
+        if (type === "trailer") {
           setVideoTrailer({
             name: files[0].name,
             url: videoObjectUrl,
-            file: files[0]
+            file: files[0],
           });
         } else {
           setVideoTrailer_2({
             name: files[0].name,
             url: videoObjectUrl,
-            file: files[0]
+            file: files[0],
           });
         }
         const video = document.createElement("video");
@@ -218,7 +297,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            if (type === 'trailer') {
+            if (type === "trailer") {
               setThumbnailUrl(canvas.toDataURL("image/jpeg"));
             } else {
               setThumbnailUrl_2(canvas.toDataURL("image/jpeg"));
@@ -229,19 +308,19 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
         setSubtitleFile({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
-          file: files[0]
+          file: files[0],
         });
       } else if (type === "portrait") {
         setPortrait({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
-          file: files[0]
+          file: files[0],
         });
       } else if (type === "landscape") {
         setPortrait_L({
           name: files[0].name,
           url: URL.createObjectURL(files[0]),
-          file: files[0]
+          file: files[0],
         });
       } else {
         // setImage({
@@ -252,25 +331,25 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
     }
   }
 
-  async function handleSearchCast(value:string){
+  async function handleSearchCast(value: string) {
     setCastTxt(value);
-        if (value === "") setCastContentList([]);
-        try {
-          setLoading_C(true);
-          const res = await searchFetchCast(value);
-          if (res.ok && res.data) {
-            setCastContentList(res.data.data);
-          }
-        } catch (error) {
-          toast("Opps! couldn't search for content!", { type: "error" });
-        } finally {
-          setLoading_C(false);
-        }
+    if (value === "") setCastContentList([]);
+    try {
+      setLoading_C(true);
+      const res = await searchFetchCast(value);
+      if (res.ok && res.data) {
+        setCastContentList(res.data.data);
+      }
+    } catch (error) {
+      toast("Opps! couldn't search for content!", { type: "error" });
+    } finally {
+      setLoading_C(false);
+    }
   }
 
   const handleInputChange = (value: string, type?: string) => {
     if (value === "") return;
-    // if (type === "cast") 
+    // if (type === "cast")
     if (value.includes(",")) {
     } else if (!selectedGenries.includes(value)) {
       if (type === "cast") {
@@ -289,7 +368,7 @@ export const AddComponent = ({ slug, selectedMedia, handleClose }: ModalProps) =
       return;
     }
     try {
-const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
+      const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
       const res = await getPreview(normalizedUrl);
       if (typeof res === "string") {
         if (type === "2") {
@@ -310,43 +389,51 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
       setUrlLink("");
       setUrlLink_2("");
     } catch (error) {
-  console.error("Preview error:", error);
-  toast("Failed to fetch link preview.", { type: "error" });
-}
+      console.error("Preview error:", error);
+      toast("Failed to fetch link preview.", { type: "error" });
+    }
   };
 
   async function handleDisableButton() {
-    if (!selectedMedia) return
+    if (!selectedMedia) return;
     try {
       setSeasonLoading(true);
-      const res = await seriesButtonValidity(selectedMedia._id, 'seasons');
-      if (res.ok && res.data) setDisabled(false)
+      const res = await seriesButtonValidity(selectedMedia._id, "seasons");
+      if (res.ok && res.data) setDisabled(false);
     } catch (error) {
-      toast(`${error}`, { type: 'error' })
+      toast(`${error}`, { type: "error" });
     } finally {
-      setSeasonLoading(false)
+      setSeasonLoading(false);
     }
   }
 
   async function handleAddSubtitle() {
-    if (!selectedMedia || !subtitleFile || !subtitleFile.file) return
+    if (!selectedMedia || !subtitleFile || !subtitleFile.file) return;
     try {
       setSrtLoading(true);
       const formdata = new FormData();
       formdata.append("parentId", selectedMedia._id);
-      formdata.append("parentType", slug.includes('series') ? "episode" : "vod");
+      formdata.append(
+        "parentType",
+        slug.includes("series") ? "episode" : "vod"
+      );
       formdata.append("language", subtitle_);
       formdata.append("subtitle", subtitleFile.file);
-      const res = await addSubtitle(formdata)
+      const res = await addSubtitle(formdata);
 
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
 
         setSRTArray((prev) => [
-          { language: subtitle_, srtFile: { name: subtitleFile?.name ?? '', url: subtitleFile?.url ?? '' } },
+          {
+            language: subtitle_,
+            srtFile: {
+              name: subtitleFile?.name ?? "",
+              url: subtitleFile?.url ?? "",
+            },
+          },
           ...prev,
-        ])
-
+        ]);
       } else {
         toast(res.data?.message, { type: "error" });
       }
@@ -366,7 +453,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
   }
 
   async function handleCreateSeason() {
-    if (!selectedMedia || !slug.includes('series')) return
+    if (!selectedMedia || !slug.includes("series")) return;
     try {
       setSeasonLoading(true);
       const res = await addSeason(selectedMedia._id);
@@ -375,21 +462,20 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
         setSeasons((prev) => [
           ...prev,
           {
-            _id: '',
-            admin: '',
+            _id: "",
+            admin: "",
             episodes: [],
             landscapePhoto: null,
             portraitPhoto: null,
             serial_number: prev[prev.length - 1].serial_number + 1,
-            trailer: '',
-            video: '',
-            viewsCount: 0
+            trailer: "",
+            video: "",
+            viewsCount: 0,
           },
-        ])
+        ]);
       } else {
         toast(res.data?.message, { type: "error" });
       }
-
     } catch (error) {
       toast(`${error}`, { type: "error" });
     } finally {
@@ -402,15 +488,19 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
     try {
       setLoading(true);
       const formdata = new FormData();
-      const category = selectedCategories.map(name => {
-        const foundCategory = cat_List.find(cat => cat.name === name);
-        return foundCategory ? foundCategory._id : '';
-      }).filter(id => id !== '');
+      const category = selectedCategories
+        .map((name) => {
+          const foundCategory = cat_List.find((cat) => cat.name === name);
+          return foundCategory ? foundCategory._id : "";
+        })
+        .filter((id) => id !== "");
 
-      const genre = selectedGenries.map(name => {
-        const foundGenre = genriesList.find(g => g.name === name);
-        return foundGenre ? foundGenre._id : '';
-      }).filter(id => id !== '');
+      const genre = selectedGenries
+        .map((name) => {
+          const foundGenre = genriesList.find((g) => g.name === name);
+          return foundGenre ? foundGenre._id : "";
+        })
+        .filter((id) => id !== "");
 
       const content: ContentFormData = {
         landscapePoster: portrait_L,
@@ -418,48 +508,67 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
         trailer: videoTrailer,
         video: videoTrailer_2,
         data: {
-          cast: selectedCasts.map(x => x._id),
+          cast: selectedCasts.map((x) => x._id),
           category,
           defaultRating: rating,
           expiryDate: new Date(expiryDate).toISOString(),
           genre,
           description: details,
-          pg: PG === 'G' ? '0' : PG.replace('+', ''),
+          pg: PG === "G" ? "0" : PG.replace("+", ""),
           releasedDate: new Date(releaseDate).toISOString(),
           runtime: time,
-          title: slug.includes('videos') ? subtitle : title,
+          title: slug.includes("videos") ? subtitle : title,
           vidClass: class_.toLowerCase(),
           primaryColor: color,
-          ...(class_.toLowerCase() === 'exclusive' && {amount: Number(amount.trim()), currency}),
-          ...(slug.includes('videos') && {artistName: title})
+          ...(class_.toLowerCase() === "exclusive" && {
+            amount: Number(amount.trim()),
+            currency,
+          }),
+          ...(slug.includes("videos") && { artistName: title }),
         },
       };
 
-      if (slug.includes('videos')) content.data.artistName = title
+      if (slug.includes("videos")) content.data.artistName = title;
 
       if (videoTrailer && videoTrailer.file) {
-        formdata.append("trailer", videoTrailer.file)
+        formdata.append("trailer", videoTrailer.file);
       } else {
         content.data.trailerLink = links?.url ?? urlLink;
-      };
-      if (videoTrailer_2 && videoTrailer_2.file && !slug.includes('series')) {
-        formdata.append("video", videoTrailer_2.file)
+      }
+      if (videoTrailer_2 && videoTrailer_2.file && !slug.includes("series")) {
+        formdata.append("video", videoTrailer_2.file);
       } else {
-        if (!slug.includes('series')) content.data.videoLink = links_2?.url ?? urlLink_2
+        if (!slug.includes("series"))
+          content.data.videoLink = links_2?.url ?? urlLink_2;
       }
 
       formdata.append("data", JSON.stringify(content.data));
       if (portrait.file) formdata.append("landscapePoster", portrait.file);
       if (portrait_L.file) formdata.append("portraitPoster", portrait_L.file);
 
-      const res = selectedMedia ? await editContent(formdata, selectedMedia._id) : await createContent(formdata, slug.includes('movies') ? 'movie' : slug.includes('skits') ? 'skit' : slug.includes('music') ? 'music-video' : slug);
+      const res = selectedMedia
+        ? await editContent(formdata, selectedMedia._id)
+        : await createContent(
+            formdata,
+            slug.includes("movies")
+              ? "movie"
+              : slug.includes("skits")
+              ? "skit"
+              : slug.includes("music")
+              ? "music-video"
+              : slug
+          );
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
         // Reset form after successful upload
         setTitle("");
         setSubTitle("");
         setReleaseDate("");
-        setExpiryDate(new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString());
+        setExpiryDate(
+          new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1)
+          ).toISOString()
+        );
         setClass("Select");
         setAmount("");
         setCurrency("");
@@ -502,11 +611,11 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
   }, [genries, categories, isSuccess_C, isSuccess]);
 
   useEffect(() => {
-    if (slug.includes('series')) {
+    if (slug.includes("series")) {
       handleFetchSeasons();
       handleDisableButton();
-    };
-  }, [slug, selectedMedia])
+    }
+  }, [slug, selectedMedia]);
 
   return (
     <div className="mt-5 h-full flex flex-col">
@@ -591,39 +700,39 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
               {/* AMOUNT */}
               {class_ === "Exclusive" && (
                 <div className="flex-row gap-x-10">
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="amount"
-                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                  >
-                    AMOUNT *
-                  </label>
-                  <CustomInput
-                    type="text"
-                    id="amount"
-                    className="font-normal w-[140px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                    value={formatAmount(amount)}
-                    onChange={(e) =>
-                      handleValidInput(e.target.value.replaceAll(",", ""))
-                    }
-                  />
-                </div>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="amount"
+                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                    >
+                      AMOUNT *
+                    </label>
+                    <CustomInput
+                      type="text"
+                      id="amount"
+                      className="font-normal w-[140px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
+                      value={formatAmount(amount)}
+                      onChange={(e) =>
+                        handleValidInput(e.target.value.replaceAll(",", ""))
+                      }
+                    />
+                  </div>
 
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="currency"
-                    className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
-                  >
-                    CURRENCY *
-                  </label>
-                  <SelectInputForm
-                    placeholder={currency}
-                    setType={setCurrency}
-                    selectData={["NGN", "USD"]}
-                    className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
-                    textStyles="text-grey_500 text-center"
-                  />
-                </div>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="currency"
+                      className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
+                    >
+                      CURRENCY *
+                    </label>
+                    <SelectInputForm
+                      placeholder={currency}
+                      setType={setCurrency}
+                      selectData={["NGN", "USD"]}
+                      className="font-normal w-[160x] h-[32px] text-[10px] py-2 border border-border_grey rounded-sm mt-2"
+                      textStyles="text-grey_500 text-center"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -716,7 +825,10 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                       type="date"
                       className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
                       value={releaseDate.replaceAll("/", "-")}
-                      onChange={(e) => [setReleaseDate(e.target.value), console.log(e.target.value)]}
+                      onChange={(e) => [
+                        setReleaseDate(e.target.value),
+                        console.log(e.target.value),
+                      ]}
                     />
                   </div>
                 )}
@@ -731,7 +843,11 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     placeholder="DD/MM/YYYY"
                     type="date"
                     className="font-normal text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm placeholder:text-input_grey"
-                    value={selectedMedia ? formatDateToDDMMYYYY(expiryDate) : expiryDate.replaceAll("/", "-")}
+                    value={
+                      selectedMedia
+                        ? formatDateToDDMMYYYY(expiryDate)
+                        : expiryDate.replaceAll("/", "-")
+                    }
                     onChange={(e) => setExpiryDate(e.target.value)}
                   />
                 </div>
@@ -740,79 +856,77 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
               {/* CAST */}
               {class_ !== "AD" && (
                 <div className="relative">
-                <div className="flex-1">
-                  <p
-                    className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
-                  >
-                    CAST{" "}
-                    <span className="text-grey_800 text-sm">
-                      (Max 10 selections)
-                    </span>
-                    *
-                  </p>
-                  <div className="min-h-[40px] border border-[#D9D9D938] p-1 overflow-y-auto">
-                    <input
-                      type="text"
-                      placeholder="Start typing..."
-                      className={`${roboto_500.className} pl-2 w-full outline-none bg-transparent text-sm text-white placeholder:text-grey_600/50`}
-                      value={castTxt}
-                      onChange={(e) =>
-                        handleSearchCast(e.target.value)
-                      }
-                    />
+                  <div className="flex-1">
+                    <p
+                      className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
+                    >
+                      CAST{" "}
+                      <span className="text-grey_800 text-sm">
+                        (Max 10 selections)
+                      </span>
+                      *
+                    </p>
+                    <div className="min-h-[40px] border border-[#D9D9D938] p-1 overflow-y-auto">
+                      <input
+                        type="text"
+                        placeholder="Start typing..."
+                        className={`${roboto_500.className} pl-2 w-full outline-none bg-transparent text-sm text-white placeholder:text-grey_600/50`}
+                        value={castTxt}
+                        onChange={(e) => handleSearchCast(e.target.value)}
+                      />
 
-                    <div className="flex flex-row flex-wrap gap-x-3 gap-y-1.5 mt-2">
-                      {selectedCasts.map((item, i) => {
+                      <div className="flex flex-row flex-wrap gap-x-3 gap-y-1.5 mt-2">
+                        {selectedCasts.map((item, i) => {
+                          return (
+                            <div
+                              key={item._id}
+                              className="flex flex-row items-center gap-x-[2px]"
+                            >
+                              <span
+                                className={`${roboto_500.className} text-sm text-white`}
+                              >
+                                {item.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  setSelectedCasts((prev) =>
+                                    prev.filter((x) => x != item)
+                                  )
+                                }
+                              >
+                                <Image
+                                  src="/small_close_btn.svg"
+                                  width={9}
+                                  height={9}
+                                  alt=""
+                                />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {castContentList.length > 0 && (
+                    <div className="absolute top-14 mt-2 w-full border border-grey_1 rounded">
+                      {castContentList.map((content, i) => {
                         return (
                           <div
-                            key={item._id}
-                            className="flex flex-row items-center gap-x-[2px]"
+                            onClick={() => [
+                              setSelectedCasts((prev) => [content, ...prev]),
+                              setCastTxt(""),
+                              setCastContentList([]),
+                            ]}
+                            className="text-white cursor-pointer bg-black2 p-3 w-full"
+                            key={i}
                           >
-                            <span
-                              className={`${roboto_500.className} text-sm text-white`}
-                            >
-                              {item.name}
-                            </span>
-                            <button
-                              onClick={() =>
-                                setSelectedCasts((prev) =>
-                                  prev.filter((x) => x != item)
-                                )
-                              }
-                            >
-                              <Image
-                                src="/small_close_btn.svg"
-                                width={9}
-                                height={9}
-                                alt=""
-                              />
-                            </button>
+                            {content.name}
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-                </div>
-
-                {castContentList.length > 0 && (
-                <div className="absolute top-14 mt-2 w-full border border-grey_1 rounded">
-                  {castContentList.map((content, i) => {
-                    return (
-                      <div
-                        onClick={() => [
-                          setSelectedCasts(prev => ([content,...prev])),
-                          setCastTxt(""),
-                          setCastContentList([])
-                        ]}
-                        className="text-white cursor-pointer bg-black2 p-3 w-full"
-                        key={i}
-                      >
-                        {content.name}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                  )}
                 </div>
               )}
             </div>
@@ -868,8 +982,9 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
           {/* third level */}
           <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
             {/* right */}
-            <div className="flex flex-col flex-1"
-            style={{opacity: videoTrailer ? 0.5:1}}
+            <div
+              className="flex flex-col flex-1"
+              style={{ opacity: videoTrailer ? 0.5 : 1 }}
             >
               <label
                 htmlFor="trailer"
@@ -898,7 +1013,13 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                       <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                         <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                           <Image
-                            src={links.image ? links.image : selectedMedia ? selectedMedia.portraitPhoto : ""}
+                            src={
+                              links.image
+                                ? links.image
+                                : selectedMedia
+                                ? selectedMedia.portraitPhoto
+                                : ""
+                            }
                             width={42}
                             height={42}
                             alt="profiles"
@@ -949,8 +1070,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                   {/* preview */}
                   {isPreview && links && (
                     <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
-                      <div
-                        className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
+                      <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
                         <button
                           style={{ display: isPlaying ? "none" : "inline" }}
                           onClick={(e) => handleVideo(e)}
@@ -979,7 +1099,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                          // onReady={() => setIsPlayerReady(true)}
+                            // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1021,9 +1141,11 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     />
                   </div>
                   <div
-                    className={`${roboto_500.className
-                      } cursor-pointer text-white text-[15px] ${links ? "bg-grey_800" : "bg-[#EE2726]"
-                      } h-[42px] px-4 flex items-center justify-center`}
+                    className={`${
+                      roboto_500.className
+                    } cursor-pointer text-white text-[15px] ${
+                      links ? "bg-grey_800" : "bg-[#EE2726]"
+                    } h-[42px] px-4 flex items-center justify-center`}
                   >
                     UPLOAD
                   </div>
@@ -1116,7 +1238,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                          // onReady={() => setIsPlayerReady(true)}
+                            // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1199,8 +1321,10 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
             {class_ !== "AD" && slug !== "series" && (
               <div className="px-10 lg:px-16 flex flex-col flex-wrap lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
                 {/* right */}
-                <div className="flex flex-col flex-1"
-                style={{opacity: videoTrailer_2 ?0.5 :1}}>
+                <div
+                  className="flex flex-col flex-1"
+                  style={{ opacity: videoTrailer_2 ? 0.5 : 1 }}
+                >
                   <label
                     htmlFor="movie"
                     className={`${roboto_500.className} font-medium text-white text-base ml-2.5`}
@@ -1208,8 +1332,8 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     {slug === "skits"
                       ? "SKIT"
                       : slug.includes("videos")
-                        ? "VIDEO"
-                        : "MOVIE"}{" "}
+                      ? "VIDEO"
+                      : "MOVIE"}{" "}
                     FILE *
                   </label>
                   <CustomInput
@@ -1232,7 +1356,13 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                           <div className="rounded-[10px] flex items-start gap-x-16 flex-wrap relative overflow-hidden">
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                               <Image
-                                src={links_2.image ? links_2.image : selectedMedia ? selectedMedia.portraitPhoto : ""}
+                                src={
+                                  links_2.image
+                                    ? links_2.image
+                                    : selectedMedia
+                                    ? selectedMedia.portraitPhoto
+                                    : ""
+                                }
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -1285,8 +1415,10 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                         <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
                           <div className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
                             <button
-                              style={{ display: isPlaying_2 ? "none" : "inline" }}
-                              onClick={(e) => handleVideo(e, '2')}
+                              style={{
+                                display: isPlaying_2 ? "none" : "inline",
+                              }}
+                              onClick={(e) => handleVideo(e, "2")}
                             >
                               <Image
                                 src="/playBtn.svg"
@@ -1312,7 +1444,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                              // onReady={() => setIsPlayerReady(true)}
+                                // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1332,8 +1464,8 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                       {slug === "skits"
                         ? "Skit"
                         : slug.includes("videos")
-                          ? "Video"
-                          : "Movie"}{" "}
+                        ? "Video"
+                        : "Movie"}{" "}
                       *
                     </p>
                     <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
@@ -1360,9 +1492,11 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                         />
                       </div>
                       <div
-                        className={`${roboto_500.className
-                          } cursor-pointer text-white text-[15px] ${links_2 ? "bg-grey_800" : "bg-[#EE2726]"
-                          } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${
+                          roboto_500.className
+                        } cursor-pointer text-white text-[15px] ${
+                          links_2 ? "bg-grey_800" : "bg-[#EE2726]"
+                        } h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1427,13 +1561,14 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                         <div className="rounded-[10px] mt-10 w-[292px] h-[159px] relative overflow-hidden">
                           <div
                             onClick={() => setIsPlaying_2(false)}
-                            className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]">
+                            className="flex items-center justify-center absolute w-[292px] h-[159px] bg-black/50 z-[9999px]"
+                          >
                             <button
                               style={{
                                 display: isPlaying_2 ? "none" : "inline",
                                 zIndex: 20,
                               }}
-                              onClick={(e) => handleVideo(e, '2')}
+                              onClick={(e) => handleVideo(e, "2")}
                             >
                               <Image
                                 src="/playBtn.svg"
@@ -1448,7 +1583,6 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                             <div
                               style={{ zIndex: isPlaying_2 ? 20 : 0 }}
                               className="absolute w-full h-full"
-
                             >
                               <ReactPlayer
                                 playing={isPlaying_2}
@@ -1460,7 +1594,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                              // onReady={() => setIsPlayerReady(true)}
+                                // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1497,7 +1631,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
             )}
 
             {/* subtitle */}
-            {(class_ !== "AD" && !slug.includes('series')) && (
+            {class_ !== "AD" && !slug.includes("series") && (
               <div className="px-10 lg:px-16 flex flex-col lg:flex-row lg:items-start gap-x-10 gap-y-6 lg:gap-x-[10%] xl:gap-x-[20%]">
                 <div className="flex flex-col flex-1">
                   <label
@@ -1555,9 +1689,9 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                         />
                       </div>
                       <div
-                        className={`${roboto_500.className
-                          } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"
-                          } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${
+                          roboto_500.className
+                        } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1571,7 +1705,8 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     isLoading={srtLoading}
                     className="ml-auto mt-6 px-6 py-3"
                     onClick={() =>
-                      (subtitleFile && !subtitle_.toLowerCase().includes("select"))
+                      subtitleFile &&
+                      !subtitle_.toLowerCase().includes("select")
                         ? handleAddSubtitle()
                         : toast("select srt file", { type: "info" })
                     }
@@ -1581,7 +1716,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
             )}
 
             {/* list of subtitle */}
-            {(class_ !== "AD" && slug.includes('series')) && (
+            {class_ !== "AD" && slug.includes("series") && (
               <div className="px-10 lg:px-16 flex flex-wrap gap-x-12 pl-10 gap-y-14 items-start py-6">
                 {srtArray.map((x, i) => {
                   return (
@@ -1601,7 +1736,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                      // onClick={() => setVideoTrailer_2(null)}
+                        // onClick={() => setVideoTrailer_2(null)}
                       >
                         <Image
                           src="/delete.svg"
@@ -1653,7 +1788,7 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
             </div> */}
 
             {/* Adding seasons */}
-            {(slug === "series" && selectedMedia) && (
+            {slug === "series" && selectedMedia && (
               <div className="-pt-10">
                 <div className="px-10 lg:px-16">
                   <AppButton
@@ -1662,13 +1797,21 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
                     className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
                     onClick={handleCreateSeason}
                     isLoading={seasonLoading}
-                    disabled={!selectedMedia || seasonLoading || isDisabled_Seasons}
+                    disabled={
+                      !selectedMedia || seasonLoading || isDisabled_Seasons
+                    }
                   />
                 </div>
 
                 <div className="mt-8">
                   {seasons.map((season, i) => {
-                    return <SeasonComponent season={season} key={i} handleFunc={() => handleFetchSeasons()} />;
+                    return (
+                      <SeasonComponent
+                        season={season}
+                        key={i}
+                        handleFunc={() => handleFetchSeasons()}
+                      />
+                    );
                   })}
                 </div>
               </div>
@@ -1789,30 +1932,97 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
               </div>
             </div>
           </>
-
         </div>
 
-        <div className="px-10 lg:px-16 my-10 cursor-pointer">
-          <p onClick={() => setColorPicker(!showPicker)} className={`${roboto_500.className} text-xl text-white`}>COVER COLOR SPLASH</p>
-          <p className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}>Select a prominent color from{"\n"}the cover poster above</p>
+        {/* <div className="px-10 lg:px-16 my-10 cursor-pointer">
+          <p
+            onClick={() => setColorPicker(!showPicker)}
+            className={`${roboto_500.className} text-xl text-white`}
+          >
+            COVER COLOR SPLASH
+          </p>
+          <p
+            className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}
+          >
+            Select a prominent color from{"\n"}the cover poster above
+          </p>
 
-          {showPicker &&
+          {showPicker && (
             <div className="mt-5 color">
-
               <HexAlphaColorPicker color={color} onChange={setColor} />
 
               <div className="w-[380px] pl-7 pb-5 bg-[#33333a] pr-[30px] flex-row flex items-center">
-                <div className={`${roboto_500.className} text-lg px-2 pr-4 text-[#c4c4c4] w-fit p-1 rounded-lg border-2 border-[#686666]`}>Hex</div>
-                <div className={`${roboto_500.className} h-[38px] ml-2.5 text-lg px-2 pr-4 text-[#c4c4c4] flex-1 p-1 rounded-lg border-2 border-[#686666]`}>{color}</div>
+                <div
+                  className={`${roboto_500.className} text-lg px-2 pr-4 text-[#c4c4c4] w-fit p-1 rounded-lg border-2 border-[#686666]`}
+                >
+                  Hex
+                </div>
+                <div
+                  className={`${roboto_500.className} h-[38px] ml-2.5 text-lg px-2 pr-4 text-[#c4c4c4] flex-1 p-1 rounded-lg border-2 border-[#686666]`}
+                >
+                  {color}
+                </div>
               </div>
             </div>
-          }
+          )}
+        </div> */}
+
+        <div className="px-10 lg:px-16 my-10 relative">
+          {/* 🟩 TITLE + EMBEDDED COLOR SQUARE */}
+          <p
+            className={`${roboto_500.className} text-xl text-white flex items-center gap-3 cursor-pointer`}
+            onClick={() => setColorPicker(!showPicker)}
+          >
+            COVER COLOR SPLASH
+            {/* 🟩 added small square inside the text */}
+            <span
+              className="w-6 h-6 inline-block rounded-md border border-[#686666] shadow-sm"
+              style={{ backgroundColor: color }}
+            ></span>
+          </p>
+
+          {/* Subtext */}
+          <p
+            className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}
+          >
+            Select a prominent color from{"\n"}the cover poster above
+          </p>
+
+          {/* 🟩 Color Picker Widget */}
+          {showPicker && (
+            <div
+              ref={pickerRef}
+              className="absolute mt-5 bg-[#2b2b2b] rounded-xl   shadow-lg z-50  bottom-full mb-3 p-3"
+            >
+              {/* Color Picker */}
+              <HexAlphaColorPicker color={color} onChange={setColor} />
+
+              {/* Hex Field */}
+              <div className="w-full mt-4 bg-[#33333a] px-4 py-3 flex items-center rounded-lg border border-[#686666]">
+                <div
+                  className={`${roboto_500.className} text-lg text-[#c4c4c4] mr-3`}
+                >
+                  Hex
+                </div>
+                <div
+                  className={`${roboto_500.className} text-lg text-[#c4c4c4] flex-1`}
+                >
+                  {color.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="px-10 lg:px-16 mt-4">
           <AppButton
             title="UPLOAD"
-            disabled={isDisabled && !slug.includes('series') && (links_2 || videoTrailer_2) === null || color === ''}
+            disabled={
+              (isDisabled &&
+                !slug.includes("series") &&
+                (links_2 || videoTrailer_2) === null) ||
+              color === ""
+            }
             isLoading={loading}
             bgColor="bg-[#EE2726]"
             className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
@@ -1826,10 +2036,18 @@ const normalizedUrl = normalizeUrl(stripYouTubeUrl(url));
 
 // Add upload progress bar functionality
 
-const UploadComponent = ({ slug, selectedMedia, handleClose }: { slug: string; selectedMedia: any; handleClose: () => void }) => {
+const UploadComponent = ({
+  slug,
+  selectedMedia,
+  handleClose,
+}: {
+  slug: string;
+  selectedMedia: any;
+  handleClose: () => void;
+}) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   const handleUpload = async (file: File) => {
     setIsUploading(true);
     const formData = new FormData();
@@ -1850,7 +2068,10 @@ const UploadComponent = ({ slug, selectedMedia, handleClose }: { slug: string; s
 
   return (
     <div>
-      <input type="file" onChange={(e) => e.target.files && handleUpload(e.target.files[0])} />
+      <input
+        type="file"
+        onChange={(e) => e.target.files && handleUpload(e.target.files[0])}
+      />
       <button disabled={isUploading || uploadProgress < 100}>Publish</button>
       {isUploading && <div>Upload Progress: {uploadProgress}%</div>}
     </div>

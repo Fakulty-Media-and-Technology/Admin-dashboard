@@ -10,6 +10,7 @@
     "pages:build": "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.2.3",
     "@types/react-lottie": "^1.2.10",
     "apisauce": "^3.1.0",
@@ -25,6 +26,7 @@
     "react": "^18",
     "react-colorful": "^5.6.1",
     "react-dom": "^18",
+    "react-hook-form": "^7.66.0",
     "react-lottie": "^1.2.4",
     "react-paystack": "^6.0.0",
     "react-player": "^2.16.0",
@@ -32,7 +34,8 @@
     "react-toastify": "^10.0.5",
     "tailwind-merge": "^2.3.0",
     "video.js": "^8.23.3",
-    "videojs-youtube": "^3.0.1"
+    "videojs-youtube": "^3.0.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.5",
@@ -45,7 +48,7 @@
     "typescript": "^5",
     "vercel": "^37.14.0"
   },
-  "engines" : {
+  "engines": {
     "node": "22"
   }
 }

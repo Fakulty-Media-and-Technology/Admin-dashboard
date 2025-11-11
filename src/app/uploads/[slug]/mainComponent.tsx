@@ -11,7 +11,7 @@ import {
   useGetAllSkitsQuery,
 } from "@/api/mediaSlice";
 import { TABLE_TH } from "@/config/data/upload";
-import { roboto_400, roboto_400_italic, roboto_500 } from "@/config/fonts";
+import { roboto_400, roboto_500 } from "@/config/fonts";
 import { IMediaData, IMediaResponse } from "@/types/api/media.types";
 import { isExpired } from "@/utilities/dateUtilities";
 import Lottie from "lottie-react";
@@ -38,19 +38,27 @@ function MainComponent({ slug }: Props) {
     [...Array(8)].map((_, i) => i + 1)
   );
   const paginationStep = 8;
+
+  // ✅ NEW: Upload progress tracking
+  // const [uploadProgress, setUploadProgress] = useState<number>(0);
+
   const {
     data: moviesData,
     refetch,
-    error,
     isSuccess,
-    isLoading,
   } = useGetAllMovieQuery({ limit: 5, page: pg }, {});
-  const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery({ limit: 5, page: pg }, {});
+  const { data: skitsData, refetch: refetchSkits } = useGetAllSkitsQuery(
+    { limit: 5, page: pg },
+    {}
+  );
   const { data: musicVideoData, refetch: refetchMusiVid } = useGetAllMusicQuery(
     { limit: 5, page: pg },
     {}
   );
-  const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery({ limit: 5, page: pg }, {});
+  const { data: seriesData, refetch: refetchSeries } = useGetAllSeriesQuery(
+    { limit: 5, page: pg },
+    {}
+  );
 
   const handleNext = () => {
     setPaginationList((prevList) =>
@@ -65,30 +73,34 @@ function MainComponent({ slug }: Props) {
     );
   };
 
-
   async function handleDelete(id: string) {
     setMediaList(mediaList.filter((media) => media._id !== id));
     setFilteredList(mediaFilteredList.filter((media) => media._id !== id));
     const res = await deleteContent({ id, slug });
-    if (
-      res.ok &&
-      res.data &&
-      res.data.message.includes("deleted successfully")
-    ) {
+    if (res.ok && res.data?.message.includes("deleted successfully")) {
       toast("user deleted successfully", { type: "info" });
-      slug.includes('movie') ? await refetch() : slug.includes('skit') ? await refetchSkits() : slug.includes('videos') ? await refetchMusiVid() : await refetchSeries();
+      slug.includes("movie")
+        ? await refetch()
+        : slug.includes("skit")
+        ? await refetchSkits()
+        : slug.includes("videos")
+        ? await refetchMusiVid()
+        : await refetchSeries();
     } else {
       toast("Opps! couldn't delete user", { type: "info" });
     }
-    await refetch();
   }
 
   function handleSearchfilter(query: string) {
     setSearchParams(query);
-
-    setFilteredList(mediaList.filter((x) => x.title.includes(query)));
     if (query === "") {
       setFilteredList(mediaList);
+    } else {
+      setFilteredList(
+        mediaList.filter((x) =>
+          x.title.toLowerCase().includes(query.toLowerCase())
+        )
+      );
     }
   }
 
@@ -106,44 +118,38 @@ function MainComponent({ slug }: Props) {
         slug === "movies"
           ? await getFetchMovies({ limit: 5, page: query ?? pg })
           : slug === "skits"
-            ? await getFetchSkit({ limit: 5, page: query ?? pg })
-            : slug === "series"
-              ? await getFetchSeries({ limit: 5, page: query ?? pg })
-              : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
+          ? await getFetchSkit({ limit: 5, page: query ?? pg })
+          : slug === "series"
+          ? await getFetchSeries({ limit: 5, page: query ?? pg })
+          : await getFetchMusicVideo({ limit: 5, page: query ?? pg });
+
       if (res.ok && res.data) {
-        console.log(res.data)
         handleMediaList(res.data);
       } else {
-        toast(`Opps! couldn't get ${slug} list`, { type: "error" });
+        toast(`Oops! couldn't get ${slug} list`, { type: "error" });
       }
     } catch (error) {
-      toast(`Opps! couldn't get ${slug} list`, { type: "error" });
+      toast(`Error fetching ${slug} list`, { type: "error" });
     } finally {
       setLoading(false);
     }
   }
 
+  // ✅ UPDATED: callback after upload/edit
+  const handleUploadOrEditComplete = async () => {
+    // setUploadProgress(0); // reset progress
+    await handleRefreshMedia();
+    setIsAdd(false);
+    setSelectedMedia(null);
+  };
+
+  // Initial data load
   useEffect(() => {
     if (slug.toLowerCase() === "movies") handleMediaList(moviesData);
     if (slug.toLowerCase() === "skits") handleMediaList(skitsData);
     if (decodeURI(slug) === "music videos") handleMediaList(musicVideoData);
     if (slug.toLowerCase() === "series") handleMediaList(seriesData);
   }, [slug, moviesData, skitsData, seriesData, musicVideoData, isSuccess]);
-
-  useEffect(() => {
-    if (isAdd === false && selectedMedia !== null) {
-      // Refresh the media list when closing the add/edit component
-      handleRefreshMedia();
-      setSelectedMedia(null);
-    }
-  }, [isAdd]);
-
-  useEffect(() => {
-    refetch();
-    refetchMusiVid();
-    refetchSeries();
-    refetchSkits();
-  }, [isAdd]);
 
   return (
     <section className={`${roboto_400.className} h-full pl-5`}>
@@ -167,7 +173,6 @@ function MainComponent({ slug }: Props) {
           />
         </div>
 
-        {/* add butn */}
         <div
           onClick={() => setIsAdd(!isAdd)}
           className={`${roboto_500.className} ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px] cursor-pointer`}
@@ -177,6 +182,15 @@ function MainComponent({ slug }: Props) {
             : `Add ${slug.includes("videos") ? "Videos" : decodeURI(slug)}`}
         </div>
       </div>
+
+      {/* {uploadProgress > 0 && uploadProgress < 100 && (
+        <div className="w-full bg-gray-700 h-2 rounded mt-3">
+          <div
+            className="bg-red-500 h-2 rounded transition-all"
+            style={{ width: `${uploadProgress}%` }}
+          />
+        </div>
+      )} */}
 
       {!isAdd ? (
         <>
@@ -256,7 +270,12 @@ function MainComponent({ slug }: Props) {
 
                           <td className="w-[50px] xl:w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
-                              <button onClick={() => [setSelectedMedia(tx), setIsAdd(!isAdd)]}>
+                              <button
+                                onClick={() => [
+                                  setSelectedMedia(tx),
+                                  setIsAdd(!isAdd),
+                                ]}
+                              >
                                 <Image
                                   src="/edit.svg"
                                   width={14}
@@ -302,8 +321,9 @@ function MainComponent({ slug }: Props) {
                               setPg(num),
                               handleRefreshMedia(num),
                             ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
+                            className={`${
+                              active ? "text-red" : "text-[#C4C4C4]"
+                            } cursor-pointer`}
                           >
                             {num}
                           </p>
@@ -332,47 +352,15 @@ function MainComponent({ slug }: Props) {
           </div>
         </>
       ) : (
-        <>
-          <AddComponent
-            slug={slug}
-            selectedMedia={selectedMedia}
-            handleClose={() => setIsAdd(!isAdd)}
-          />
-        </>
+        <AddComponent
+          slug={slug}
+          selectedMedia={selectedMedia}
+          handleClose={handleUploadOrEditComplete} // ⬅️ triggers refresh
+          // onUploadProgress={(progress: number) => setUploadProgress(progress)} // ⬅️ progress callback
+        />
       )}
     </section>
   );
 }
 
 export default MainComponent;
-
-// Add auto-refresh functionality after upload
-
-const MainComponentWithAutoRefresh = ({ slug }: { slug: string }) => {
-  const [mediaList, setMediaList] = useState<IMediaData[]>([]);
-  const [isAdd, setIsAdd] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<IMediaData | null>(null);
-  
-  const handleRefreshMedia = async () => {
-    // Fetch media list logic here
-    // After fetching, setMediaList with the new data
-    toast.success("Media list refreshed!");
-  };
-
-  const handleUploadComplete = () => {
-    handleRefreshMedia(); // Refresh media list after upload
-    setIsAdd(false); // Close the add component
-  };
-
-  return (
-    <div>
-      {/* Other components */}
-      <AddComponent
-        slug={slug}
-        selectedMedia={selectedMedia}
-        handleClose={handleUploadComplete}
-      />
-      {/* Render media list */}
-    </div>
-  );
-};

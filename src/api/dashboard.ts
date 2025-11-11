@@ -1,6 +1,6 @@
 import { LoginRequest, LoginResponse } from "@/types/api/auth.types";
 import { apiSlice } from "./apiSlice";
-import { SUCESS_CODES } from "@/screens/Login";
+import { SUCCESS_CODES } from "@/screens/Login";
 import { SuperUserResponse, UserResponse } from "@/types/api/profile.types";
 import {
   IDashboardTOTAL_Contents,

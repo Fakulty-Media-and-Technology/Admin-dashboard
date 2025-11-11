@@ -11,14 +11,35 @@ export const createContent = async (data: FormData, type: string) =>
     })
   );
 
-export const editContent = async (data: FormData, id: string) =>
-  await apiCall<IGeneric>((baseApi) =>
-    baseApi.put<IGeneric>(`/superadmin/uploads/edit/${id}`, data, {
+// export const editContent = async (data: FormData, id: string) =>
+//   await apiCall<IGeneric>((baseApi) =>
+//     baseApi.put<IGeneric>(`/superadmin/uploads/edit/${id}`, data, {
+//       headers: {
+//         "Content-Type": "multipart/form-data",
+//       },
+//     })
+//   );
+
+
+
+export const editContent = async (
+  data: FormData,
+  id: string,
+  type: "movie" | "skit" | "series" | "music-video"
+) => {
+  const authToken =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+
+  // ✅ Added 'Content-Type' for FormData PUT request
+  return await apiCall<IGeneric>((baseApi) =>
+    baseApi.put<IGeneric>(`/superadmin/uploads/${type}/edit/${id}`, data, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        "superadmin-auth": `${authToken}`,
+        "Content-Type": "multipart/form-data", // important for file uploads
       },
     })
   );
+};
 
 export const addSeason = async (seriesId: string) =>
   await apiCall<ISeasonResponse>((baseApi) =>
@@ -52,8 +73,12 @@ export const addEpisodes = async (data: FormData, seasonId: string) =>
     })
   );
 
-export const deleteContent = async (data: { id: string, slug: string }) =>
-  await apiCall<IGeneric>(baseApi => baseApi.delete<IGeneric>(`/superadmin/uploads/remove/${data.id}/${data.slug}`))
+export const deleteContent = async (data: { id: string; slug: string }) =>
+  await apiCall<IGeneric>((baseApi) =>
+    baseApi.delete<IGeneric>(
+      `/superadmin/uploads/remove/${data.id}/${data.slug}`
+    )
+  );
 
 export const getSeasons = async (data: { id: string }) =>
   await apiCall<ISeasonResponse>(baseApi => baseApi.get<ISeasonResponse>(`/superadmin/uploads/seasons/fetch/${data.id}?page=1&limit=40000&withMediaSources=true`))

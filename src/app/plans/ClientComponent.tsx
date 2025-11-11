@@ -497,7 +497,7 @@ export const ClientsComponent = () => {
                                     placeholder={currency}
                                     setType={setCurrency}
                                     selectData={["NGN", "USD"]}
-                                    className="font-normal h-[30px] mt-1 text-sm py-2 lg:pl-3 mt-2.5 border border-border_grey rounded-sm"
+                                    className="font-normal h-[30px]  text-sm py-2 lg:pl-3 mt-2.5 border border-border_grey rounded-sm"
                                     textStyles="text-grey_500 text-sm"
                                 />
                                  <div

@@ -1,69 +1,75 @@
-import { IGeneric, LoginRequest, LoginResponse } from "@/types/api/auth.types";
 import { apiSlice } from "./apiSlice";
-import { SUCESS_CODES } from "@/screens/Login";
+import { SUCCESS_CODES } from "@/screens/Login";
 import {
-  IEditUser,
-  SuperUserResponse,
-  UserResponse,
-} from "@/types/api/profile.types";
-
-const CLIENT_URL = "clients";
-const SUPERADMIN_URL = "superadmin";
+  LoginRequest,
+  LoginResponse,
+} from "@/types/api/auth.types";
+import { IEditUser } from "@/types/api/profile.types";
 
 export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
-      query: (data) => ({
-        url: `/superadmin/admins-signin`,
+      query: (credentials) => ({
+        url: "/superadmin/auth/login",
         method: "POST",
-        body: data,
+        body: credentials,
       }),
-      // Save the token to localStorage after successful login
-      async onQueryStarted(arg, { queryFulfilled }) {
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          if (data.status === SUCESS_CODES) {
+          if (SUCCESS_CODES.includes(data.status)) {
             localStorage.setItem("auth_token", data.data.token); // Save token in localStorage
-            console.log("Token saved");
+            dispatch(
+              userApiSlice.util.updateQueryData(
+                "getUserProfile",
+                undefined,
+                (draft) => {
+                  Object.assign(draft, data);
+                }
+              )
+            );
           }
         } catch (error) {
-          console.error("Login error:", error);
+          console.error("Login failed:", error);
         }
       },
     }),
-
-    getUserProfile: builder.query<UserResponse, void>({
+    getUserProfile: builder.query<any, void>({
       query: () => {
-        const authToken = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("auth_token");
         return {
-          url: `${CLIENT_URL}/profile/fetch`,
+          url: "/superadmin/dashboard/profile/fetch",
           method: "GET",
           headers: {
-            "clients-auth": `${authToken}`,
+            "superadmin-auth": token || "",
           },
         };
       },
     }),
-
-    getSuperAdminProfile: builder.query<SuperUserResponse, void>({
+    getSuperAdminProfile: builder.query<any, void>({
       query: () => {
-        const authToken = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("auth_token");
         return {
-          url: `${SUPERADMIN_URL}/dashboard/profile/fetch`,
+          url: "/superadmin/dashboard/profile/fetch",
           method: "GET",
           headers: {
-            "superadmin-auth": `${authToken}`,
+            "superadmin-auth": token || "",
           },
         };
       },
     }),
-
-    editProfile: builder.mutation<IGeneric, IEditUser>({
-      query: (data) => ({
-        url: `/superadmin/dashboard/profile/edit`,
-        method: "PUT",
-        body: data,
-      }),
+    editProfile: builder.mutation<any, IEditUser>({
+      query: (data) => {
+        const token = localStorage.getItem("auth_token");
+        return {
+          url: "/superadmin/dashboard/profile/edit",
+          method: "PATCH",
+          headers: {
+            "superadmin-auth": token || "",
+          },
+          body: data,
+        };
+      },
     }),
   }),
 });

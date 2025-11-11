@@ -29,9 +29,7 @@ import { editContent } from "@/api/contentSlice";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { IEventData } from "@/types/api/live.types";
 
-
 export const runtime = "edge";
-
 
 export default function page() {
   const [stage, setStage] = useState<string>("main");
@@ -39,8 +37,12 @@ export default function page() {
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_M, setLoading_M] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<string>("");
-  const [selectedUpcoming, setUpcoming] = useState<IEventData | IUpcomingData | null>(null)
-  const [searchedContentList, setContentList] = useState<(IEventData | IUpcomingData)[]>([]);
+  const [selectedUpcoming, setUpcoming] = useState<
+    IEventData | IUpcomingData | null
+  >(null);
+  const [searchedContentList, setContentList] = useState<
+    (IEventData | IUpcomingData)[]
+  >([]);
   const [pg, setPg] = useState<number>(1);
   const [upcomingEvents, setUpcomingEvents] = useState<
     (IEventData | IUpcomingData)[]
@@ -60,7 +62,6 @@ export default function page() {
     [...Array(8)].map((_, i) => i + 1)
   );
   const paginationStep = 8;
-
 
   const handleNext = () => {
     setPaginationList((prevList) =>
@@ -83,7 +84,7 @@ export default function page() {
   }
 
   function handleSearchfilter(value: string) {
-    if (stage === 'add') return
+    if (stage === "add") return;
     setSearchParams(value);
 
     setUpcomingEventsFiltered(
@@ -114,12 +115,25 @@ export default function page() {
     if (!selectedUpcoming) return;
     try {
       setLoading_M(true);
+
       const formdata = new FormData();
-      formdata.append('data', JSON.stringify({ upcoming: !selectedUpcoming.upcoming }));
-      const res = await editContent(formdata, selectedUpcoming._id);
+      formdata.append(
+        "data",
+        JSON.stringify({ upcoming: !selectedUpcoming.upcoming })
+      );
+
+      // ✅ FIXED: Cast 'type' string to the expected union type
+      const mediaType = selectedUpcoming.type as
+        | "movie"
+        | "skit"
+        | "series"
+        | "music-video";
+
+      const res = await editContent(formdata, selectedUpcoming._id, mediaType);
+
       if (res.ok && res.data) {
         toast("Upcoming events!", { type: "success" });
-        setStage('main')
+        setStage("main");
         refetch();
       }
     } catch (error) {
@@ -132,7 +146,7 @@ export default function page() {
   async function handleRefreshMedia(query?: number) {
     try {
       setLoading(true);
-      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg })
+      const res = await getUpcomingEvent({ limit: 5, page: query ?? pg });
       if (res.ok && res.data) {
         handleUpcomingList(res.data);
       } else {
@@ -145,14 +159,13 @@ export default function page() {
     }
   }
 
-
   useEffect(() => {
     handleUpcomingList(upcomingData);
   }, [isSuccess]);
 
   useEffect(() => {
     refetch();
-  }, [stage])
+  }, [stage]);
 
   switch (stage) {
     case "main":
@@ -195,7 +208,9 @@ export default function page() {
           <div className="relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
             <div className="absolute h-[700px] w-full py-5 pb-6 pl-0  sm:ml-0 sm:pl-3 md:pl-10 overflow-x-auto">
               <div className="h-full relative">
-                <table className={`${roboto_400.className} w-full min-w-[810px]`}>
+                <table
+                  className={`${roboto_400.className} w-full min-w-[810px]`}
+                >
                   <thead className="">
                     <tr>
                       {UP_TableHeads.map((t, i) => {
@@ -220,7 +235,11 @@ export default function page() {
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit  min-w-[140px]">
                               <Image
-                                src={"coverPhoto" in tx ? tx.coverPhoto : tx.portraitPhoto}
+                                src={
+                                  "coverPhoto" in tx
+                                    ? tx.coverPhoto
+                                    : tx.portraitPhoto
+                                }
                                 width={42}
                                 height={42}
                                 alt="profiles"
@@ -250,7 +269,9 @@ export default function page() {
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
-                            {formatAmount((tx.upcomingSubscribers.length ?? 0).toString())}
+                            {formatAmount(
+                              (tx.upcomingSubscribers.length ?? 0).toString()
+                            )}
                           </td>
 
                           <td className="text-center font-normal text-xs capitalize">
@@ -259,7 +280,12 @@ export default function page() {
 
                           <td className="w-[400px]">
                             <div className="flex items-center justify-center gap-x-10">
-                              <button onClick={() => [setUpcoming(tx), setStage("add")]}>
+                              <button
+                                onClick={() => [
+                                  setUpcoming(tx),
+                                  setStage("add"),
+                                ]}
+                              >
                                 <Image
                                   src="/edit.svg"
                                   width={14}
@@ -305,8 +331,9 @@ export default function page() {
                               setPg(num),
                               handleRefreshMedia(num),
                             ]}
-                            className={`${active ? "text-red" : "text-[#C4C4C4]"
-                              } cursor-pointer`}
+                            className={`${
+                              active ? "text-red" : "text-[#C4C4C4]"
+                            } cursor-pointer`}
                           >
                             {num}
                           </p>
@@ -330,7 +357,6 @@ export default function page() {
                     />
                   )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -384,7 +410,7 @@ export default function page() {
                         onClick={() => [
                           setUpcoming(content),
                           setSearchParams(""),
-                          setContentList([])
+                          setContentList([]),
                         ]}
                         className="text-white cursor-pointer bg-black2 p-3 w-full"
                         key={i}
@@ -398,7 +424,7 @@ export default function page() {
             </div>
             {/* add butn */}
             <div
-              onClick={() => [setStage("main"), setSearchParams('')]}
+              onClick={() => [setStage("main"), setSearchParams("")]}
               className={`${roboto_500.className} cursor-pointer ml-auto md:ml-0 mt-2 md:mt-0 font-medium text-lg text-white bg-red_500 rounded-r-[10px] py-[10px] text-center w-[145px]`}
             >
               Back
@@ -456,7 +482,17 @@ export default function page() {
                   type="text"
                   id="date"
                   readOnly
-                  value={!selectedUpcoming ? '' : formatDateToDDMMYYYY(new Date("start" in selectedUpcoming ? selectedUpcoming.start : selectedUpcoming?.releaseDate ?? '').toISOString())}
+                  value={
+                    !selectedUpcoming
+                      ? ""
+                      : formatDateToDDMMYYYY(
+                          new Date(
+                            "start" in selectedUpcoming
+                              ? selectedUpcoming.start
+                              : selectedUpcoming?.releaseDate ?? ""
+                          ).toISOString()
+                        )
+                  }
                   className="font-normal block w-[157px] text-grey_500 text-sm py-2 mt-2.5 border border-[#D9D9D938] rounded-sm"
                 />
               </div>
@@ -470,7 +506,7 @@ export default function page() {
                     onClick={handleUpcomingToggle}
                     disabled={loading_M}
                     isLoading={loading_M}
-                    title={selectedUpcoming?.upcoming ? 'Remove' : 'Save'}
+                    title={selectedUpcoming?.upcoming ? "Remove" : "Save"}
                   />
                 </div>
               </div>
@@ -490,7 +526,14 @@ export default function page() {
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto) : "No File selected"}
+                        {selectedUpcoming
+                          ? truncateText(
+                              35,
+                              "coverPhoto" in selectedUpcoming
+                                ? selectedUpcoming.coverPhoto
+                                : selectedUpcoming.landscapePhoto
+                            )
+                          : "No File selected"}
                       </span>
                     </div>
                     <div
@@ -505,7 +548,11 @@ export default function page() {
                       <>
                         <Image
                           id="upload"
-                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.landscapePhoto}
+                          src={
+                            "coverPhoto" in selectedUpcoming
+                              ? selectedUpcoming.coverPhoto
+                              : selectedUpcoming.landscapePhoto
+                          }
                           width={298}
                           height={159}
                           alt="uploaded"
@@ -538,7 +585,14 @@ export default function page() {
                       <span
                         className={`${roboto_400.className} truncate text-xs text-grey_500`}
                       >
-                        {selectedUpcoming ? truncateText(35, "coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto) : "No File selected"}
+                        {selectedUpcoming
+                          ? truncateText(
+                              35,
+                              "coverPhoto" in selectedUpcoming
+                                ? selectedUpcoming.coverPhoto
+                                : selectedUpcoming.portraitPhoto
+                            )
+                          : "No File selected"}
                       </span>
                     </div>
                     <div
@@ -553,7 +607,11 @@ export default function page() {
                       <>
                         <Image
                           // id="upload"
-                          src={"coverPhoto" in selectedUpcoming ? selectedUpcoming.coverPhoto : selectedUpcoming.portraitPhoto}
+                          src={
+                            "coverPhoto" in selectedUpcoming
+                              ? selectedUpcoming.coverPhoto
+                              : selectedUpcoming.portraitPhoto
+                          }
                           width={108}
                           height={161}
                           alt="uploaded"
@@ -580,5 +638,4 @@ export default function page() {
         </section>
       );
   }
-};
-
+}

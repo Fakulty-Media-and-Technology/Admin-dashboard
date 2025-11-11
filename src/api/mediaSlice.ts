@@ -3,102 +3,226 @@ import { IPagination } from "@/types/api/suggestion.types";
 import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IGeneric } from "@/types/api/auth.types";
-import { IMediaResponse, IMediaSeriesResponse } from "@/types/api/media.types";
+import { IMediaResponse } from "@/types/api/media.types";
+
+/**
+ * ✅ CHANGES (where):
+ *  - Added providesTags for GET queries (so RTK can refetch lists when mutations invalidate).
+ *  - Added add* mutations (addMovie/addSkit/addMusicVideo/addSeries) for uploads (they invalidate the list tag).
+ *  - Corrected fetch helper paths (getFetch*).
+ */
 
 export const mediaApiSlice = apiSlice.injectEndpoints({
-    endpoints: (builder) => ({
-        getAllMovie: builder.query<IMediaResponse, IPagination>({
-            query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
-                return {
-                    url: `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
-                    method: "GET",
-                    headers: {
-                        "superadmin-auth": `${authToken}`,
-                    },
-                };
-            },
-        }),
-
-        getAllSkits: builder.query<IMediaResponse, IPagination>({
-            query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
-                return {
-                    url: `/superadmin/uploads/fetch/skit?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
-                    method: "GET",
-                    headers: {
-                        "superadmin-auth": `${authToken}`,
-                    },
-                };
-            },
-        }),
-
-
-        getAllMusic: builder.query<IMediaResponse, IPagination>({
-            query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
-                return {
-                    url: `/superadmin/uploads/fetch/music-video?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
-                    method: "GET",
-                    headers: {
-                        "superadmin-auth": `${authToken}`,
-                    },
-                };
-            },
-        }),
-
-
-        getAllSeries: builder.query<IMediaResponse, IPagination>({
-            query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
-                return {
-                    url: `/superadmin/uploads/fetch/series?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
-                    method: "GET",
-                    headers: {
-                        "superadmin-auth": `${authToken}`,
-                    },
-                };
-            },
-        }),
-
-
+  endpoints: (builder) => ({
+    getAllMovie: builder.query<IMediaResponse, IPagination>({
+      query: (data) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
+          method: "GET",
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map((r) => ({ type: "Media" as const, id: r._id })),
+              { type: "Media" as const, id: "LIST_MOVIES" },
+            ]
+          : [{ type: "Media" as const, id: "LIST_MOVIES" }],
     }),
+
+    getAllSkits: builder.query<IMediaResponse, IPagination>({
+      query: (data) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/fetch/skit?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
+          method: "GET",
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      providesTags: (result) =>
+        result
+          ? [...result.data.map((r) => ({ type: "Media" as const, id: r._id })), { type: "Media" as const, id: "LIST_SKITS" }]
+          : [{ type: "Media" as const, id: "LIST_SKITS" }],
+    }),
+
+    getAllMusic: builder.query<IMediaResponse, IPagination>({
+      query: (data) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/fetch/music-video?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
+          method: "GET",
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      providesTags: (result) =>
+        result
+          ? [...result.data.map((r) => ({ type: "Media" as const, id: r._id })), { type: "Media" as const, id: "LIST_MUSIC" }]
+          : [{ type: "Media" as const, id: "LIST_MUSIC" }],
+    }),
+
+    getAllSeries: builder.query<IMediaResponse, IPagination>({
+      query: (data) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/fetch/series?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
+          method: "GET",
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      providesTags: (result) =>
+        result
+          ? [...result.data.map((r) => ({ type: "Media" as const, id: r._id })), { type: "Media" as const, id: "LIST_SERIES" }]
+          : [{ type: "Media" as const, id: "LIST_SERIES" }],
+    }),
+
+    // mutations for adding media (invalidate corresponding list tag)
+    addMovie: builder.mutation<IGeneric, FormData>({
+      query: (form) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/video/add/movie`,
+          method: "POST",
+          body: form,
+          headers: {
+            "superadmin-auth": `${authToken}`,
+            // do NOT set Content-Type for FormData here (browser will set it)
+          },
+        };
+      },
+      invalidatesTags: [{ type: "Media", id: "LIST_MOVIES" }],
+    }),
+
+    addSkit: builder.mutation<IGeneric, FormData>({
+      query: (form) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/video/add/skit`,
+          method: "POST",
+          body: form,
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: [{ type: "Media", id: "LIST_SKITS" }],
+    }),
+
+    addMusicVideo: builder.mutation<IGeneric, FormData>({
+      query: (form) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/video/add/music-video`,
+          method: "POST",
+          body: form,
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: [{ type: "Media", id: "LIST_MUSIC" }],
+    }),
+
+    addSeries: builder.mutation<IGeneric, FormData>({
+      query: (form) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/video/add/series`,
+          method: "POST",
+          body: form,
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: [{ type: "Media", id: "LIST_SERIES" }],
+    }),
+
+    // delete and edit also included previously — keep as needed (not used in upload UI)
+    deleteMedia: builder.mutation<IGeneric, { id: string; type: string }>({
+      query: ({ id, type }) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/remove/${id}/${type}`,
+          method: "DELETE",
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: (_result, _error, arg) => [{ type: "Media", id: `LIST_${arg.type.toUpperCase()}` }],
+    }),
+
+    editMovie: builder.mutation<IGeneric, { id: string; form: FormData }>({
+      query: ({ id, form }) => {
+        const authToken =
+          typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+        return {
+          url: `/superadmin/uploads/movie/edit/${id}`,
+          method: "PUT",
+          body: form,
+          headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        };
+      },
+      invalidatesTags: [{ type: "Media", id: "LIST_MOVIES" }],
+    }),
+  }),
 });
 
-export const { useGetAllMovieQuery, useGetAllMusicQuery, useGetAllSeriesQuery, useGetAllSkitsQuery } = mediaApiSlice;
+// exported hooks
+export const {
+  useGetAllMovieQuery,
+  useGetAllSkitsQuery,
+  useGetAllMusicQuery,
+  useGetAllSeriesQuery,
+  useAddMovieMutation,
+  useAddSkitMutation,
+  useAddMusicVideoMutation,
+  useAddSeriesMutation,
+  useDeleteMediaMutation,
+  useEditMovieMutation,
+} = mediaApiSlice;
 
+/**
+ * Helper helpers for non-RTK usages (kept for any existing code).
+ * ✅ Note: paths include &withMediaSources=true to match GET pattern used.
+ */
 export const getFetchMovies = async (data: IPagination) =>
-    await apiCall<IMediaResponse>((baseApi) =>
-        baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
-        )
-    );
+  await apiCall<IMediaResponse>((baseApi) =>
+    baseApi.get<IMediaResponse>(`/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`)
+  );
 
 export const getFetchSkit = async (data: IPagination) =>
-    await apiCall<IMediaResponse>((baseApi) =>
-        baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/skit/fetch/?page=${data.page}&limit=${data.limit}`,
-        )
-    );
+  await apiCall<IMediaResponse>((baseApi) =>
+    baseApi.get<IMediaResponse>(`/superadmin/uploads/fetch/skit?page=${data.page}&limit=${data.limit}&withMediaSources=true`)
+  );
 
 export const getFetchMusicVideo = async (data: IPagination) =>
-    await apiCall<IMediaResponse>((baseApi) =>
-        baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/music-video/fetch/?page=${data.page}&limit=${data.limit}`,
-        )
-    );
+  await apiCall<IMediaResponse>((baseApi) =>
+    baseApi.get<IMediaResponse>(`/superadmin/uploads/fetch/music-video?page=${data.page}&limit=${data.limit}&withMediaSources=true`)
+  );
 
 export const getFetchSeries = async (data: IPagination) =>
-    await apiCall<IMediaResponse>((baseApi) =>
-        baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/series/fetch/?page=${data.page}&limit=${data.limit}`,
-        )
-    );
-
-// export const addCategoryEnums = async (data: IAddCategory, path: string) =>
-//   await apiCall<IGeneric>((baseApi) =>
-//     baseApi.post<IGeneric>(`/superadmin/enums/add-${path}`, data)
-//   );
-
-
-// export const deleteMedia = async (_id: string, path: string) => await apiCall<IGeneric>(baseApi => baseApi.delete(`/superadmin/enums/rem-${path}/${_id}`))
+  await apiCall<IMediaResponse>((baseApi) =>
+    baseApi.get<IMediaResponse>(`/superadmin/uploads/fetch/series?page=${data.page}&limit=${data.limit}&withMediaSources=true`)
+  );

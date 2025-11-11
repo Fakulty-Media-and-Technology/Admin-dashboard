@@ -12,6 +12,8 @@ import {
 } from "@/store/slices/usersSlice";
 import { IEditUser, IProfile } from "@/types/api/profile.types";
 import { IUploadImage } from "@/types/api/upload.types";
+import { ApiResponse } from "apisauce";
+import { IGeneric } from "@/types/api/auth.types";
 import Lottie from "lottie-react";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -54,7 +56,8 @@ const AccScreen = () => {
     data.append("fileHandle", "photo");
     data.append("photo", files[0]);
 
-    const res = await uploadImage(data, authToken);
+    // Fix the type issue by explicitly typing the response
+    const res: ApiResponse<IUploadImage, IGeneric> = await uploadImage(data, authToken);
     if (res.ok && res.data && res.data.message.includes("Successful")
     ) {
       setLoadingImg(false);
@@ -68,7 +71,14 @@ const AccScreen = () => {
       }));
     } else {
       setLoadingImg(false);
-      toast("Opps! couldn't upload image", {
+      // Handle error response properly
+      let errorMessage = "Opps! couldn't upload image";
+      if (res.data && res.data.message) {
+        errorMessage = res.data.message;
+      } else if (res.problem) {
+        errorMessage = `Upload failed: ${res.problem}`;
+      }
+      toast(errorMessage, {
         type: "error",
       });
     }
@@ -171,7 +181,6 @@ const AccScreen = () => {
             className="rounded w-[105px] h-[106px] object-cover"
           />
         )}
-
         {isSuperAdmin && (
           <div className="absolute -bottom-[3px] -right-[4px] z-10">
             <div className="w-fit relative">
@@ -571,10 +580,9 @@ export const TableComp = () => {
                           key={indx}
                         >
                          
-
-                        </td>
-                        <td className="text-center font-normal text-xs">
-                        </td> */}
+                  </td>
+                  <td className="text-center font-normal text-xs">
+                  </td> */}
                 </tr>
               );
             })}

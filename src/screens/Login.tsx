@@ -22,7 +22,7 @@ import { getClientProfile, getSuperadminProfile } from "@/api/auth.api";
 import { IProfile } from "@/types/api/profile.types";
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-export const SUCESS_CODES = 201 || 200;
+export const SUCCESS_CODES = [200, 201];
 
 function Login() {
   const router = useRouter();
@@ -45,14 +45,18 @@ function Login() {
         }).unwrap();
         console.log(res, "login");
 
-        if (res.status === SUCESS_CODES && res.data) {
+        if (SUCCESS_CODES.includes(res.status) && res.data) {
+          // ✅ log the token
+          console.log("Token created:", res.data.token); 
+          console.log("Stored in localStorage and cookie.");
+
           const isSuperAdmin = res.data.role === "superadmin";
           localStorage.setItem("role", res.data.role);
           localStorage.setItem("auth_token", res.data.token);
 
           setCookie(null, "auth_token", res.data.token, {
             maxAge: 30 * 24 * 60 * 60, // 30 days
-            path: "/", // Makes it accessible in all pages
+            path: "/", // accessible in all pages
           });
 
           // Trigger the user profile query after login

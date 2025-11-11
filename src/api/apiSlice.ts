@@ -6,5 +6,6 @@ const baseQuery = fetchBaseQuery({
 
 export const apiSlice = createApi({
   baseQuery,
+  tagTypes: ["Media"], 
   endpoints: (builder) => ({}),
 });

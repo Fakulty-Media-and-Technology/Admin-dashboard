@@ -14,7 +14,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (data) => ({
-        url: `/superadmin/admins-signin`,
+        url: `/superadmin/auth/login`,
         method: "POST",
         body: data,
       }),

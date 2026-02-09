@@ -1952,38 +1952,6 @@ export const AddComponent = ({
           </>
         </div>
 
-        {/* <div className="px-10 lg:px-16 my-10 cursor-pointer">
-          <p
-            onClick={() => setColorPicker(!showPicker)}
-            className={`${roboto_500.className} text-xl text-white`}
-          >
-            COVER COLOR SPLASH
-          </p>
-          <p
-            className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}
-          >
-            Select a prominent color from{"\n"}the cover poster above
-          </p>
-
-          {showPicker && (
-            <div className="mt-5 color">
-              <HexAlphaColorPicker color={color} onChange={setColor} />
-
-              <div className="w-[380px] pl-7 pb-5 bg-[#33333a] pr-[30px] flex-row flex items-center">
-                <div
-                  className={`${roboto_500.className} text-lg px-2 pr-4 text-[#c4c4c4] w-fit p-1 rounded-lg border-2 border-[#686666]`}
-                >
-                  Hex
-                </div>
-                <div
-                  className={`${roboto_500.className} h-[38px] ml-2.5 text-lg px-2 pr-4 text-[#c4c4c4] flex-1 p-1 rounded-lg border-2 border-[#686666]`}
-                >
-                  {color}
-                </div>
-              </div>
-            </div>
-          )}
-        </div> */}
 
         <div className="px-10 lg:px-16 my-10 relative">
           {/* 🟩 TITLE + EMBEDDED COLOR SQUARE */}

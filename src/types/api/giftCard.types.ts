@@ -11,8 +11,9 @@ export interface IGiftCardData {
     serialNumber: string;
     amount: number;
     code: string;
-    used: boolean;
+    status: string;
     currency: string;
+    creatorMode:string;
     createdAt: string;
     updatedAt: string;
 }

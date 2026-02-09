@@ -51,7 +51,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
       query: (data) => {
         const authToken = localStorage.getItem("auth_token");
         return {
-          url: `/superadmin/shared/get-cast?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
+          url: `/superadmin/shared/get-casts?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
           headers: {
             "superadmin-auth": `${authToken}`,
@@ -87,7 +87,7 @@ export const geetFetchGenres = async (data?:IPagination) =>
 export const geetFetchCast = async (data?:IPagination) =>
   await apiCall<ICastResponse>((baseApi) =>
     baseApi.get<ICastResponse>(
-      `superadmin/enums/get-cast?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
+      `superadmin/shared/get-casts?limit=${!data ? 100 : data.limit }&page=${!data ? 1 :data.page}`
     )
   );
 

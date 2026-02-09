@@ -8,7 +8,7 @@ export interface ContentData {
   releasedDate: string;
   category: string[];
   genre: string[];
-  cast: string[];
+  cast?: string[];
   description?: string;
   runtime: string;
   defaultRating: string;

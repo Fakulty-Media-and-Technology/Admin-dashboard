@@ -7,11 +7,11 @@ import { IGeneric } from "@/types/api/auth.types";
 
 export const giftCardApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getGiftCards: builder.query<IGiftCardResponse, IPagination>({
+        getGiftCards: builder.query<IGiftCardResponse, {pagination:IPagination, type:'RP'|'MERCHANT'}>({
             query: (data) => {
                 const authToken = localStorage.getItem("auth_token");
                 return {
-                    url: `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`,
+                    url: `superadmin/giftcard/generated/fetch?type=${data.type}&limit=${data.pagination.limit}&page=${data.pagination.page}`,
                     method: "GET",
                     headers: {
                         "superadmin-auth": `${authToken}`,
@@ -24,10 +24,10 @@ export const giftCardApiSlice = apiSlice.injectEndpoints({
 
 export const { useGetGiftCardsQuery } = giftCardApiSlice;
 
-export const getGiftCards = async (data: IPagination) =>
+export const getGiftCards = async (data: {pagination:IPagination, type:'RP'|'MERCHANT'}) =>
   await apiCall<IGiftCardResponse>((baseApi) =>
     baseApi.get<IGiftCardResponse>(
-      `superadmin/giftcard/generated/fetch?limit=${data.limit}&page=${data.page}`
+      `superadmin/giftcard/generated/fetch?type=${data.type}&limit=${data.pagination.limit}&page=${data.pagination.page}`
     )
   );
 

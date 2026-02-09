@@ -87,8 +87,8 @@ export const AddComponent = ({
     selectedMedia
       ? new Date(selectedMedia.expiryDate).toISOString()
       : new Date(
-          new Date().setFullYear(new Date().getFullYear() + 1)
-        ).toISOString()
+        new Date().setFullYear(new Date().getFullYear() + 1)
+      ).toISOString()
   );
   const [class_, setClass] = useState<string>(
     selectedMedia ? selectedMedia.vidClass.toUpperCase() : "Select"
@@ -508,7 +508,6 @@ export const AddComponent = ({
         trailer: videoTrailer,
         video: videoTrailer_2,
         data: {
-          cast: selectedCasts.map((x) => x._id),
           category,
           defaultRating: rating,
           expiryDate: new Date(expiryDate).toISOString(),
@@ -524,7 +523,9 @@ export const AddComponent = ({
             amount: Number(amount.trim()),
             currency,
           }),
-          ...(slug.includes("videos") && { artistName: title }),
+          ...(slug.includes("videos") ? { artistName: title } : {
+            cast: typeof selectedCasts[0] === 'string' ? selectedCasts as any : selectedCasts.map((x) => x._id),
+          }),
         },
       };
 
@@ -549,15 +550,16 @@ export const AddComponent = ({
       const res = selectedMedia
         ? await editContent(formdata, selectedMedia._id)
         : await createContent(
-            formdata,
-            slug.includes("movies")
-              ? "movie"
-              : slug.includes("skits")
+          formdata,
+          slug.includes("movies")
+            ? "movie"
+            : slug.includes("skits")
               ? "skit"
               : slug.includes("music")
-              ? "music-video"
-              : slug
-          );
+                ? "music-video"
+                : slug
+        );
+      console.log(res.data)
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
         // Reset form after successful upload
@@ -711,10 +713,23 @@ export const AddComponent = ({
                       type="text"
                       id="amount"
                       className="font-normal w-[140px] text-grey_500 text-sm py-2 mt-2 border border-border_grey rounded-sm"
-                      value={formatAmount(amount)}
-                      onChange={(e) =>
-                        handleValidInput(e.target.value.replaceAll(",", ""))
+                      value={
+                        amount
+                          ? parseFloat(amount).toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                          : ""
                       }
+                      onChange={(e) => {
+                        let raw = e.target.value.replace(/[^0-9]/g, "");
+                        if (raw === "") {
+                          setAmount("");
+                          return;
+                        }
+                        const numericValue = (parseFloat(raw) / 100).toFixed(2);
+                        setAmount(numericValue);
+                      }}
                     />
                   </div>
 
@@ -827,7 +842,15 @@ export const AddComponent = ({
                       value={releaseDate.replaceAll("/", "-")}
                       onChange={(e) => [
                         setReleaseDate(e.target.value),
-                        console.log(e.target.value),
+                        setExpiryDate(p => {
+                          if (e.target.value) {
+                            const dateObj = new Date(e.target.value);
+                            dateObj.setFullYear(dateObj.getFullYear() + 1);
+                            const oneYearLater = dateObj.toISOString().split('T')[0];
+                            return oneYearLater
+                          }
+                          return p
+                        }),
                       ]}
                     />
                   </div>
@@ -854,8 +877,8 @@ export const AddComponent = ({
               </div>
 
               {/* CAST */}
-              {class_ !== "AD" && (
-                <div className="relative">
+              {class_ !== "AD" && !(slug.includes("videos")) && (
+                <div className="relative z-30">
                   <div className="flex-1">
                     <p
                       className={`${roboto_500.className} mb-2 font-medium text-white text-base ml-2.5`}
@@ -1017,8 +1040,8 @@ export const AddComponent = ({
                               links.image
                                 ? links.image
                                 : selectedMedia
-                                ? selectedMedia.portraitPhoto
-                                : ""
+                                  ? selectedMedia.portraitPhoto
+                                  : ""
                             }
                             width={42}
                             height={42}
@@ -1099,7 +1122,7 @@ export const AddComponent = ({
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                            // onReady={() => setIsPlayerReady(true)}
+                          // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1141,11 +1164,9 @@ export const AddComponent = ({
                     />
                   </div>
                   <div
-                    className={`${
-                      roboto_500.className
-                    } cursor-pointer text-white text-[15px] ${
-                      links ? "bg-grey_800" : "bg-[#EE2726]"
-                    } h-[42px] px-4 flex items-center justify-center`}
+                    className={`${roboto_500.className
+                      } cursor-pointer text-white text-[15px] ${links ? "bg-grey_800" : "bg-[#EE2726]"
+                      } h-[42px] px-4 flex items-center justify-center`}
                   >
                     UPLOAD
                   </div>
@@ -1238,7 +1259,7 @@ export const AddComponent = ({
                             height="100%"
                             volume={1}
                             onEnded={() => setIsPlaying(false)}
-                            // onReady={() => setIsPlayerReady(true)}
+                          // onReady={() => setIsPlayerReady(true)}
                           />
                         </div>
                       )}
@@ -1332,8 +1353,8 @@ export const AddComponent = ({
                     {slug === "skits"
                       ? "SKIT"
                       : slug.includes("videos")
-                      ? "VIDEO"
-                      : "MOVIE"}{" "}
+                        ? "VIDEO"
+                        : "MOVIE"}{" "}
                     FILE *
                   </label>
                   <CustomInput
@@ -1360,8 +1381,8 @@ export const AddComponent = ({
                                   links_2.image
                                     ? links_2.image
                                     : selectedMedia
-                                    ? selectedMedia.portraitPhoto
-                                    : ""
+                                      ? selectedMedia.portraitPhoto
+                                      : ""
                                 }
                                 width={42}
                                 height={42}
@@ -1444,7 +1465,7 @@ export const AddComponent = ({
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                                // onReady={() => setIsPlayerReady(true)}
+                              // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1464,8 +1485,8 @@ export const AddComponent = ({
                       {slug === "skits"
                         ? "Skit"
                         : slug.includes("videos")
-                        ? "Video"
-                        : "Movie"}{" "}
+                          ? "Video"
+                          : "Movie"}{" "}
                       *
                     </p>
                     <div className="flex justify-between w-full border overflow-hidden border-[#D9D9D938] rounded-tr-[5px] rounded-br-[5px]">
@@ -1492,11 +1513,9 @@ export const AddComponent = ({
                         />
                       </div>
                       <div
-                        className={`${
-                          roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${
-                          links_2 ? "bg-grey_800" : "bg-[#EE2726]"
-                        } h-[42px] px-4 flex items-center justify-center`}
+                        className={`${roboto_500.className
+                          } cursor-pointer text-white text-[15px] ${links_2 ? "bg-grey_800" : "bg-[#EE2726]"
+                          } h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1594,7 +1613,7 @@ export const AddComponent = ({
                                 height="100%"
                                 volume={1}
                                 onEnded={() => setIsPlaying_2(false)}
-                                // onReady={() => setIsPlayerReady(true)}
+                              // onReady={() => setIsPlayerReady(true)}
                               />
                             </div>
                           )}
@@ -1689,9 +1708,8 @@ export const AddComponent = ({
                         />
                       </div>
                       <div
-                        className={`${
-                          roboto_500.className
-                        } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
+                        className={`${roboto_500.className
+                          } cursor-pointer text-white text-[15px] ${"bg-[#EE2726]"} h-[42px] px-4 flex items-center justify-center`}
                       >
                         UPLOAD
                       </div>
@@ -1706,7 +1724,7 @@ export const AddComponent = ({
                     className="ml-auto mt-6 px-6 py-3"
                     onClick={() =>
                       subtitleFile &&
-                      !subtitle_.toLowerCase().includes("select")
+                        !subtitle_.toLowerCase().includes("select")
                         ? handleAddSubtitle()
                         : toast("select srt file", { type: "info" })
                     }
@@ -1736,7 +1754,7 @@ export const AddComponent = ({
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                        // onClick={() => setVideoTrailer_2(null)}
+                      // onClick={() => setVideoTrailer_2(null)}
                       >
                         <Image
                           src="/delete.svg"
@@ -2016,7 +2034,7 @@ export const AddComponent = ({
 
         <div className="px-10 lg:px-16 mt-4">
           <AppButton
-            title="UPLOAD"
+            title={selectedMedia ? 'UPDATE' : "UPLOAD"}
             disabled={
               (isDisabled &&
                 !slug.includes("series") &&

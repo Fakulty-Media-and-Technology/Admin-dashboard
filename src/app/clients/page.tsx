@@ -121,9 +121,9 @@ export default function page() {
       </div>
 
 
-      <div className="bg-black3 min-h-[100%] flex-1 pt-12 px-5 md:px-10 lg:px-14 relative">
-        <div className="w-full sm:w-[326px] lg:w-[556px] mb-5 flex items-center">
-          <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
+        <div className="bg-black3 min-h-screen flex flex-col pt-12 px-5 md:px-10 lg:px-14 relative">        
+<div className="w-full sm:w-[326px] lg:w-[556px] mb-5 flex items-center shrink-0">         
+  <button className="rounded-l-[10px] bg-red_500 py-[14.5px] flex items-center justify-center w-[63px]">
             <Image
               src="/searchIcon.svg"
               width={20}
@@ -140,23 +140,25 @@ export default function page() {
           />
         </div>
 
-        <div className="min-h-[500px] relative w-full md:h-[80%] h-[100%] pb-10 mt-8 pr-5">
-          {tab === 'tickets' ?
+<div className="flex-1 w-full mt-8 overflow-hidden">          
+  {tab === 'tickets' ?
             <div className="flex items-center justify-center h-[400px]">
               <p className={`${roboto_400.className} font-normal text-4xl text-white`}>
                 3rd party support ticket API HERE
               </p>
             </div>
 
-            : <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
-              <table className={`${roboto_400.className} w-[calc(100%-20px)] min-w-[810px] lg:ml-5`}>
+            : 
+            // <div className="absolute w-full py-5 pb-6 pl-0 -ml-4 sm:ml-0 sm:pl-3 pr-10 overflow-x-auto">
+            <div className="w-full pb-6 overflow-x-auto">
+              <table className={`${roboto_400.className} w-full min-w-[810px] lg:ml-5`}>
                 <thead className="mb-3">
                   <tr>
                     {(tab === 'deposits' ? DEPOSITS : tab === 'withdrawals' ? WITHDRAWALS : CLIENT_TH).map((t, i) => {
                       return (
                         <th
                           key={i}
-                          className={`${roboto_500.className} font-medium text-lg text-white uppercase`}
+                          className={`${roboto_500.className} font-medium text-lg text-white uppercase py-4 text-center`}
                         >
                           {t}
                         </th>
@@ -175,7 +177,7 @@ export default function page() {
                         >
                           <div className="flex items-center pl-2 py-1 pr-1 rounded w-fit ">
                             <Image
-                              src={tx.photo ?? `/tablepic/mum.png`}
+                              src={tx.photo ?? `/user.png`}
                               width={42}
                               height={42}
                               alt="profiles"
@@ -293,23 +295,23 @@ export default function page() {
 
 
 
-        {tab === 'clients' && <div className="mt-auto bg-black3 absolute bottom-10 z-50 flex flex-row items-center">
+        {tab === 'clients' && <div className="mt-8 mb-10 shrink-0 bg-black3 flex flex-row items-center">
           <div
-            className={`${roboto_500.className} py-2 px-7 ml-16 flex w-fit items-center border border-[#C4C4C438]`}
+            className={`${roboto_500.className} py-2 px-7 flex w-fit items-center border border-[#C4C4C438]`}
           >
             <button
               onClick={() => [setPage(page == 1 ? page : page - 1), handleGetRefreshList(page == 1 ? page : page - 1)]}
-              className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800`}
+              className={`${roboto_400.className} font-normal mr-3 text-[17px] text-grey_800 flex items-center`}
             >
               <span className="text-grey_800 mr-2">{`<<`}</span>
               Previous
             </button>
-            <div className="text-grey_800 text-[17px] mr-1 font-medium space-x-1.5">
-              <span className="text-red">{page}</span>
+            <div className="text-grey_800 text-[17px] mr-4 font-medium">
+              <span className="text-red font-bold">{page}</span>
             </div>
             <button
               onClick={() => [setPage(clientList.length > 0 ? page + 1 : page), handleGetRefreshList(clientList.length > 0 ? page + 1 : page)]}
-              className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800`}
+              className={`${roboto_400.className} font-normal ml-2 text-[17px] text-grey_800 flex items-center`}
             >
               Next <span className="text-grey_800 ml-2">{`>>`}</span>
             </button>

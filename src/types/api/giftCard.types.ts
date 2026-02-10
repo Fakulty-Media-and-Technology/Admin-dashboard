@@ -8,6 +8,7 @@ export interface IGiftCardResponse extends IGeneric {
 export interface IGiftCardData {
     _id: string;
     admin_id: string;
+    name: string;
     serialNumber: string;
     amount: number;
     code: string;

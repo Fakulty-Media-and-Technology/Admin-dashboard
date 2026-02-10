@@ -212,7 +212,7 @@ export default function page() {
                     </td>
 
                     <td className="text-center font-normal text-xs capitalize">
-                      {"Backend Fix"}
+                      {tx.name}
                     </td>
                     <td className="text-center font-normal text-xs capitalize">
                       {tx.status}

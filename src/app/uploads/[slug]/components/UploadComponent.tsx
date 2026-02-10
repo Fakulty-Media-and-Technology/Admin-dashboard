@@ -483,6 +483,26 @@ export const AddComponent = ({
     }
   }
 
+  const handleEyedropper = async () => {
+    // Check if the browser supports the EyeDropper API
+    // @ts-ignore
+    if (!window.EyeDropper) {
+      toast.error("Your browser does not support the eyedropper tool.");
+      return;
+    }
+
+    const eyeDropper = new (window as any).EyeDropper();
+
+    try {
+      const result = await eyeDropper.open();
+      // result.sRGBHex contains the hex code of the pixel clicked
+      setColor(result.sRGBHex);
+    } catch (e) {
+      // User cancelled the selection
+      console.log("Eyedropper closed without selection");
+    }
+  };
+
   async function handleCreateContent() {
     if (!portrait_L || !portrait) return;
     try {
@@ -1954,47 +1974,54 @@ export const AddComponent = ({
 
 
         <div className="px-10 lg:px-16 my-10 relative">
-          {/* 🟩 TITLE + EMBEDDED COLOR SQUARE */}
-          <p
-            className={`${roboto_500.className} text-xl text-white flex items-center gap-3 cursor-pointer`}
-            onClick={() => setColorPicker(!showPicker)}
-          >
-            COVER COLOR SPLASH
-            {/* 🟩 added small square inside the text */}
-            <span
-              className="w-6 h-6 inline-block rounded-md border border-[#686666] shadow-sm"
-              style={{ backgroundColor: color }}
-            ></span>
-          </p>
+          <div className="flex items-center gap-4">
+            <p
+              className={`${roboto_500.className} text-xl text-white flex items-center gap-3 cursor-pointer`}
+              onClick={() => setColorPicker(!showPicker)}
+            >
+              COVER COLOR SPLASH
+              <span
+                className="w-6 h-6 inline-block rounded-md border border-[#686666] shadow-sm"
+                style={{ backgroundColor: color }}
+              ></span>
+            </p>
+
+            {/* 🟩 NEW EYEDROPPER BUTTON */}
+            <button
+              onClick={handleEyedropper}
+              className="p-2 hover:bg-[#33333a] rounded-full transition-colors group"
+              title="Pick color from screen"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="group-hover:scale-110 transition-transform"
+              >
+                <path d="m2 22 1-1h3l9-9" />
+                <path d="M3 21v-3l9-9" />
+                <path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l-3-3Z" />
+              </svg>
+            </button>
+          </div>
 
           {/* Subtext */}
-          <p
-            className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}
-          >
-            Select a prominent color from{"\n"}the cover poster above
+          <p className={`${roboto_400_italic.className} max-w-[220px] leading-5 mt-1 italic text-base text-[#c4c4c4]`}>
+            Select a prominent color from the cover poster above
           </p>
 
-          {/* 🟩 Color Picker Widget */}
+          {/* Color Picker Widget (unchanged) */}
           {showPicker && (
-            <div
-              ref={pickerRef}
-              className="absolute mt-5 bg-[#2b2b2b] rounded-xl   shadow-lg z-50  bottom-full mb-3 p-3"
-            >
-              {/* Color Picker */}
+            <div ref={pickerRef} className="absolute mt-5 bg-[#2b2b2b] rounded-xl shadow-lg z-50 bottom-full mb-3 p-3">
               <HexAlphaColorPicker color={color} onChange={setColor} />
-
-              {/* Hex Field */}
               <div className="w-full mt-4 bg-[#33333a] px-4 py-3 flex items-center rounded-lg border border-[#686666]">
-                <div
-                  className={`${roboto_500.className} text-lg text-[#c4c4c4] mr-3`}
-                >
-                  Hex
-                </div>
-                <div
-                  className={`${roboto_500.className} text-lg text-[#c4c4c4] flex-1`}
-                >
-                  {color.toUpperCase()}
-                </div>
+                <div className={`${roboto_500.className} text-lg text-[#c4c4c4] mr-3`}>Hex</div>
+                <div className={`${roboto_500.className} text-lg text-[#c4c4c4] flex-1`}>{color.toUpperCase()}</div>
               </div>
             </div>
           )}

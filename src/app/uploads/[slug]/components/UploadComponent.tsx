@@ -35,11 +35,13 @@ import {
   createContent,
   editContent,
   getSeasons,
+  getSubtitles,
   seriesButtonValidity,
 } from "@/api/contentSlice";
 import { IMediaData } from "@/types/api/media.types";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
+import { useProgress } from "@bprogress/next";
 
 interface ModalProps {
   handleClose: () => void;
@@ -67,6 +69,7 @@ export const AddComponent = ({
   selectedMedia,
   handleClose,
 }: ModalProps) => {
+  const { start, stop } = useProgress();
   const [loading, setLoading] = useState<boolean>(false);
   const [loading_C, setLoading_C] = useState<boolean>(false);
   const [isGenre, setIsGenre] = useState<boolean>(false);
@@ -407,6 +410,16 @@ export const AddComponent = ({
     }
   }
 
+  async function handleFetchSubtitle() {
+    if (!selectedMedia) return;
+    const res = await getSubtitles({ id: selectedMedia._id });
+    if (res.ok && res.data) {
+      console.log(res.data)
+      // setSeasons(res.data.data);
+
+    }
+  }
+
   async function handleAddSubtitle() {
     if (!selectedMedia || !subtitleFile || !subtitleFile.file) return;
     try {
@@ -423,7 +436,6 @@ export const AddComponent = ({
 
       if (res.ok && res.data) {
         toast(res.data.message, { type: "success" });
-
         setSRTArray((prev) => [
           {
             language: subtitle_,
@@ -434,6 +446,7 @@ export const AddComponent = ({
           },
           ...prev,
         ]);
+        handleFetchSubtitle();
       } else {
         toast(res.data?.message, { type: "error" });
       }
@@ -441,14 +454,21 @@ export const AddComponent = ({
       toast(`${error}`, { type: "error" });
     } finally {
       setSrtLoading(false);
+      setSUBTITLE("Select Language");
+      setSubtitleFile(null);
     }
   }
 
   async function handleFetchSeasons() {
     if (!selectedMedia) return;
-    const res = await getSeasons({ id: selectedMedia._id });
-    if (res.ok && res.data) {
-      setSeasons(res.data.data);
+    try {
+      start()
+      const res = await getSeasons({ id: selectedMedia._id });
+      if (res.ok && res.data) {
+        setSeasons(res.data.data);
+      }
+    } finally {
+      stop()
     }
   }
 
@@ -637,6 +657,7 @@ export const AddComponent = ({
       handleFetchSeasons();
       handleDisableButton();
     }
+    handleFetchSubtitle();
   }, [slug, selectedMedia]);
 
   return (
@@ -1175,6 +1196,7 @@ export const AddComponent = ({
                         : "No File selected"}
                     </span>
                     <input
+                      key={videoTrailer ? videoTrailer.name : "empty-videoTrailer"}
                       type="file"
                       id="file"
                       accept="video/*"
@@ -1524,6 +1546,7 @@ export const AddComponent = ({
                             : "No File selected"}
                         </span>
                         <input
+                          key={videoTrailer_2 ? videoTrailer_2.name : "empty-videoTrailer_2"}
                           type="file"
                           id="file"
                           accept="video/*"
@@ -1720,6 +1743,7 @@ export const AddComponent = ({
                             : "No File selected"}
                         </span>
                         <input
+                          key={subtitleFile ? subtitleFile.name : "empty-sub"}
                           type="file"
                           id="file"
                           accept="srt/*"
@@ -1746,7 +1770,7 @@ export const AddComponent = ({
                       subtitleFile &&
                         !subtitle_.toLowerCase().includes("select")
                         ? handleAddSubtitle()
-                        : toast("select srt file", { type: "info" })
+                        : toast("select srt file & select subtitle language", { type: "info" })
                     }
                   />
                 </div>
@@ -1754,7 +1778,7 @@ export const AddComponent = ({
             )}
 
             {/* list of subtitle */}
-            {class_ !== "AD" && slug.includes("series") && (
+            {class_ !== "AD" && (
               <div className="px-10 lg:px-16 flex flex-wrap gap-x-12 pl-10 gap-y-14 items-start py-6">
                 {srtArray.map((x, i) => {
                   return (
@@ -1828,26 +1852,45 @@ export const AddComponent = ({
             {/* Adding seasons */}
             {slug === "series" && selectedMedia && (
               <div className="-pt-10">
-                <div className="px-10 lg:px-16">
+                <div className="px-10 lg:px-16 flex items-center gap-x-4 mb-5">
                   <AppButton
                     title="Add Season"
                     bgColor="bg-[#EE2726]"
-                    className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"
+                    className="px-6 py-3 hover:scale-105 transition-all duration-300"
                     onClick={handleCreateSeason}
                     isLoading={seasonLoading}
-                    disabled={
-                      !selectedMedia || seasonLoading || isDisabled_Seasons
-                    }
+                    disabled={!selectedMedia || seasonLoading || isDisabled_Seasons}
                   />
+
+                  <button
+                    onClick={() => handleFetchSeasons()}
+                    className="p-2.5 rounded-full border border-[#D9D9D938] hover:bg-[#D9D9D91A] transition-all duration-200 active:rotate-180"
+                    title="Refresh Seasons"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M23 4v6h-6"></path>
+                      <path d="M1 20v-6h6"></path>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                  </button>
                 </div>
 
                 <div className="mt-8">
                   {seasons.map((season, i) => {
                     return (
                       <SeasonComponent
+                        key={season?._id ? `${season._id}${season.episodes.length}` : i}
                         season={season}
-                        key={i}
-                        handleFunc={() => handleFetchSeasons()}
+                        handleFunc={async () => await handleFetchSeasons()}
                       />
                     );
                   })}
@@ -1884,6 +1927,7 @@ export const AddComponent = ({
                           : "No File selected"}
                       </span>
                       <input
+                        key={portrait ? portrait.name : "empty-portrait"}
                         type="file"
                         id="file"
                         accept="image/png, image/jpeg, image/jpg"
@@ -1939,6 +1983,7 @@ export const AddComponent = ({
                           : "No File selected"}
                       </span>
                       <input
+                        key={portrait_L ? portrait_L.name : "empty-portrait_L"}
                         type="file"
                         id="file"
                         accept="image/png, image/jpeg, image/jpg"

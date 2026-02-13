@@ -638,9 +638,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         <span
                                             className={`${roboto_400.className} truncate text-xs text-grey_500`}
                                         >
-                                            {videoTrailer ? videoTrailer.name : "No File selected"}
+                                            {videoTrailer ? videoTrailer.name.slice(0, 14) : "No File selected"}
                                         </span>
                                         <input
+                                        key={videoTrailer ? videoTrailer.name :'empty_videoTrailer'}
                                             type="file"
                                             id="file"
                                             accept="video/*"
@@ -755,9 +756,10 @@ const AddComponent = ({handleRefech}:{handleRefech: () => void}) => {
                                         <span
                                             className={`${roboto_400.className} truncate text-xs text-grey_500`}
                                         >
-                                            {landscapeImage_M ? landscapeImage_M.name : "No File selected"}
+                                            {landscapeImage_M ? landscapeImage_M.name.slice(0, 12)+'...' : "No File selected"}
                                         </span>
                                         <input
+                                        key={landscapeImage_M ? landscapeImage_M.name :'empty_landscapeImage_M'}
                                             type="file"
                                             id="file"
                                             accept="png/*"

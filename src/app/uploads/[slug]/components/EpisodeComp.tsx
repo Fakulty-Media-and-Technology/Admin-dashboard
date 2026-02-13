@@ -13,14 +13,14 @@ import { toast } from 'react-toastify';
 import { getPreview } from '@/app/server';
 import { ImageProps } from '@/app/plans/ClientComponent';
 import { IFile, ISubtitle } from './UploadComponent';
-import { addEpisodes, addSubtitle } from '@/api/contentSlice';
+import { addEpisodes, addSubtitle, getSubtitles } from '@/api/contentSlice';
 import { IEpisodeData } from '@/types/api/content.type';
 
 
 interface Props {
     episode: IEpisodeData;
     seasonId: string
-    handleFunc?: () => void
+    handleFunc: () => void
     setIsViewEp: React.Dispatch<React.SetStateAction<string>>;
     isViewEp: string
 }
@@ -28,7 +28,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
     const [name, setName] = useState<string>(episode.title)
     const [showSelect, setShowSelect] = useState(false);
     const [details, setDetails] = useState(episode.description);
-    const [links, setLinks] = useState<LinkViewProps | null>(episode ? { title: truncateText(20, episode.video), url: episode.video } : null)
+    const [links, setLinks] = useState<LinkViewProps | null>((episode && episode.video !== '') ? { title: truncateText(20, episode.video), url: episode.video } : null)
     const [videoTrailer, setVideoTrailer] = useState<IFile | null>(null);
     const [videoTrailer_intro, setVideoTrailer_intro] = useState<IFile | null>(episode.trailer !== '' ? { name: truncateText(20, episode.trailer), url: episode.trailer } : null);
     const [videoTrailer_recap, setVideoTrailer_recap] = useState<IFile | null>(null);
@@ -138,12 +138,22 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
         }
     }
 
+    async function handleFetchSubtitle() {
+        if (episode.admin === '') return;
+        const res = await getSubtitles({ id: episode._id });
+        if (res.ok && res.data) {
+            console.log(res.data)
+            // setSeasons(res.data.data);
+
+        }
+    }
+
     async function handleAddSubtitle() {
-        if (!subtitleFile || !subtitleFile.file) return
+        if (!subtitleFile || !subtitleFile.file || episode.admin === '') return
         try {
             setSrtLoading(true);
             const formdata = new FormData();
-            formdata.append("parentId", 'parentId');
+            formdata.append("parentId", episode._id);
             formdata.append("parentType", "episode");
             formdata.append("language", subtitle_);
             formdata.append("subtitle", subtitleFile.file);
@@ -151,17 +161,12 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
 
             if (res.ok && res.data) {
                 toast(res.data.message, { type: "success" });
-
                 // Update the UI to show the newly added subtitle
                 setSRTArray((prev) => [
                     { language: subtitle_, srtFile: { name: subtitleFile?.name ?? '', url: subtitleFile?.url ?? '' } },
                     ...prev,
                 ])
-
-                // Reset subtitle file and selection
-                setSubtitleFile(null);
-                setSUBTITLE("Select Language");
-
+                handleFetchSubtitle()
             } else {
                 toast(res.data?.message, { type: "error" });
             }
@@ -169,6 +174,8 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
             toast(`${error}`, { type: "error" });
         } finally {
             setSrtLoading(false);
+            setSUBTITLE("Select Language");
+            setSubtitleFile(null)
         }
     }
 
@@ -206,7 +213,8 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                 setSubtitleFile(null);
                 setSUBTITLE("Select Language");
 
-                handleFunc && handleFunc()
+                console.log('about to call fetch seasons...')
+                handleFunc();
             } else {
                 toast(res.data?.message, { type: "error" });
             }
@@ -225,6 +233,22 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
             setShowSelect(false);
         }
     }, [isViewEp]);
+
+    useEffect(() => {
+        setName(episode.title);
+        setDetails(episode.description);
+        if (episode.video !== '') {
+            setLinks({ title: truncateText(20, episode.video), url: episode.video });
+            setUrlLink('');
+        } else {
+            setLinks(null);
+        }
+        if (episode.trailer) {
+            setVideoTrailer_intro({ name: truncateText(20, episode.trailer), url: episode.trailer });
+        } else {
+            setVideoTrailer_intro(null);
+        }
+    }, [episode]);
 
     return (
         <div style={{ backfaceVisibility: "hidden" }} className={`relative z-0 overflow-y-hidden ${!showSelect && 'h-[40px]'}`}>
@@ -414,6 +438,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                         {videoTrailer ? truncateText(20, videoTrailer.name) : "No File selected"}
                                     </span>
                                     <input
+                                        key={videoTrailer ? videoTrailer.name : "empty-videoTrailer"}
                                         type="file"
                                         id="file"
                                         accept="video/*"
@@ -572,6 +597,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                                 : "No File selected"}
                                         </span>
                                         <input
+                                            key={subtitleFile ? subtitleFile.name : "empty-subtitleFile"}
                                             type="file"
                                             id="file"
                                             accept="srt/*"
@@ -591,14 +617,14 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
 
                             <AppButton
                                 title="Add Subtitle"
-                                bgColor={"bg-green_400"}
-                                disabled={srtLoading}
+                                bgColor={(srtLoading || episode.admin === '') ? 'bg-gray-400' : "bg-green_400"}
+                                disabled={srtLoading || episode.admin === ''}
                                 isLoading={srtLoading}
                                 className="ml-auto mt-6 px-6 py-3"
                                 onClick={() =>
                                     (subtitleFile && !subtitle_.toLowerCase().includes("select"))
                                         ? handleAddSubtitle()
-                                        : toast("select srt file", { type: "info" })
+                                        : toast("select srt file & select subtitle language", { type: "info" })
                                 }
                             />
                         </div>
@@ -670,6 +696,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                                 {videoTrailer_recap ? truncateText(20, videoTrailer_recap.name) : "No File selected"}
                                             </span>
                                             <input
+                                                key={videoTrailer_recap ? videoTrailer_recap.name : "empty-videoTrailer_recap"}
                                                 type="file"
                                                 id="file"
                                                 accept="video/*"
@@ -799,6 +826,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                                             {videoTrailer_intro ? truncateText(20, videoTrailer_intro.name) : "No File selected"}
                                         </span>
                                         <input
+                                            key={videoTrailer_intro ? videoTrailer_intro.name : "empty-videoTrailer_intro"}
                                             type="file"
                                             id="file"
                                             accept="video/*"
@@ -908,7 +936,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
                 </div>
 
                 <AppButton
-                    title={`${episode._id !== '' ? 'Edit' : 'Add'} Episode ${episode.episodeNumber}`}
+                    title={`${episode.admin !== '' ? 'Edit' : 'Add'} Episode ${episode.episodeNumber}`}
                     bgColor={(isDisabled) ? 'bg-gray-500' : 'bg-green_400'}
                     className='mt-6 px-10 py-2.5'
                     onClick={handleAddEpisode}

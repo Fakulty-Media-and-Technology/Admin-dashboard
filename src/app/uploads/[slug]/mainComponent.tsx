@@ -209,13 +209,15 @@ function MainComponent({ slug }: Props) {
                             key={indx}
                           >
                             <div className="flex items-center pl-2 py-1 pr-1  border-none rounded w-fit min-w-[140px]">
+                              <div className="w-[42px] h-[42px] rounded-full overflow-hidden">
                               <Image
                                 src={tx.portraitPhoto}
                                 width={42}
                                 height={42}
                                 alt="profiles"
-                                className="object-cover h-[42px] rounded-full"
+                                className="object-cover w-full h-full"
                               />
+                              </div>
                               <div className="ml-2.5">
                                 <p
                                   className={`${roboto_500.className} capitalize font-medium text-[#fff] text-[15px]`}

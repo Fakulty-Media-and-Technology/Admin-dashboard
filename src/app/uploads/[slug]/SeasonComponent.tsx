@@ -40,8 +40,6 @@ function SeasonComponent({ season, handleFunc }: Props) {
         video: ''
     }
 
-
-
     async function handleDisableButton() {
         const res = await seriesButtonValidity(season._id, 'episodes');
         if (res.ok && res.data) setDisabled(false)
@@ -49,6 +47,8 @@ function SeasonComponent({ season, handleFunc }: Props) {
 
     useEffect(() => {
         handleDisableButton();
+        const _sortedEpisodes = season.episodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
+        setEpisodeArray(_sortedEpisodes)
     }, [season])
 
 
@@ -75,18 +75,19 @@ function SeasonComponent({ season, handleFunc }: Props) {
                 {showSelect && <AppButton
                     title={`Add New Episode`}
                     className='mt-6 px-10 ml-10 lg:ml-16'
+                    disabled={isDisabled || (episodeArray.length > 0 && episodeArray[episodeArray.length - 1]?.admin === '')}
                     onClick={() => setEpisodeArray(prev => ([...prev, emptyEpisode]))}
-                    bgColor={(isDisabled) ? 'bg-gray-500' : 'bg-green_400'}
+                    bgColor={(isDisabled || (episodeArray.length > 0 && episodeArray[episodeArray.length - 1]?.admin === '')) ? 'bg-gray-500' : 'bg-green_400'}
                 />}
 
                 {/* Episodes array */}
                 {episodeArray.map((episode, index) => {
                     if (episode === null) return
                     return <EpisodeComponent
-                        key={index}
+                        key={episode.admin !== '' ? episode._id : index}
                         episode={episode}
                         seasonId={season._id}
-                        handleFunc={handleFunc}
+                        handleFunc={() =>handleFunc?.()}
                         setIsViewEp={setIsViewEp}
                         isViewEp={isViewEp}
                     />

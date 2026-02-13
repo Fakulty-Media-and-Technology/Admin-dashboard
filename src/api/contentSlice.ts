@@ -57,3 +57,6 @@ export const deleteContent = async (data: { id: string, slug: string }) =>
 
 export const getSeasons = async (data: { id: string }) =>
   await apiCall<ISeasonResponse>(baseApi => baseApi.get<ISeasonResponse>(`/superadmin/uploads/seasons/fetch/${data.id}?page=1&limit=40000&withMediaSources=true`))
+
+export const getSubtitles = async (data: { id: string }) =>
+  await apiCall<IGeneric>(baseApi => baseApi.get<IGeneric>(`/superadmin/subtitles/fetch/${data.id}`))

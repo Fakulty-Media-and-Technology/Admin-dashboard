@@ -10,6 +10,7 @@
     "pages:build": "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
+    "@bprogress/next": "^3.2.12",
     "@reduxjs/toolkit": "^2.2.3",
     "@types/react-lottie": "^1.2.10",
     "apisauce": "^3.1.0",
@@ -45,7 +46,7 @@
     "typescript": "^5",
     "vercel": "^37.14.0"
   },
-  "engines" : {
+  "engines": {
     "node": "22"
   }
 }

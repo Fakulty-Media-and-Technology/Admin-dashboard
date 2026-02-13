@@ -41,7 +41,7 @@ export const createAds = async (data:FormData) =>
 
 export const deleteAds = async (_id: string) =>
     await apiCall<IGeneric>((baseApi) =>
-        baseApi.get<IGeneric>(
+        baseApi.delete<IGeneric>(
             `superadmin/ads/remove/${_id}`
         )
     );

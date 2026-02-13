@@ -6,6 +6,7 @@ import store from "@/store/store";
 import { Provider } from "react-redux";
 import Container from "./Container";
 import AuthGuard from "./AuthGuard";
+import { ProgressProvider } from "@bprogress/next/app";
 
 type Props = {
   children: React.ReactNode;
@@ -17,9 +18,16 @@ const ProviderContainer = ({ children }: Props) => {
     //     <ThemeProvider enableSystem={true} attribute="class">
     <Provider store={store}>
       <AuthGuard>
-        {/* <Container> */}
-        {children}
-        {/* </Container> */}
+        <ProgressProvider
+          height="3px"
+          color="#EE2726"
+          options={{ showSpinner: false }}
+          shallowRouting
+        >
+          {/* <Container> */}
+          {children}
+          {/* </Container> */}
+        </ProgressProvider>
       </AuthGuard>
     </Provider>
     //     </ThemeProvider>

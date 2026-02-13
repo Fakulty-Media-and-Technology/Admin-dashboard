@@ -91,7 +91,7 @@ export const getFetchMusicVideo = async (data: IPagination) =>
 export const getFetchSeries = async (data: IPagination) =>
     await apiCall<IMediaResponse>((baseApi) =>
         baseApi.get<IMediaResponse>(
-            `/superadmin/uploads/series/fetch/?page=${data.page}&limit=${data.limit}`,
+            `/superadmin/uploads/fetch/series/?page=${data.page}&limit=${data.limit}`,
         )
     );
 

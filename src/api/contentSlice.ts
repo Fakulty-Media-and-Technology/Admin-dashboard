@@ -1,6 +1,6 @@
 import { IGeneric } from "@/types/api/auth.types";
 import { apiCall } from "./auth.api";
-import { ISeasonResponse } from "@/types/api/content.type";
+import { ISeasonResponse, ISubtitleResponse } from "@/types/api/content.type";
 
 export const createContent = async (data: FormData, type: string) =>
   await apiCall<IGeneric>((baseApi) =>
@@ -58,5 +58,8 @@ export const deleteContent = async (data: { id: string, slug: string }) =>
 export const getSeasons = async (data: { id: string }) =>
   await apiCall<ISeasonResponse>(baseApi => baseApi.get<ISeasonResponse>(`/superadmin/uploads/seasons/fetch/${data.id}?page=1&limit=40000&withMediaSources=true`))
 
-export const getSubtitles = async (data: { id: string }) =>
-  await apiCall<IGeneric>(baseApi => baseApi.get<IGeneric>(`/superadmin/subtitles/fetch/${data.id}`))
+export const getSubtitles = async (data: { id: string, type:'vod' | 'episode' | 'series' }) =>
+  await apiCall<ISubtitleResponse>(baseApi => baseApi.get<ISubtitleResponse>(`/superadmin/shared/subtitles/fetch/${data.id}/${data.type}`))
+
+export const deleteSubtitles = async (data: { id: string }) =>
+  await apiCall<IGeneric>(baseApi => baseApi.delete<IGeneric>(`/superadmin/media/delete-subtitle/${data.id}`))

@@ -15,12 +15,12 @@ import { selectUserProfile } from "@/store/slices/usersSlice";
 import { useAppSelector } from "@/hooks/reduxHook";
 import dynamic from "next/dynamic";
 const LiveStreamPlayer = dynamic(() => import('@/components/LiveStreamPlayer'), {
-  ssr: false,
+    ssr: false,
 });
 
 
 export const ClientsComponent = () => {
-      const user = useAppSelector(selectUserProfile);
+    const user = useAppSelector(selectUserProfile);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [mute, setMute] = useState<boolean>(false);
     const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false);
@@ -41,11 +41,12 @@ export const ClientsComponent = () => {
     }
 
     useEffect(() => {
-        if (!livesteamDetails || livesteamDetails.data.length===0) return
+        if (!livesteamDetails || livesteamDetails.data.length === 0) return
         setLive(livesteamDetails.data[0])
     }, [isSuccess_L]);
 
     // console.log(live ? live.stream_url : '')
+    console.log(live)
 
     return (
         <div className="lg:px-10 px-4 bg-black3 min-h-fit h-full py-5 pt-14 pb-6 mt-12 items-center flex flex-col">
@@ -117,7 +118,7 @@ export const ClientsComponent = () => {
 
                 {/* {isPlayerReady && ( */}
                 <Image
-              src={(livesteamDetails && livesteamDetails.data.length>0)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
+                    src={(livesteamDetails && livesteamDetails.data.length > 0 && livesteamDetails?.data[0].coverPhoto) ? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
                     alt=""
                     width={Size.calcWidth(100)}
                     height={Size.calcHeight(100)}
@@ -154,7 +155,7 @@ export const ClientsComponent = () => {
                             className="flex flex-row items-center"
                         >
                             <Image
-                                src={user ? user.photo_url : '/channels.png'}
+                                src={(user && user.photo_url) ? user.photo_url : '/user.png'}
                                 alt=""
                                 width={28}
                                 height={28}
@@ -188,24 +189,24 @@ export const ClientsComponent = () => {
                         >
                             <div className="w-[10px] h-[10px] animate-pulse rounded-full bg-red_500 " />
                             <span
-                                               className={`${outfit_500.className} font-medium text-[13px] text-white`}
-                                             >
-                                               LIVE
-                                             </span>
-                                             <div style={{}} onClick={() => setMute(!mute)} className="relative">
-                                               {mute && <div className="h-[2px] w-[22px] -rotate-[45deg] bg-white absolute top-2.5" />}
-                                               <Image
-                                                 src="/unmute.svg"
-                                                 alt=""
-                                                 width={24}
-                                                 height={24}
-                                                 className="object-contain rounded-full"
-                                               />
-                                             </div>
-                                             {isPlaying && <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
-                                               <div className="w-1 h-3.5 bg-white" />
-                                               <div className="w-1 h-3.5 bg-white" />
-                                             </button>}
+                                className={`${outfit_500.className} font-medium text-[13px] text-white`}
+                            >
+                                LIVE
+                            </span>
+                            <div style={{}} onClick={() => setMute(!mute)} className="relative">
+                                {mute && <div className="h-[2px] w-[22px] -rotate-[45deg] bg-white absolute top-2.5" />}
+                                <Image
+                                    src="/unmute.svg"
+                                    alt=""
+                                    width={24}
+                                    height={24}
+                                    className="object-contain rounded-full"
+                                />
+                            </div>
+                            {isPlaying && <button className="ml-2 flex gap-x-1.5" onClick={handleVideo}>
+                                <div className="w-1 h-3.5 bg-white" />
+                                <div className="w-1 h-3.5 bg-white" />
+                            </button>}
                         </div>
                     </div>
                 )}

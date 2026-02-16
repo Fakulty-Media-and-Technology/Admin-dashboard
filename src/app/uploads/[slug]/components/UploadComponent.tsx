@@ -33,6 +33,7 @@ import {
   addSeason,
   addSubtitle,
   createContent,
+  deleteSubtitles,
   editContent,
   getSeasons,
   getSubtitles,
@@ -42,6 +43,8 @@ import { IMediaData } from "@/types/api/media.types";
 import { formatDateToDDMMYYYY } from "@/utilities/dateUtilities";
 import { HexAlphaColorPicker, HexColorPicker } from "react-colorful";
 import { useProgress } from "@bprogress/next";
+import LoadingSpinner from "@/config/lottie/loading.json";
+import Lottie from "lottie-react";
 
 interface ModalProps {
   handleClose: () => void;
@@ -156,6 +159,7 @@ export const AddComponent = ({
     selectedMedia ? selectedMedia.description ?? "" : ""
   );
   const [srtLoading, setSrtLoading] = useState<boolean>(false);
+  const [subtitleProcessingId, setSubtitleProcessingId] = useState<string>('');
   const [seasonLoading, setSeasonLoading] = useState<boolean>(false);
   const maxLength = 200;
   const [seasons, setSeasons] = useState<ISeasonData[]>([]);
@@ -412,11 +416,27 @@ export const AddComponent = ({
 
   async function handleFetchSubtitle() {
     if (!selectedMedia) return;
-    const res = await getSubtitles({ id: selectedMedia._id });
+    const res = await getSubtitles({ id: selectedMedia._id, type:'vod' });
     if (res.ok && res.data) {
-      console.log(res.data)
-      // setSeasons(res.data.data);
+      setSRTArray(res.data.data.map(x => ({language:x.language, srtFile:{url:x.src, name:x._id}})))
+    }
+  }
 
+  async function handleDeleteSubtitle(id:string){
+    try {
+      setSubtitleProcessingId(id);
+      const res = await deleteSubtitles({id});
+      if(res.ok){
+         toast(`Subtitle Deleted Successfully`, { type: "success" });
+         setSRTArray(p => p.filter(x => x.srtFile.name !== id))
+      }else{
+        toast(`${res.data?.message}`, { type: "error" });
+      }
+    } catch (error) {
+       toast(`${error}`, { type: "error" });
+    }finally{
+      setSubtitleProcessingId('');
+      handleFetchSubtitle();
     }
   }
 
@@ -1798,14 +1818,21 @@ export const AddComponent = ({
 
                       <button
                         className="hover:scale-110 transition-all duration-200"
-                      // onClick={() => setVideoTrailer_2(null)}
+                      onClick={() => handleDeleteSubtitle(x.srtFile.name)}
                       >
+                        {x.srtFile.name === subtitleProcessingId ? (
+                                <Lottie
+                                  animationData={LoadingSpinner}
+                                  loop
+                                  style={{ width: 35, height: 35, marginRight: 5 }}
+                                />
+                              ):
                         <Image
                           src="/delete.svg"
                           width={16}
                           height={16}
                           alt="delete icon"
-                        />
+                        />}
                       </button>
                     </div>
                   );
@@ -2081,6 +2108,7 @@ export const AddComponent = ({
                 (links_2 || videoTrailer_2) === null) ||
               color === ""
             }
+            showPercentage
             isLoading={loading}
             bgColor="bg-[#EE2726]"
             className="px-6 py-3 mb-5 hover:scale-105 transition-all duration-300"

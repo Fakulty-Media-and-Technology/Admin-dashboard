@@ -53,3 +53,13 @@ export interface IEpisodeData {
   video: string;
   trailer: string;
 }
+
+export interface ISubtitleResponse extends IGeneric {
+  data: ISubtitleData[]
+}
+
+export interface ISubtitleData{
+  language:string;
+  src:string;
+  _id:string
+}

@@ -13,8 +13,10 @@ import { toast } from 'react-toastify';
 import { getPreview } from '@/app/server';
 import { ImageProps } from '@/app/plans/ClientComponent';
 import { IFile, ISubtitle } from './UploadComponent';
-import { addEpisodes, addSubtitle, getSubtitles } from '@/api/contentSlice';
+import { addEpisodes, addSubtitle, deleteSubtitles, getSubtitles } from '@/api/contentSlice';
 import { IEpisodeData } from '@/types/api/content.type';
+import LoadingSpinner from "@/config/lottie/loading.json";
+import Lottie from "lottie-react";
 
 
 interface Props {
@@ -47,6 +49,7 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
     const [subtitleFile, setSubtitleFile] = useState<IFile | null>(null);
     const [urlLink, setUrlLink] = useState<string>('')
     const [srtArray, setSRTArray] = useState<ISubtitle[]>([]);
+    const [subtitleProcessingId, setSubtitleProcessingId] = useState<string>('');
     const maxLength = 200;
 
     const isDisabled = name === '' || details === "" || (links || videoTrailer) === null || (videoTrailer_recap || videoTrailer_intro) === null
@@ -140,11 +143,27 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
 
     async function handleFetchSubtitle() {
         if (episode.admin === '') return;
-        const res = await getSubtitles({ id: episode._id });
+        const res = await getSubtitles({ id: episode._id, type: 'episode' });
         if (res.ok && res.data) {
-            console.log(res.data)
-            // setSeasons(res.data.data);
+            setSRTArray(res.data.data.map(x => ({ language: x.language, srtFile: { url: x.src, name: x._id } })))
+        }
+    }
 
+    async function handleDeleteSubtitle(id: string) {
+        try {
+            setSubtitleProcessingId(id);
+            const res = await deleteSubtitles({ id });
+            if (res.ok) {
+                toast(`Subtitle Deleted Successfully`, { type: "success" });
+                setSRTArray(p => p.filter(x => x.srtFile.name !== id))
+            } else {
+                toast(`${res.data?.message}`, { type: "error" });
+            }
+        } catch (error) {
+            toast(`${error}`, { type: "error" });
+        } finally {
+            setSubtitleProcessingId('');
+            handleFetchSubtitle();
         }
     }
 
@@ -651,14 +670,21 @@ function EpisodeComponent({ episode, seasonId, setIsViewEp, isViewEp, handleFunc
 
                                     <button
                                         className="hover:scale-110 transition-all duration-200"
-                                    // onClick={() => setVideoTrailer_2(null)}
+                                        onClick={() => handleDeleteSubtitle(x.srtFile.name)}
                                     >
-                                        <Image
-                                            src="/delete.svg"
-                                            width={16}
-                                            height={16}
-                                            alt="delete icon"
-                                        />
+                                        {x.srtFile.name === subtitleProcessingId ? (
+                                            <Lottie
+                                                animationData={LoadingSpinner}
+                                                loop
+                                                style={{ width: 35, height: 35, marginRight: 5 }}
+                                            />
+                                        ) :
+                                            <Image
+                                                src="/delete.svg"
+                                                width={16}
+                                                height={16}
+                                                alt="delete icon"
+                                            />}
                                     </button>
                                 </div>
                             );

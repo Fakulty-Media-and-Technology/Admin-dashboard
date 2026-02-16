@@ -323,7 +323,7 @@ function page() {
 
             {/* {isPlayerReady && ( */}
             <Image
-              src={(livesteamDetails && livesteamDetails.data.length>0)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
+              src={(livesteamDetails && livesteamDetails.data.length>0 && livesteamDetails?.data[0].coverPhoto)? livesteamDetails?.data[0].coverPhoto : "/coverphoto.png"}
               alt=""
               width={Size.calcWidth(100)}
               height={Size.calcHeight(100)}
@@ -360,7 +360,7 @@ function page() {
                   className="flex flex-row items-center"
                 >
                   <Image
-                    src={user.photo_url}
+                    src={user.photo_url ?? '/user.png'}
                     alt=""
                     width={28}
                     height={28}

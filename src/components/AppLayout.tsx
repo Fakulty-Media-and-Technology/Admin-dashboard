@@ -7,6 +7,7 @@ import { ComponentProps } from "react";
 import { twMerge } from "tailwind-merge";
 import LoadingSpinner from "@/config/lottie/loading.json";
 import Lottie from "lottie-react";
+import { useState, useEffect } from "react";
 
 export const CustomInput = ({
   className,
@@ -174,8 +175,10 @@ interface AppButtonProps extends ComponentProps<"button"> {
   title: string;
   disabled?: boolean;
   isLoading?: boolean;
+  showPercentage?: boolean;
   bgColor?: string;
 }
+
 
 export const AppButton = ({
   className,
@@ -183,30 +186,63 @@ export const AppButton = ({
   disabled,
   isLoading,
   bgColor,
+  showPercentage,
   ...props
 }: AppButtonProps) => {
+  const [simulatedProgress, setSimulatedProgress] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isLoading && showPercentage) {
+      setSimulatedProgress(0); 
+      
+      interval = setInterval(() => {
+        setSimulatedProgress((prev) => {
+          if (prev >= 99) {
+            clearInterval(interval);
+            return 99;
+          }
+          const increment = prev < 70 ? 5 : 1; 
+          return prev + increment;
+        });
+      }, 150); // Adjust speed here
+    } else {
+      setSimulatedProgress(0);
+    }
+
+    return () => clearInterval(interval);
+  }, [isLoading, showPercentage]);
+
   return (
     <button
       {...props}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       className={twMerge(
         `${disabled || isLoading
           ? "bg-gray-500 cursor-not-allowed"
-          : bgColor
-            ? bgColor
-            : "bg-red"
-        } flex flex-row items-center justify-center rounded py-[12px] font-normal text-lg text-white  ${manrope_400}`,
+          : bgColor || "bg-red"
+        } flex flex-row items-center justify-center rounded py-[12px] font-normal text-lg text-white min-w-[140px] transition-all ${manrope_400}`,
         className
       )}
     >
-      {isLoading && (
+      {/* Variant A: Lottie Spinner */}
+      {isLoading && !showPercentage && (
         <Lottie
           animationData={LoadingSpinner}
           loop
           style={{ width: 35, height: 35, marginRight: 5 }}
         />
       )}
-      {title}
+
+      {/* Variant B: Simulated Percentage */}
+      {isLoading && showPercentage && (
+        <span className="mr-3 tabular-nums font-bold text-base animate-pulse">
+          {simulatedProgress}%
+        </span>
+      )}
+
+      <span>{isLoading && showPercentage ? "Processing..." : title}</span>
     </button>
   );
 };

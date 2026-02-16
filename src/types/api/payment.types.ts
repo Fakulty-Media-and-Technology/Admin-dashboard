@@ -16,4 +16,5 @@ export interface IPaymentData{
     useCase:"live schedule"|"live schedule ext";
     fullName:string;
     email:string
+    method:string
 }

@@ -22,7 +22,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
       async onQueryStarted(arg, { queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          if (data.status === SUCESS_CODES) {
+          if (SUCESS_CODES.includes(data.status)) {
             localStorage.setItem("auth_token", data.data.token); // Save token in localStorage
             console.log("Token saved");
           }

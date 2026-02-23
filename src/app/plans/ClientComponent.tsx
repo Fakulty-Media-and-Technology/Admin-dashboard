@@ -91,7 +91,7 @@ export const ClientsComponent = () => {
         payment_options: 'card,mobilemoney,ussd',
         customer: {
             email: user?.profile?.email ?? '',
-            phone_number:'',
+            phone_number: '',
             name: `${user?.profile?.first_name} ${user?.profile?.last_name}`,
         },
         customizations: {
@@ -179,7 +179,7 @@ export const ClientsComponent = () => {
     }
 
 
-    async function handleCreateLive(id: string) {
+    async function handleCreateLive() {
         try {
             setLoading(true);
             const category = selectedCategories.map(name => {
@@ -205,10 +205,10 @@ export const ClientsComponent = () => {
             if (coverImage && coverImage.file) formdata.append('coverPhoto', coverImage.file);
             if (videoTrailer && videoTrailer.file) formdata.append('previewVideo', videoTrailer.file);
             //   if (image && image.file) formdata.append('channelLogo', image.file);
-            formdata.append('data', JSON.stringify({ ...data, paymentId: id }));
+            formdata.append('data', JSON.stringify({ ...data }));
 
             const res = await clientCreateLive(formdata);
-            console.log(res.data, id)
+            console.log(res.data)
             if (res.ok && res.data) {
                 toast(`${res.data.message}`, { type: "success" });
                 // RESET 
@@ -230,7 +230,8 @@ export const ClientsComponent = () => {
             refetch();
             setIsPaymentActive(false);
         } else {
-            handleCreateLive(id);
+            refetch();
+            // handleCreateLive(id);
         }
     };
 
@@ -240,7 +241,7 @@ export const ClientsComponent = () => {
         console.log('closed')
     }
 
-   async function handlePayment(provider: 'paystack' | 'flutterwave') {
+    async function handlePayment(provider: 'paystack' | 'flutterwave') {
         try {
             setLoading(true);
             const data: IPaymentData = {
@@ -249,12 +250,12 @@ export const ClientsComponent = () => {
                 email: user?.profile.email ?? '',
                 fullName: user?.profile.first_name ?? '',
                 useCase: live ? 'live schedule ext' : 'live schedule',
-                method: provider, 
+                method: provider,
                 ...(live && { liveId: live._id })
             }
 
             const res = await initiatePayment(data);
-            
+
             if (res.ok && res.data) {
                 const _id = res.data.data.paymentId;
 
@@ -281,7 +282,7 @@ export const ClientsComponent = () => {
             }
         } catch (error: any) {
             toast(`${error.message}`, { type: "error" });
-        }finally{
+        } finally {
             setLoading(false)
         }
     }
@@ -675,7 +676,7 @@ export const ClientsComponent = () => {
 
                 <div className="w-[30%] min-w-[240px] mt-10">
                     <AppButton
-                        onClick={() => handlePayment('flutterwave')}
+                        onClick={() => live ? !live.hasPaid ? handlePayment('flutterwave') : null : handleCreateLive()}
                         title={live ? "EDIT LIVE" : "CONTINUE TO PAYMENT"}
                         className="w-full"
                         isLoading={loading}
@@ -692,7 +693,7 @@ export const ClientsComponent = () => {
                     handleEstFunc={value => handleGetEstimatedPrice(Number(value) <= Number(eventHours) ? '' : (Number(value) - Number(eventHours)).toString())}
                     currency={currency}
                     price={eventEstimatedPrice}
-                    paymentFunc={() =>handlePayment('flutterwave')}
+                    paymentFunc={() => handlePayment('flutterwave')}
                     disabled={live ? (Number(eventHours) + getTimeDifferenceInHours(live.start, live.expiry)) <= getTimeDifferenceInHours(live.start, live.expiry) : true}
                 />
             )}

@@ -13,6 +13,15 @@ function useResponsiveSize(size: number, otherParams?: string): number {
   return 0;
 }
 
+export const calcSize = {
+  height(size: number, windowHeight: number) {
+    return (windowHeight / 100) * size;
+  },
+  width(size: number, windowWidth: number) {
+    return (windowWidth / 100) * size;
+  }
+};
+
 const Size = {
   calcHeight(size: number) {
     return useResponsiveSize(size, "useHeight");

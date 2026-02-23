@@ -40,6 +40,7 @@ export interface IEventData {
         createdAt: string
         updatedAt: string
     } | null
+    hasPaid:boolean
 }
 
 export interface ICreateLiveData {

@@ -1,17 +1,14 @@
 "use client";
 
-import { manrope_400, manrope_600, roboto_500 } from "@/config/fonts";
-import { Manrope } from "next/font/google";
+import { manrope_400, manrope_600 } from "@/config/fonts";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AppButton,
   CustomInput,
   InputWithIcon,
-  SelectInput,
 } from "../components/AppLayout";
 import { useRouter } from "next/navigation";
-import { useWindowSize } from "@/hooks/useWindowSize";
 import Size from "@/utilities/useResponsiveSize";
 import { useLoginMutation } from "@/api/userSlice.api";
 import { useAppDispatch } from "@/hooks/reduxHook";
@@ -22,7 +19,64 @@ import { getClientProfile, getSuperadminProfile } from "@/api/auth.api";
 import { IProfile } from "@/types/api/profile.types";
 
 const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-export const SUCESS_CODES = 201 || 200;
+export const SUCESS_CODES = [201, 200];
+
+// --- DASHBOARD SKELETON BASED ON SCREENSHOTS ---
+const DashboardSkeleton = () => {
+  return (
+    <div className="flex h-screen w-full bg-[#181818] overflow-hidden">
+      {/* Sidebar Skeleton */}
+      <div className="w-[250px] bg-[#1F1F1F] p-6 flex flex-col border-r border-[#2A2A2A] animate-pulse">
+        {/* Logo Area */}
+        <div className="h-8 w-32 bg-[#333333] rounded mb-12 mx-auto" />
+        {/* User Profile Area */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="h-20 w-20 bg-[#333333] rounded-full mb-4" />
+          <div className="h-4 w-28 bg-[#333333] rounded mb-2" />
+          <div className="h-3 w-20 bg-[#333333] rounded" />
+        </div>
+        {/* Menu Items */}
+        <div className="flex flex-col gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-10 w-full bg-[#333333] rounded-md" />
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area Skeleton */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Header */}
+        <div className="h-[70px] bg-[#1F1F1F] flex items-center justify-between px-8 animate-pulse">
+          <div className="h-5 w-48 bg-[#333333] rounded" />
+          <div className="flex items-center gap-4">
+            <div className="h-8 w-8 bg-[#333333] rounded-sm" />
+            <div className="h-8 w-8 bg-[#333333] rounded-sm" />
+            <div className="h-10 w-10 bg-[#333333] rounded-full" />
+          </div>
+        </div>
+
+        {/* Dashboard Content */}
+        <div className="p-8 flex-1 animate-pulse">
+          <div className="h-5 w-24 bg-[#333333] rounded mb-6" />
+          {/* 3 Overview Cards */}
+          <div className="flex gap-6 mb-10">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-[120px] flex-1 bg-[#1F1F1F] rounded-md flex flex-col items-center justify-center gap-3"
+              >
+                <div className="h-4 w-24 bg-[#333333] rounded" />
+                <div className="h-8 w-12 bg-[#333333] rounded" />
+              </div>
+            ))}
+          </div>
+          {/* Main Video/Table Area */}
+          <div className="w-full h-[400px] bg-[#0A0A0A] rounded-md border border-[#2A2A2A]" />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function Login() {
   const router = useRouter();
@@ -30,66 +84,70 @@ function Login() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const mTop=Size.calcHeight(2)
+  
+  // 🟩 ADDED: Initial loading state to show skeleton
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true); 
+  
   const dispatch = useAppDispatch();
 
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
 
   const submitHandler = async () => {
     if (email === "" || password === "" || !regex.test(email)) {
-    } else {
-      try {
-        setLoading(true);
-        const res = await login({
-          email,
-          password,
-        }).unwrap();
-        console.log(res, "login");
+      return;
+    } 
+    try {
+      setLoading(true);
+      const res = await login({
+        email,
+        password,
+      }).unwrap();
 
-        if (res.status === SUCESS_CODES && res.data) {
-          const isSuperAdmin = res.data.role === "superadmin";
-          localStorage.setItem("role", res.data.role);
-          localStorage.setItem("auth_token", res.data.token);
+      if (SUCESS_CODES.includes(res.status) && res.data) {
+        const isSuperAdmin = res.data.role === "superadmin";
+        localStorage.setItem("role", res.data.role);
+        localStorage.setItem("auth_token", res.data.token);
 
-          setCookie(null, "auth_token", res.data.token, {
-            maxAge: 30 * 24 * 60 * 60, // 30 days
-            path: "/", // Makes it accessible in all pages
-          });
-
-          // Trigger the user profile query after login
-          const resProfile = isSuperAdmin
-            ? await getSuperadminProfile(res.data.token)
-            : await getClientProfile(res.data.token);
-
-          if (resProfile.ok && resProfile.data && resProfile.data !== null) {
-            const superAdmin =
-              (resProfile.data.data as IProfile[])[0] ||
-              (resProfile.data.data as IProfile);
-            const superAdminPatch: IProfile = {
-              profile: superAdmin as any,
-              photo_url: "",
-            };
-            dispatch(
-              setCredentials(isSuperAdmin ? superAdminPatch : superAdmin)
-            );
-            router.replace("/dashboard");
-
-            toast("Successful login", {
-              type: "success",
-            });
-          } else {
-            toast("Opps! couldn't authenticate user", {
-              type: "error",
-            });
-          }
-        }
-      } catch (error) {
-        console.log("Login error:", error);
-        toast(`Something went wrong`, {
-          type: "error",
+        setCookie(null, "auth_token", res.data.token, {
+          maxAge: 30 * 24 * 60 * 60, // 30 days
+          path: "/", // Makes it accessible in all pages
         });
-      } finally {
-        setLoading(false);
+
+        // Trigger the user profile query after login
+        const resProfile = isSuperAdmin
+          ? await getSuperadminProfile(res.data.token)
+          : await getClientProfile(res.data.token);
+
+        if (resProfile.ok && resProfile.data && resProfile.data !== null) {
+          const superAdmin =
+            (resProfile.data.data as IProfile[])[0] ||
+            (resProfile.data.data as IProfile);
+          const superAdminPatch: IProfile = {
+            profile: superAdmin as any,
+            photo_url: "",
+          };
+          dispatch(
+            setCredentials(isSuperAdmin ? superAdminPatch : superAdmin)
+          );
+          router.replace("/dashboard");
+
+          toast("Successful login", {
+            type: "success",
+          });
+        } else {
+          toast("Opps! couldn't authenticate user", {
+            type: "error",
+          });
+        }
       }
+    } catch (error) {
+      console.log("Login error:", error);
+      toast(`Something went wrong`, {
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,48 +157,59 @@ function Login() {
     const isSuperAdmin = role?.toLowerCase() === "superadmin";
 
     if (token && role) {
-      const resProfile = isSuperAdmin
-        ? await getSuperadminProfile(token)
-        : await getClientProfile(token);
+      try {
+        const resProfile = isSuperAdmin
+          ? await getSuperadminProfile(token)
+          : await getClientProfile(token);
 
-      if (resProfile.ok && resProfile.data && resProfile.data !== null) {
-        const userData =
-          (resProfile.data.data as IProfile[])[0] ||
-          (resProfile.data.data as IProfile);
-        console.log(userData, userData.profile);
-        const superAdminPatch: IProfile = {
-          profile: userData as any,
-          photo_url: "",
-        };
-        dispatch(setCredentials(isSuperAdmin ? superAdminPatch : userData));
+        if (resProfile.ok && resProfile.data && resProfile.data !== null) {
+          const userData =
+            (resProfile.data.data as IProfile[])[0] ||
+            (resProfile.data.data as IProfile);
+          
+          const superAdminPatch: IProfile = {
+            profile: userData as any,
+            photo_url: "",
+          };
+          dispatch(setCredentials(isSuperAdmin ? superAdminPatch : userData));
 
-        setCookie(null, "auth_token", token, {
-          maxAge: 30 * 24 * 60 * 60, // 30 days
-          path: "/", // Makes it accessible in all pages
-        });
+          setCookie(null, "auth_token", token, {
+            maxAge: 30 * 24 * 60 * 60, // 30 days
+            path: "/",
+          });
 
-        toast(
-          `Welcome ${
-            isSuperAdmin
-              ? superAdminPatch.profile.first_name
-              : userData.profile.first_name
-          }`,
-          {
-            type: "success",
-          }
-        );
-        router.replace("/dashboard");
+          toast(
+            `Welcome ${
+              isSuperAdmin
+                ? superAdminPatch.profile.first_name
+                : userData.profile.first_name
+            }`,
+            {
+              type: "success",
+            }
+          );
+          router.replace("/dashboard");
+          return; // 🟩 Stop execution here. Do NOT set isCheckingAuth to false, let it hold the skeleton until the route changes
+        }
+      } catch (error) {
+        console.log("Auto-login failed:", error);
       }
     }
+    
+    // 🟩 If there is no token, or the token is invalid/expired, remove the skeleton and show the login form
+    setIsCheckingAuth(false);
   }
 
-  // Optionally, you can use useEffect to automatically fetch user profile after login if the token exists
   useEffect(() => {
     handleAuthUser();
   }, []);
 
-  // TODO: check if token is still valid then neviagte to home
+  // 🟩 IF CHECKING AUTH, RENDER THE SKELETON
+  if (isCheckingAuth) {
+    return <DashboardSkeleton />;
+  }
 
+  // OTHERWISE, RENDER THE LOGIN FORM
   return (
     <div className="flex items-center justify-center h-full w-full">
       <div
@@ -151,7 +220,7 @@ function Login() {
           width={300}
           height={150}
           alt="Logo"
-          style={{ marginTop: Size.calcHeight(2) }}
+          style={{ marginTop:  mTop}}
         />
 
         <div className="mt-3">
@@ -175,7 +244,6 @@ function Login() {
           />
 
           <InputWithIcon
-            // ref={passwordRef}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type={inputType}
@@ -209,7 +277,7 @@ function Login() {
             </span>{" "}
             <span
               onClick={() => console.log("route to contact screen")}
-              className="font-normal text-base text-blue_200"
+              className="font-normal text-base text-blue_200 cursor-pointer"
             >
               Contact us
             </span>

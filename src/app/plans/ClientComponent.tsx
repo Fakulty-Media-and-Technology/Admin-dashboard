@@ -25,6 +25,7 @@ import { useGetLivestreamDetailsQuery } from "@/api/dashboard";
 import { initiatePayment } from "@/api/paymentSlice";
 import { IPaymentData } from "@/types/api/payment.types";
 import { closePaymentModal, useFlutterwave } from "flutterwave-react-v3";
+import { useRouter } from "next/navigation";
 
 
 const paymentMethods = ["Visa/mastercard", "Paypal", "Crypto", "Bank Transfer"];
@@ -40,6 +41,7 @@ interface IFile extends ImageProps {
 }
 
 export const ClientsComponent = () => {
+      const router = useRouter();
     const user = useAppSelector(selectUserProfile);
     const { data: livesteamDetails, isSuccess: isSuccess_L, refetch
     } = useGetLivestreamDetailsQuery(undefined, {});
@@ -179,6 +181,70 @@ export const ClientsComponent = () => {
     }
 
 
+       const onSuccess = () => {
+        // Implementation for whatever you want to do with reference and after success call.
+        if (live) {
+            refetch();
+            setIsPaymentActive(false);
+        } else {
+            refetch();
+            router.replace('/dashboard')
+        }
+    };
+
+
+    const onClose = () => {
+        // implementation for  whatever you want to do when the Paystack dialog closed.
+        console.log('closed')
+    }
+
+    async function handlePayment(provider: 'paystack' | 'flutterwave', id:string) {
+        try {
+            setLoading(true);
+            const data: IPaymentData = {
+                amount: eventEstimatedPrice,
+                currency: currency.toUpperCase(),
+                email: user?.profile.email ?? '',
+                fullName: user?.profile.first_name ?? '',
+                useCase: live ? 'live schedule ext' : 'live schedule',
+                method: provider,
+                liveId: live ? live._id:id
+            }
+
+            const res = await initiatePayment(data);
+
+            if (res.ok && res.data) {
+                const _id = res.data.data.paymentId;
+
+                if (provider === 'paystack') {
+                    initializePayment({ onSuccess: () => onSuccess(), onClose });
+                } else {
+                    // Trigger Flutterwave
+                    handleFlutterwavePayment({
+                        callback: (response) => {
+                            if (response.status === "successful") {
+                                onSuccess();
+                            } else {
+                                toast("Payment was not successful", { type: "error" });
+                            }
+                            closePaymentModal();
+                        },
+                        onClose: () => {
+                            console.log('Flutterwave modal closed');
+                        },
+                    });
+                }
+            } else {
+                toast(`${res.data?.message}`, { type: "error" });
+            }
+        } catch (error: any) {
+            toast(`${error.message}`, { type: "error" });
+        } finally {
+            setLoading(false)
+        }
+    }
+
+
     async function handleCreateLive() {
         try {
             setLoading(true);
@@ -208,9 +274,10 @@ export const ClientsComponent = () => {
             formdata.append('data', JSON.stringify({ ...data }));
 
             const res = await clientCreateLive(formdata);
-            console.log(res.data)
             if (res.ok && res.data) {
-                toast(`${res.data.message}`, { type: "success" });
+                handlePayment("flutterwave", res.data.data.liveId).then(x =>{
+                    toast(`${res.data?.message}`, { type: "success" });
+                })
                 // RESET 
             } else {
                 toast(`${res.data?.message}`, { type: "error" });
@@ -224,68 +291,7 @@ export const ClientsComponent = () => {
     }
 
 
-    const onSuccess = (id: string) => {
-        // Implementation for whatever you want to do with reference and after success call.
-        if (live) {
-            refetch();
-            setIsPaymentActive(false);
-        } else {
-            refetch();
-            // handleCreateLive(id);
-        }
-    };
-
-
-    const onClose = () => {
-        // implementation for  whatever you want to do when the Paystack dialog closed.
-        console.log('closed')
-    }
-
-    async function handlePayment(provider: 'paystack' | 'flutterwave') {
-        try {
-            setLoading(true);
-            const data: IPaymentData = {
-                amount: eventEstimatedPrice,
-                currency: currency.toUpperCase(),
-                email: user?.profile.email ?? '',
-                fullName: user?.profile.first_name ?? '',
-                useCase: live ? 'live schedule ext' : 'live schedule',
-                method: provider,
-                ...(live && { liveId: live._id })
-            }
-
-            const res = await initiatePayment(data);
-
-            if (res.ok && res.data) {
-                const _id = res.data.data.paymentId;
-
-                if (provider === 'paystack') {
-                    initializePayment({ onSuccess: () => onSuccess(_id), onClose });
-                } else {
-                    // Trigger Flutterwave
-                    handleFlutterwavePayment({
-                        callback: (response) => {
-                            if (response.status === "successful") {
-                                onSuccess(_id);
-                            } else {
-                                toast("Payment was not successful", { type: "error" });
-                            }
-                            closePaymentModal();
-                        },
-                        onClose: () => {
-                            console.log('Flutterwave modal closed');
-                        },
-                    });
-                }
-            } else {
-                toast(`${res.data?.message}`, { type: "error" });
-            }
-        } catch (error: any) {
-            toast(`${error.message}`, { type: "error" });
-        } finally {
-            setLoading(false)
-        }
-    }
+ 
 
     useEffect(() => {
         console.log(categories)
@@ -676,7 +682,7 @@ export const ClientsComponent = () => {
 
                 <div className="w-[30%] min-w-[240px] mt-10">
                     <AppButton
-                        onClick={() => live ? !live.hasPaid ? handlePayment('flutterwave') : null : handleCreateLive()}
+                        onClick={() => live ? !live.hasPaid ? handlePayment('flutterwave', live._id) : null : handleCreateLive()}
                         title={live ? "EDIT LIVE" : "CONTINUE TO PAYMENT"}
                         className="w-full"
                         isLoading={loading}
@@ -693,7 +699,7 @@ export const ClientsComponent = () => {
                     handleEstFunc={value => handleGetEstimatedPrice(Number(value) <= Number(eventHours) ? '' : (Number(value) - Number(eventHours)).toString())}
                     currency={currency}
                     price={eventEstimatedPrice}
-                    paymentFunc={() => handlePayment('flutterwave')}
+                    paymentFunc={() => handlePayment('flutterwave', live?._id??'')}
                     disabled={live ? (Number(eventHours) + getTimeDifferenceInHours(live.start, live.expiry)) <= getTimeDifferenceInHours(live.start, live.expiry) : true}
                 />
             )}

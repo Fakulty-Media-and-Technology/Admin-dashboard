@@ -4,7 +4,7 @@ import { apiSlice } from "./apiSlice";
 import { apiCall } from "./auth.api";
 import { IGeneric } from "@/types/api/auth.types";
 import { IPagination } from "@/types/api/suggestion.types";
-import { IEventResponse } from "@/types/api/live.types";
+import { ICreateLiveContentResponse, IEventResponse } from "@/types/api/live.types";
 
 export const liveApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
@@ -121,8 +121,8 @@ export const createLive = async (data: FormData) =>
     );
 
 export const clientCreateLive = async (data: FormData) =>
-    await apiCall<IGeneric>((baseApi) =>
-        baseApi.post<IGeneric>(`/clients/shared/lives/create`, data, {
+    await apiCall<ICreateLiveContentResponse>((baseApi) =>
+        baseApi.post<ICreateLiveContentResponse>(`/clients/shared/lives/create`, data, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },

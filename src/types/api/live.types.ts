@@ -58,3 +58,9 @@ export interface ICreateLiveData {
     amount?: number;
     category:string[]
 }
+
+export interface ICreateLiveContentResponse extends IGeneric{
+    data:{
+        liveId:string
+    }
+}

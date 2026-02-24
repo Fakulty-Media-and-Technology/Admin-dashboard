@@ -17,4 +17,5 @@ export interface IPaymentData{
     fullName:string;
     email:string
     method:string
+    liveId?:string
 }

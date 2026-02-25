@@ -7,7 +7,7 @@ export const upcomingApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getUpcoming: builder.query<IUpcomingResponse, IUpcomingQuery>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `superadmin/upcoming/event/getall?limit=${data.limit}&page=${data.page}`,
           method: "GET",

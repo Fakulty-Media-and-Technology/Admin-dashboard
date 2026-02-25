@@ -17,7 +17,7 @@ export const featuredApiSlice = apiSlice.injectEndpoints({
 
     getFeatures: builder.query<IFeaturedContentResponse, IUpcomingQuery>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/featured/contents/fetch`,
           method: "GET",

@@ -7,7 +7,7 @@ export const suggestionApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getSuggestions: builder.query<ISuggestionResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `superadmin/suggestions/all?limit=${data.limit}&page=${data.page}`,
                     method: "GET",

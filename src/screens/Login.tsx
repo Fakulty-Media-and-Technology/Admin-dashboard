@@ -2,15 +2,15 @@
 
 import { manrope_400, manrope_600 } from "@/config/fonts";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
   AppButton,
   CustomInput,
   InputWithIcon,
 } from "../components/AppLayout";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Size from "@/utilities/useResponsiveSize";
-import { useLoginMutation } from "@/api/userSlice.api";
+import { useLoginMutation, useSuperadminClientRedirectMutation } from "@/api/userSlice.api";
 import { useAppDispatch } from "@/hooks/reduxHook";
 import { setCredentials } from "@/store/slices/usersSlice";
 import { toast } from "react-toastify";
@@ -78,38 +78,61 @@ const DashboardSkeleton = () => {
   );
 };
 
-function Login() {
+// Extracted inner component so we can wrap useSearchParams in Suspense
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryEmail = searchParams.get("email"); // 🟩 Grab email from route
+
   const [inputType, setInputType] = useState("password");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const mTop=Size.calcHeight(2)
+  const mTop = Size.calcHeight(2);
   
-  // 🟩 ADDED: Initial loading state to show skeleton
+  // Initial loading state to show skeleton
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true); 
   
   const dispatch = useAppDispatch();
 
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [superadminClientRedirect, { isLoading: isSuperadminClientRedirectLoading }] = useSuperadminClientRedirectMutation();
 
   const submitHandler = async () => {
-    if (email === "" || password === "" || !regex.test(email)) {
+    // 🟩 Bypass strict validation if we are in the redirect flow
+    if (!queryEmail && (email === "" || password === "" || !regex.test(email))) {
       return;
     } 
+    console.log(queryEmail, 'here...')
     try {
       setLoading(true);
-      const res = await login({
-        email,
-        password,
-      }).unwrap();
+      let res;
+
+      // 🟩 FIXED COMMENT LOGIC
+      if (queryEmail) {
+        // Superadmin is trying to access a client dashboard
+        const c = await superadminClientRedirect({ email: queryEmail }).unwrap();
+        console.log(c, queryEmail)
+        res = c
+      } else {
+        // Standard login
+        res = await login({
+          email,
+          password,
+        }).unwrap();
+      }
 
       if (SUCESS_CODES.includes(res.status) && res.data) {
         const isSuperAdmin = res.data.role === "superadmin";
-        localStorage.setItem("role", res.data.role);
-        localStorage.setItem("auth_token", res.data.token);
+        if(queryEmail){
+          const r = localStorage.getItem("role");
+          localStorage.setItem("role", `${r}_${res.data.role}`);
+        }else{
+          localStorage.setItem("role", res.data.role);
+        }
+        localStorage.setItem(isSuperAdmin ? "superadmin_token" : "auth_token", res.data.token);
 
-        setCookie(null, "auth_token", res.data.token, {
+        setCookie(null, isSuperAdmin ? "superadmin_token" : "auth_token", res.data.token, {
           maxAge: 30 * 24 * 60 * 60, // 30 days
           path: "/", // Makes it accessible in all pages
         });
@@ -152,11 +175,19 @@ function Login() {
   };
 
   async function handleAuthUser() {
-    const token = localStorage.getItem("auth_token");
-    const role = localStorage.getItem("role");
-    const isSuperAdmin = role?.toLowerCase() === "superadmin";
+    // 🟩 If the URL has ?email=..., automatically trigger the superadmin redirect flow
+    if (queryEmail) {
+      await submitHandler();
+      return;
+    }
 
-    if (token && role) {
+    const r = localStorage.getItem("role");
+     const role = r?.split("_") || [];
+    const isSuperAdmin = role.includes("superadmin");
+    const token = localStorage.getItem(isSuperAdmin ? "superadmin_token" : "auth_token");
+    if(isSuperAdmin && role.length >1) localStorage.setItem("role", "superadmin"); // Clean up role if we had a superadmin-client redirect before
+
+    if (token && role.length > 0) {
       try {
         const resProfile = isSuperAdmin
           ? await getSuperadminProfile(token)
@@ -173,7 +204,7 @@ function Login() {
           };
           dispatch(setCredentials(isSuperAdmin ? superAdminPatch : userData));
 
-          setCookie(null, "auth_token", token, {
+          setCookie(null, isSuperAdmin ? "superadmin_token" : "auth_token", token, {
             maxAge: 30 * 24 * 60 * 60, // 30 days
             path: "/",
           });
@@ -189,22 +220,21 @@ function Login() {
             }
           );
           router.replace("/dashboard");
-          return; // 🟩 Stop execution here. Do NOT set isCheckingAuth to false, let it hold the skeleton until the route changes
+          return; 
         }
       } catch (error) {
         console.log("Auto-login failed:", error);
       }
     }
     
-    // 🟩 If there is no token, or the token is invalid/expired, remove the skeleton and show the login form
     setIsCheckingAuth(false);
   }
 
   useEffect(() => {
     handleAuthUser();
-  }, []);
+  }, [queryEmail]);
 
-  // 🟩 IF CHECKING AUTH, RENDER THE SKELETON
+  // IF CHECKING AUTH, RENDER THE SKELETON
   if (isCheckingAuth) {
     return <DashboardSkeleton />;
   }
@@ -220,7 +250,7 @@ function Login() {
           width={300}
           height={150}
           alt="Logo"
-          style={{ marginTop:  mTop}}
+          style={{ marginTop: mTop }}
         />
 
         <div className="mt-3">
@@ -260,7 +290,8 @@ function Login() {
 
         <div className="px-5 mt-14 w-full mb-8">
           <AppButton
-            isLoading={isLoginLoading || loading}
+            // 🟩 Ensure button reflects superadmin loading state too if they somehow click it
+            isLoading={isLoginLoading || loading || isSuperadminClientRedirectLoading}
             disabled={
               email !== "" && password !== "" && regex.test(email)
                 ? false
@@ -288,4 +319,11 @@ function Login() {
   );
 }
 
-export default Login;
+// 🟩 Wrap everything in Suspense so useSearchParams doesn't break Next.js build
+export default function Login() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <LoginContent />
+    </Suspense>
+  );
+}

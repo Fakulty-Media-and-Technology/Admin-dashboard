@@ -9,7 +9,7 @@ export const clientsApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllClients: builder.query<IClientsResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/clients/allfetch?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
@@ -22,7 +22,7 @@ export const clientsApiSlice = apiSlice.injectEndpoints({
 
         getClientsDeposit: builder.query<IClientsDepositResponse, void>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/clients/deposits`,
                     method: "GET",

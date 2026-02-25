@@ -13,7 +13,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const cookies = parseCookies();
-    const authToken = cookies.auth_token;
+    const authToken = cookies.auth_token || cookies.superadmin_token;
     console.log(pathname, !authToken && !publicRoutes.includes(pathname));
 
     // If the user is authenticated and trying to access a public route

@@ -43,7 +43,7 @@ const AccScreen = () => {
   const [handleEditProfile, { isLoading }] = useEditProfileMutation();
 
   async function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const authToken = localStorage.getItem("auth_token");
+    const authToken = localStorage.getItem(user?.profile.role === 'superadmin' ? "superadmin_token" : "auth_token");
     const files = e.target.files;
     if (files) setUserPic(files[0]);
     const data = new FormData();
@@ -79,11 +79,12 @@ const AccScreen = () => {
   };
 
   async function handleAuthUser() {
-    const token = localStorage.getItem("auth_token");
-    const role = localStorage.getItem("role");
-    const isSuperAdmin = role?.toLowerCase() === "superadmin";
+    const r = localStorage.getItem("role");
+    const role = r?.split("_") || [];
+    const isSuperAdmin = role.includes("superadmin");
+    const token = localStorage.getItem(isSuperAdmin ? "superadmin_token" : "auth_token");
 
-    if (token && role && isSuperAdmin) {
+    if (token && role.length === 1 && isSuperAdmin) {
       const resProfile = await getSuperadminProfile(token);
 
       if (resProfile.ok && resProfile.data && resProfile.data !== null) {

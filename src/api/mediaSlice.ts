@@ -9,7 +9,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getAllMovie: builder.query<IMediaResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/uploads/fetch/movie?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
@@ -22,7 +22,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
 
         getAllSkits: builder.query<IMediaResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/uploads/fetch/skit?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
@@ -36,7 +36,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
 
         getAllMusic: builder.query<IMediaResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/uploads/fetch/music-video?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",
@@ -50,7 +50,7 @@ export const mediaApiSlice = apiSlice.injectEndpoints({
 
         getAllSeries: builder.query<IMediaResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/uploads/fetch/series?page=${data.page}&limit=${data.limit}&withMediaSources=true`,
                     method: "GET",

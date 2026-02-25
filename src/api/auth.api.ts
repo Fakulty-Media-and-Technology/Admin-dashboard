@@ -8,7 +8,7 @@ export const createAuth = create({
 });
 
 export const createAdminAuthWrapper = async (isClient?:boolean) => {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem(isClient ? "auth_token": "superadmin_token");
   return create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,
     headers: {

@@ -1,4 +1,4 @@
-import { IGeneric, LoginRequest, LoginResponse } from "@/types/api/auth.types";
+import { IGeneric, LoginRequest, LoginResponse, SuperadminClientLoginRequest } from "@/types/api/auth.types";
 import { apiSlice } from "./apiSlice";
 import { SUCESS_CODES } from "@/screens/Login";
 import {
@@ -23,7 +23,32 @@ export const userApiSlice = apiSlice.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           if (SUCESS_CODES.includes(data.status)) {
-            localStorage.setItem("auth_token", data.data.token); // Save token in localStorage
+            localStorage.setItem(data.data.role === 'superadmin' ? "superadmin_token" : "auth_token", data.data.token); // Save token in localStorage
+            console.log("Token saved");
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+        }
+      },
+    }),
+
+    superadminClientRedirect: builder.mutation<LoginResponse, SuperadminClientLoginRequest>({
+      query: (data) => {
+        const authToken = localStorage.getItem("superadmin_token");
+        return {
+        url: `/superadmin/client-redirect/login`,
+        method: "POST",
+         headers: {
+            "superadmin-auth": `${authToken}`,
+          },
+        body: data,
+      }},
+      // Save the token to localStorage after successful login
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (SUCESS_CODES.includes(data.status)) {
+            localStorage.setItem("auth_token", data.data.token);
             console.log("Token saved");
           }
         } catch (error) {
@@ -47,7 +72,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
 
     getSuperAdminProfile: builder.query<SuperUserResponse, void>({
       query: () => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `${SUPERADMIN_URL}/dashboard/profile/fetch`,
           method: "GET",
@@ -73,4 +98,5 @@ export const {
   useGetUserProfileQuery,
   useGetSuperAdminProfileQuery,
   useEditProfileMutation,
+  useSuperadminClientRedirectMutation
 } = userApiSlice;

@@ -80,6 +80,10 @@ export default function page() {
     }
   };
 
+  function handleSuperadminRedirect(email: string) {
+    window.open(`/redirect?email=${email}`, '_blank');
+  }
+
 
   useEffect(() => {
     if (tab === 'clients') handleGetLists(clientData)
@@ -251,7 +255,7 @@ export default function page() {
                               <>
                                 {"fullname" in tx && <>
                                   <button
-                                    onClick={() => [setIsViewClient(tx), setAddClient(true)]}
+                                    onClick={() => handleSuperadminRedirect(tx.email)}
                                   >
                                     <Image
                                       src="/eyeWH.svg"

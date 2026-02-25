@@ -10,7 +10,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getEvents: builder.query<IEventResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/lives/all/event?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
@@ -23,7 +23,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
 
         getChannels: builder.query<IEventResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/lives/all/channel?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
@@ -37,7 +37,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
 
         getTVShows: builder.query<IEventResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/lives/all/tvshow?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
@@ -50,7 +50,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
 
         getPodcast: builder.query<IEventResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/lives/all/podcast?limit=${data.limit}&page=${data.page}`,
                     method: "GET",
@@ -63,7 +63,7 @@ export const liveApiSlice = apiSlice.injectEndpoints({
 
         getSport: builder.query<IEventResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `/superadmin/lives/all/sport?limit=${data.limit}&page=${data.page}`,
                     method: "GET",

@@ -40,8 +40,8 @@ function Header() {
     // console.log(query);
 
     if (query === "log out") {
-      localStorage.removeItem("auth_token");
-      destroyCookie(null, "auth_token", {
+      localStorage.removeItem(user?.profile.role === 'superadmin' ? "superadmin_token" : "auth_token");
+      destroyCookie(null, user?.profile.role === 'superadmin' ? "superadmin_token" : "auth_token", {
         path: "/",
       });
       router.push("/");

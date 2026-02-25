@@ -12,7 +12,7 @@ export const userRPApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<IUsersResponse, IPagination>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `superadmin/user/fetch?page=${data.page}$limit=${data.limit}`,
           method: "GET",

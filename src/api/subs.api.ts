@@ -9,7 +9,7 @@ export const subsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getPlanSubs: builder.query<IPlanSubsResponse, void>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/subscription/plans/fetch`,
           method: "GET",
@@ -22,7 +22,7 @@ export const subsApiSlice = apiSlice.injectEndpoints({
 
     getSubscriptions: builder.query<ISubscriptionResponse, IPagination>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/subscription/all/fetch?limit=${data.limit}&page=${data.page}`,
           method: "GET",

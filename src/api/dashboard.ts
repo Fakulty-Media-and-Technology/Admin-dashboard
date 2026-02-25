@@ -15,7 +15,7 @@ export const dashboardApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardContentList: builder.query<IDashboardTOTAL_Contents, void>({
       query: () => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `${SUPERADMIN_URL}/dashboard/totcontentsandchunks`,
           method: "GET",
@@ -28,7 +28,7 @@ export const dashboardApiSlice = apiSlice.injectEndpoints({
 
     getDashboardTotalUser: builder.query<IDashboardTOTAL_Users, void>({
       query: () => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `${SUPERADMIN_URL}/dashboard/fetchbalanceandusers`,
           method: "GET",

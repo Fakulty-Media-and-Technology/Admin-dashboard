@@ -10,7 +10,7 @@ export const adsApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getADs: builder.query<IAdsResponse, IPagination>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `superadmin/ads/fetchall?limit=${data.limit}&page=${data.page}`,
                     method: "GET",

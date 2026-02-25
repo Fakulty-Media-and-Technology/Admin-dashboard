@@ -9,7 +9,7 @@ export const giftCardApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getGiftCards: builder.query<IGiftCardResponse, {pagination:IPagination, type:'RP'|'MERCHANT'}>({
             query: (data) => {
-                const authToken = localStorage.getItem("auth_token");
+                const authToken = localStorage.getItem("superadmin_token");
                 return {
                     url: `superadmin/giftcard/generated/fetch?type=${data.type}&limit=${data.pagination.limit}&page=${data.pagination.page}`,
                     method: "GET",

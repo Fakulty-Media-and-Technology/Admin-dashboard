@@ -9,7 +9,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getCategory: builder.query<ICategoryResponse, IPagination|undefined>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/shared/get-categories?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
@@ -35,7 +35,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
 
     getGenre: builder.query<ICategoryResponse, IPagination|undefined>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/shared/get-genres?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
@@ -49,7 +49,7 @@ export const categoryApiSlice = apiSlice.injectEndpoints({
 
     getCast: builder.query<ICastResponse, IPagination|undefined>({
       query: (data) => {
-        const authToken = localStorage.getItem("auth_token");
+        const authToken = localStorage.getItem("superadmin_token");
         return {
           url: `/superadmin/shared/get-casts?limit=${data ? data.limit : 100}&page=${data ? data.page:1}`,
           method: "GET",
